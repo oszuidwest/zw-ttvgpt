@@ -98,24 +98,30 @@ class TekstTVGPT {
             ]
         ];
 
-        $headers = [
-            'Content-Type: application/json',
-            'Authorization: Bearer ' . $this->api_key
-        ];
+        $response = wp_remote_post($endpoint_url, [
+            'body' => json_encode($data),
+            'headers' => [
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Bearer ' . $this->api_key
+            ],
+            'timeout' => 15
+        ]);
 
-        $ch = curl_init($endpoint_url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        $response = curl_exec($ch);
-        curl_close($ch);
+        if (is_wp_error($response)) {
+            return $response->get_error_message();
+        }
 
-        $result = json_decode($response, true);
-        $summary = $result['choices'][0]['message']['content'];
+        $body = wp_remote_retrieve_body($response);
+        $result = json_decode($body, true);
 
-        return trim($summary);
+        if (isset($result['choices'][0]['message']['content'])) {
+            $summary = $result['choices'][0]['message']['content'];
+            return trim($summary);
+        } else {
+            return 'An error occurred while generating the summary.';
+        }
     }
 }
 
 new TekstTVGPT();
+?>
