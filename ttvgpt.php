@@ -6,15 +6,17 @@ Version: 0.2
 Author: Raymon Mens
 */
 
-require_once(plugin_dir_path(__FILE__) . 'options.php');
+require_once(plugin_dir_path(__FILE__) . 'options-page.php');
 
 class TekstTVGPT {
     private $api_key;
     private $word_limit = 100;
+    private $model;
 
     public function __construct() {
         $this->api_key = get_option('ttvgpt_api_key', '');
         $this->word_limit = get_option('ttvgpt_word_limit', 100);
+        $this->model = get_option('ttvgpt_model', 'gpt-4');
 
         add_action('admin_enqueue_scripts', array($this, 'enqueue_scripts'));
         add_action('admin_footer', array($this, 'generate_summary_button'));
@@ -83,7 +85,7 @@ class TekstTVGPT {
 
         $data = [
             'max_tokens' => 256,
-            'model' => 'ft:gpt-3.5-turbo-0613:personal::871wJ7cX',
+            'model' => $this->model,
             'messages' => [
                 [
                     'role' => 'system',

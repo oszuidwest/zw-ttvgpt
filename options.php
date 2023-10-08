@@ -8,11 +8,11 @@ class TekstTVGPT_OptionsPage {
 
     public function add_plugin_page() {
         add_options_page(
-            'Tekst TV GPT Settings', // page_title
-            'Tekst TV GPT', // menu_title
-            'manage_options', // capability
-            'ttvgpt-setting-admin', // menu_slug
-            array($this, 'create_admin_page') // function
+            'Tekst TV GPT Settings',
+            'Tekst TV GPT',
+            'manage_options',
+            'ttvgpt-setting-admin',
+            array($this, 'create_admin_page')
         );
     }
 
@@ -33,37 +33,51 @@ class TekstTVGPT_OptionsPage {
 
     public function page_init() {
         register_setting(
-            'ttvgpt_option_group', // option_group
-            'ttvgpt_api_key', // option_name
-            array($this, 'sanitize') // sanitize_callback
+            'ttvgpt_option_group',
+            'ttvgpt_api_key',
+            array($this, 'sanitize')
         );
 
         register_setting(
-            'ttvgpt_option_group', // option_group
-            'ttvgpt_word_limit', // option_name
-            array($this, 'sanitize') // sanitize_callback
+            'ttvgpt_option_group',
+            'ttvgpt_word_limit',
+            array($this, 'sanitize')
+        );
+
+        register_setting(
+            'ttvgpt_option_group',
+            'ttvgpt_model',
+            array($this, 'sanitize')
         );
 
         add_settings_section(
-            'setting_section_id', // id
-            'Settings', // title
-            array($this, 'print_section_info'), // callback
-            'ttvgpt-setting-admin' // page
+            'setting_section_id',
+            'Settings',
+            array($this, 'print_section_info'),
+            'ttvgpt-setting-admin'
         );
 
         add_settings_field(
-            'api_key', // id
-            'API Key', // title
-            array($this, 'api_key_callback'), // callback
-            'ttvgpt-setting-admin', // page
-            'setting_section_id' // section
+            'api_key',
+            'API Key',
+            array($this, 'api_key_callback'),
+            'ttvgpt-setting-admin',
+            'setting_section_id'
         );
 
         add_settings_field(
-            'word_limit', 
-            'Word Limit', 
-            array($this, 'word_limit_callback'), 
-            'ttvgpt-setting-admin', 
+            'word_limit',
+            'Word Limit',
+            array($this, 'word_limit_callback'),
+            'ttvgpt-setting-admin',
+            'setting_section_id'
+        );
+
+        add_settings_field(
+            'model',
+            'Model',
+            array($this, 'model_callback'),
+            'ttvgpt-setting-admin',
             'setting_section_id'
         );
     }
@@ -87,6 +101,13 @@ class TekstTVGPT_OptionsPage {
         printf(
             '<input type="number" id="word_limit" name="ttvgpt_word_limit" value="%s" min="1" />',
             esc_attr(get_option('ttvgpt_word_limit', 100))
+        );
+    }
+
+    public function model_callback() {
+        printf(
+            '<input type="text" id="model" name="ttvgpt_model" value="%s" style="width: 300px;" placeholder="gpt-4" />',
+            esc_attr(get_option('ttvgpt_model', 'gpt-4'))
         );
     }
 }
