@@ -1,8 +1,8 @@
 <?php
 /*
-Plugin Name: Article Summary Generator
-Description: Generates a summary of an article using GPT-3.5 API and places it in a specified textarea.
-Version: 1.0
+Plugin Name: Tekst TV GPT
+Description: Maakt met OpenAI's GPT een samenvatting van een artikel voor op Tekst TV en plaatst dit in het juiste ACF-veld
+Version: 0.1
 Author: Raymon Mens
 */
 
@@ -87,7 +87,7 @@ function asg_generate_summary_using_gpt35($content) {
 
     $data = [
         'max_tokens' => 256,
-        'model' => 'gpt-4',
+        'model' => 'ft:gpt-3.5-turbo-0613:personal::871wJ7cX',
         'messages' => [
             [
                 'role' => 'system',

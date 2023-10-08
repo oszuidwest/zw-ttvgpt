@@ -19,7 +19,7 @@ function generateSummary() {
     // Disable the "Generate summary" button, show a spinner, and update the summary textarea
     generateSummaryButton.classList.add('disabled');
     summaryTextarea.disabled = true;
-    summaryTextarea.value = '\u2728 ChatGPT aan het raadplegen. Dit duurt een paar seconden...';
+    summaryTextarea.value = '\u2728 KabelkrantGPT aan het raadplegen. Dit duurt een paar seconden...';
     const spinner = document.createElement('span');
     spinner.className = 'spinner is-active';
     generateSummaryButton.parentNode.insertBefore(spinner, generateSummaryButton.nextSibling);
