@@ -17,7 +17,7 @@ function ttvgpt_enqueue_scripts($hook) {
         return;
     }
 
-    wp_enqueue_script('article-summary-generator', plugin_dir_url(__FILE__) . 'teksttvgpt.js', array('jquery'), '1.0', true);
+    wp_enqueue_script('article-summary-generator', plugin_dir_url(__FILE__) . 'ttvgpt.js', array('jquery'), '1.0', true);
     wp_localize_script('article-summary-generator', 'ttvgpt_ajax_vars', array(
         'nonce' => wp_create_nonce('ttvgpt-ajax-nonce')
     ));
@@ -58,7 +58,7 @@ function ttvgpt_generate_summary_ajax() {
 
     if (isset($_POST['content'])) {
         $content = $_POST['content'];
-        $summary = ttvgpt_generate_summary_using_gpt35($content);
+        $summary = ttvgpt_generate_gpt_summary($content);
         echo $summary;
     }
 
@@ -67,7 +67,7 @@ function ttvgpt_generate_summary_ajax() {
 
 add_action('wp_ajax_generate_summary', 'ttvgpt_generate_summary_ajax');
 
-function ttvgpt_generate_summary_using_gpt35($content) {
+function ttvgpt_generate_gpt_summary($content) {
     global $hardcoded_api_key, $hardcoded_word_limit;
 
     // Check if the word count in the content is less than 30
