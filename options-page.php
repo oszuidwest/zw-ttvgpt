@@ -117,12 +117,11 @@ class TekstTVGPT_OptionsPage {
         );
     }
 
-    public function word_limit_callback() {
+    public function model_callback() {
         printf(
-            '<input type="number" id="word_limit" name="ttvgpt_word_limit" value="%s" min="1" />',
-            esc_attr(get_option('ttvgpt_word_limit', 100))
+            '<input type="text" id="model" name="ttvgpt_model" value="%s" style="width: 300px;" placeholder="gpt-4" />',
+            esc_attr(get_option('ttvgpt_model', 'gpt-4'))
         );
-        echo '<p class="description">GPT models are not very good at respecting the amount of words. This is only an indicator, not a hard limit.</p>';
     }
 }
 
