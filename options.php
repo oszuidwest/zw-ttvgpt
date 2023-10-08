@@ -1,12 +1,15 @@
 <?php
 
-class TekstTVGPT_OptionsPage {
-    public function __construct() {
+class TekstTVGPT_OptionsPage
+{
+    public function __construct()
+    {
         add_action('admin_menu', array($this, 'add_plugin_page'));
         add_action('admin_init', array($this, 'page_init'));
     }
 
-    public function add_plugin_page() {
+    public function add_plugin_page()
+    {
         add_options_page(
             'Tekst TV GPT Settings',
             'Tekst TV GPT',
@@ -16,7 +19,8 @@ class TekstTVGPT_OptionsPage {
         );
     }
 
-    public function create_admin_page() {
+    public function create_admin_page()
+    {
         ?>
         <div class="wrap">
             <h1>Tekst TV GPT Settings</h1>
@@ -31,7 +35,8 @@ class TekstTVGPT_OptionsPage {
         <?php
     }
 
-    public function page_init() {
+    public function page_init()
+    {
         // Register settings with combined validation and sanitization callback
         register_setting(
             'ttvgpt_option_group',
@@ -85,7 +90,8 @@ class TekstTVGPT_OptionsPage {
         );
     }
 
-    public function sanitize_and_validate_field($input) {
+    public function sanitize_and_validate_field($input)
+    {
         // If the field is empty, add an error message and revert the option to its old value.
         if (empty($input)) {
             add_settings_error(
@@ -99,18 +105,21 @@ class TekstTVGPT_OptionsPage {
         return sanitize_text_field($input);
     }
 
-    public function print_section_info() {
+    public function print_section_info()
+    {
         print('Enter your settings below:');
     }
 
-    public function api_key_callback() {
+    public function api_key_callback()
+    {
         printf(
             '<input type="text" id="api_key" name="ttvgpt_api_key" value="%s" style="width: 300px;" />',
             esc_attr(get_option('ttvgpt_api_key'))
         );
     }
 
-    public function word_limit_callback() {
+    public function word_limit_callback()
+    {
         printf(
             '<input type="number" id="word_limit" name="ttvgpt_word_limit" value="%s" min="1" />',
             esc_attr(get_option('ttvgpt_word_limit', 100))
@@ -118,7 +127,8 @@ class TekstTVGPT_OptionsPage {
         echo '<p class="description">GPT models are not very good at respecting the amount of words. This is only an indicator, not a hard limit.</p>';
     }
 
-    public function model_callback() {
+    public function model_callback()
+    {
         printf(
             '<input type="text" id="model" name="ttvgpt_model" value="%s" style="width: 300px;" placeholder="gpt-4" />',
             esc_attr(get_option('ttvgpt_model', 'gpt-4'))

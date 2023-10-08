@@ -8,12 +8,14 @@ Author: Raymon Mens
 
 require_once(plugin_dir_path(__FILE__) . 'options.php');
 
-class TekstTVGPT {
+class TekstTVGPT
+{
     private $api_key;
     private $word_limit = 100;
     private $model;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->api_key = get_option('ttvgpt_api_key', '');
         $this->word_limit = get_option('ttvgpt_word_limit', 100);
         $this->model = get_option('ttvgpt_model', 'gpt-4');
@@ -23,7 +25,8 @@ class TekstTVGPT {
         add_action('wp_ajax_generate_summary', array($this, 'generate_summary_ajax'));
     }
 
-    public function enqueue_scripts($hook) {
+    public function enqueue_scripts($hook)
+    {
         if ('post.php' !== $hook && 'post-new.php' !== $hook) {
             return;
         }
@@ -34,7 +37,8 @@ class TekstTVGPT {
         ));
     }
 
-    public function generate_summary_button() {
+    public function generate_summary_button()
+    {
         ?>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
@@ -60,7 +64,8 @@ class TekstTVGPT {
         <?php
     }
 
-    public function generate_summary_ajax() {
+    public function generate_summary_ajax()
+    {
         check_ajax_referer('ttvgpt-ajax-nonce', '_ajax_nonce');
 
         if (isset($_POST['content'])) {
@@ -72,9 +77,10 @@ class TekstTVGPT {
         wp_die();
     }
 
-    private function generate_gpt_summary($content) {
+    private function generate_gpt_summary($content)
+    {
         if (str_word_count($content) < 30) {
-            return "Te weinig woorden om een bericht te maken. Er zijn er minimaal 30 nodig.";
+            return 'Te weinig woorden om een bericht te maken. Er zijn er minimaal 30 nodig.';
         }
 
         if (empty($this->api_key)) {
@@ -89,7 +95,7 @@ class TekstTVGPT {
             'messages' => [
                 [
                     'role' => 'system',
-                    'content' => "Please summarize the following news article in a clear and concise manner that is easy to understand for a general audience. Use short sentences. Do it in Dutch. Ignore everything in the article that's not a Dutch word. Parse HTML. Never output English words. Use maximal " . $this->word_limit . " words."
+                    'content' => "Please summarize the following news article in a clear and concise manner that is easy to understand for a general audience. Use short sentences. Do it in Dutch. Ignore everything in the article that's not a Dutch word. Parse HTML. Never output English words. Use maximal " . $this->word_limit . ' words.'
                 ],
                 [
                     'role' => 'user',
