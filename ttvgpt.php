@@ -6,7 +6,7 @@ Version: 0.2
 Author: Raymon Mens
 */
 
-require_once(plugin_dir_path(__FILE__) . 'options-page.php');
+require_once(plugin_dir_path(__FILE__) . 'options.php');
 
 class TekstTVGPT {
     private $api_key;
