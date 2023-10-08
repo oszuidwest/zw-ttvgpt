@@ -2,7 +2,7 @@
 /*
 Plugin Name: Tekst TV GPT
 Description: Maakt met OpenAI's GPT een samenvatting van een artikel voor op Tekst TV en plaatst dit in het juiste ACF-veld
-Version: 0.1
+Version: 0.2
 Author: Raymon Mens
 */
 
@@ -10,22 +10,22 @@ Author: Raymon Mens
 $hardcoded_api_key = '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';
 $hardcoded_word_limit = 100;
 
-function asg_enqueue_scripts($hook) {
+function ttvgpt_enqueue_scripts($hook) {
     global $hardcoded_api_key, $hardcoded_word_limit;
 
     if ('post.php' != $hook && 'post-new.php' != $hook) {
         return;
     }
 
-    wp_enqueue_script('article-summary-generator', plugin_dir_url(__FILE__) . 'asg.js', array('jquery'), '1.0', true);
-    wp_localize_script('article-summary-generator', 'asg_ajax_vars', array(
-        'nonce' => wp_create_nonce('asg-ajax-nonce')
+    wp_enqueue_script('article-summary-generator', plugin_dir_url(__FILE__) . 'ttvgpt.js', array('jquery'), '1.0', true);
+    wp_localize_script('article-summary-generator', 'ttvgpt_ajax_vars', array(
+        'nonce' => wp_create_nonce('ttvgpt-ajax-nonce')
     ));
 }
 
-add_action('admin_enqueue_scripts', 'asg_enqueue_scripts');
+add_action('admin_enqueue_scripts', 'ttvgpt_enqueue_scripts');
 
-function asg_generate_summary_button() {
+function ttvgpt_generate_summary_button() {
     ?>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -51,23 +51,23 @@ function asg_generate_summary_button() {
     <?php
 }
 
-add_action('admin_footer', 'asg_generate_summary_button');
+add_action('admin_footer', 'ttvgpt_generate_summary_button');
 
-function asg_generate_summary_ajax() {
-    check_ajax_referer('asg-ajax-nonce', '_ajax_nonce');
+function ttvgpt_generate_summary_ajax() {
+    check_ajax_referer('ttvgpt-ajax-nonce', '_ajax_nonce');
 
     if (isset($_POST['content'])) {
         $content = $_POST['content'];
-        $summary = asg_generate_summary_using_gpt35($content);
+        $summary = ttvgpt_generate_gpt_summary($content);
         echo $summary;
     }
 
     wp_die();
 }
 
-add_action('wp_ajax_generate_summary', 'asg_generate_summary_ajax');
+add_action('wp_ajax_generate_summary', 'ttvgpt_generate_summary_ajax');
 
-function asg_generate_summary_using_gpt35($content) {
+function ttvgpt_generate_gpt_summary($content) {
     global $hardcoded_api_key, $hardcoded_word_limit;
 
     // Check if the word count in the content is less than 30

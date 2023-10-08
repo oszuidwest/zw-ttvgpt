@@ -28,7 +28,7 @@ function generateSummary() {
     jQuery.post(ajaxurl, {
         action: 'generate_summary',
         content: content,
-        _ajax_nonce: asg_ajax_vars.nonce
+        _ajax_nonce: ttvgpt_ajax_vars.nonce
     }).done(function(summary) {
         // Add selected regio labels to the summary
         summary = `${selectedRegios.join(' / ')} - ${summary}`;
