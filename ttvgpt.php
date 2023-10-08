@@ -79,8 +79,8 @@ class TekstTVGPT
 
     private function generate_gpt_summary($content)
     {
-        if (str_word_count($content) < 30) {
-            return 'Te weinig woorden om een bericht te maken. Er zijn er minimaal 30 nodig.';
+        if (str_word_count($content) < 100) {
+            return 'Te weinig woorden om een bericht te maken. Er zijn er minimaal 100 nodig.';
         }
 
         if (empty($this->api_key)) {
