@@ -32,24 +32,26 @@ class TekstTVGPT_OptionsPage {
     }
 
     public function page_init() {
+        // Register settings with validation and sanitization callbacks
         register_setting(
             'ttvgpt_option_group',
             'ttvgpt_api_key',
-            array($this, 'sanitize')
+            array('sanitize_callback' => array($this, 'sanitize_field'), 'validate_callback' => array($this, 'validate_field'))
         );
 
         register_setting(
             'ttvgpt_option_group',
             'ttvgpt_word_limit',
-            array($this, 'sanitize')
+            array('sanitize_callback' => array($this, 'sanitize_field'), 'validate_callback' => array($this, 'validate_field'))
         );
 
         register_setting(
             'ttvgpt_option_group',
             'ttvgpt_model',
-            array($this, 'sanitize')
+            array('sanitize_callback' => array($this, 'sanitize_field'), 'validate_callback' => array($this, 'validate_field'))
         );
 
+        // Add settings section
         add_settings_section(
             'setting_section_id',
             'Settings',
@@ -57,6 +59,7 @@ class TekstTVGPT_OptionsPage {
             'ttvgpt-setting-admin'
         );
 
+        // Add settings fields
         add_settings_field(
             'api_key',
             'API Key',
@@ -82,7 +85,21 @@ class TekstTVGPT_OptionsPage {
         );
     }
 
-    public function sanitize($input) {
+    public function validate_field($input) {
+        // If the field is empty, add an error message and revert the option to its old value.
+        if (empty($input)) {
+            add_settings_error(
+                'ttvgpt_settings_error',
+                esc_attr('settings_updated'),
+                'All fields are mandatory!',
+                'error'
+            );
+            return get_option(current_filter()); // Return old value.
+        }
+        return $input;
+    }
+
+    public function sanitize_field($input) {
         return sanitize_text_field($input);
     }
 
