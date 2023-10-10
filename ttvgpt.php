@@ -69,7 +69,7 @@ class TekstTVGPT
         check_ajax_referer('ttvgpt-ajax-nonce', '_ajax_nonce');
 
         if (isset($_POST['content'])) {
-            $content = $_POST['content'];
+            $content = sanitize_text_field($_POST['content']);
             $summary = $this->generate_gpt_summary($content);
             echo esc_html($summary);
         }
