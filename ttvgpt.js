@@ -37,7 +37,7 @@ function generateSummary() {
     generateSummaryButton.nextSibling,
   );
 
-  // Call the PHP function to generate the summary using the GPT-3.5 API
+  // Call the PHP function to generate the summary using the OpenAI API
   jQuery
     .post(ajaxurl, {
       action: "generate_summary",
