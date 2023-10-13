@@ -7,7 +7,7 @@
     <arg value="nps"/>
 
     <file>ttvgpt.php</file>
-    <file>options.php</file>
+    <file>src/</file>
 
     <!-- Fix crash on PHP 8 -->
     <ini name="error_reporting" value="E_ALL &#38; ~E_DEPRECATED"/>
@@ -28,7 +28,7 @@
     <!-- WordPress -->
     <rule ref="WordPress.NamingConventions.PrefixAllGlobals">
         <properties>
-            <property name="prefixes" type="array" value="zw_webapp_"/>
+            <property name="prefixes" type="array" value="zw_teksttvgpt_,ZuidWest\TekstTVGPT"/>
         </properties>
     </rule>
     <rule ref="Generic.CodeAnalysis.EmptyPHPStatement"/>

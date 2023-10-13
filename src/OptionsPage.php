@@ -1,6 +1,8 @@
 <?php
 
-class TekstTVGPT_OptionsPage
+namespace ZuidWest\TekstTVGPT;
+
+class OptionsPage
 {
     public function __construct()
     {
@@ -134,8 +136,4 @@ class TekstTVGPT_OptionsPage
             esc_attr(get_option('ttvgpt_model', 'gpt-4'))
         );
     }
-}
-
-if (is_admin()) {
-    new TekstTVGPT_OptionsPage();
 }
