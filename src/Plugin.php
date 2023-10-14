@@ -86,6 +86,7 @@ class Plugin
         $data = [
             'max_tokens' => 256,
             'model' => $this->model,
+            'temperature' => 0.1,
             'messages' => [
                 [
                     'role' => 'system',
