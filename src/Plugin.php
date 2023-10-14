@@ -25,8 +25,8 @@ class Plugin
             return;
         }
 
-        wp_enqueue_script('article-summary-generator', plugin_dir_url(__FILE__) . 'ttvgpt.js', array('jquery'), '1.0', true);
-        wp_localize_script('article-summary-generator', 'ttvgpt_ajax_vars', array(
+        wp_enqueue_script('ttvgpt', plugin_dir_url(__FILE__) . 'ttvgpt.js', array('jquery'), '1.0', true);
+        wp_localize_script('ttvgpt', 'ttvgpt_ajax_vars', array(
             'nonce' => wp_create_nonce('ttvgpt-ajax-nonce')
         ));
     }
