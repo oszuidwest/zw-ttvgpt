@@ -29,7 +29,7 @@ function generateSummary() {
   generateSummaryButton.classList.add("disabled");
   summaryTextarea.disabled = true;
   summaryTextarea.value =
-    "\u2728 KabelkrantGPT aan het raadplegen. Dit duurt een paar seconden...";
+    "\u2728 AI aan het raadplegen. Dit duurt een paar seconden...";
   const spinner = document.createElement("span");
   spinner.className = "spinner is-active";
   generateSummaryButton.parentNode.insertBefore(
