@@ -25,7 +25,7 @@ class Plugin
             return;
         }
 
-        wp_enqueue_script('ttvgpt', plugin_dir_url(__FILE__) . '../ttvgpt.js', array('jquery'), '1.0-a', true);
+        wp_enqueue_script('ttvgpt', plugin_dir_url(__FILE__) . '../ttvgpt.js', array('jquery'), '1.0', true);
         wp_localize_script('ttvgpt', 'ttvgpt_ajax_vars', array(
             'nonce' => wp_create_nonce('ttvgpt-ajax-nonce')
         ));
@@ -73,12 +73,14 @@ class Plugin
 
     private function generate_gpt_summary($content)
     {
+        header('Content-Type: text/plain; charset=utf-8');
+
         if (str_word_count($content) < 100) {
-            return 'Te weinig woorden om een bericht te maken. Er zijn er minimaal 100 nodig.';
+            echo 'Te weinig woorden om een bericht te maken. Er zijn er minimaal 100 nodig.';
         }
 
         if (empty($this->api_key)) {
-            return 'API Key niet ingevuld. Kan geen bericht genereren.';
+            echo 'API Key niet ingevuld. Kan geen bericht genereren.';
         }
 
         $endpoint_url = 'https://api.openai.com/v1/chat/completions';
@@ -109,19 +111,17 @@ class Plugin
         ]);
 
         if (is_wp_error($response)) {
-            return $response->get_error_message();
+            echo $response->get_error_message();
         }
 
         $body = wp_remote_retrieve_body($response);
         $result = json_decode($body, true);
 
         if (isset($result['choices'][0]['message']['content'])) {
-            header('Content-Type: text/plain; charset=utf-8');
             $summary = $result['choices'][0]['message']['content'];
             echo trim($summary);
         } else {
             echo 'Er ging iets mis bij het maken van het bericht.';
-            wp_die();
         }
     }
 }
