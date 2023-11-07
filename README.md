@@ -9,10 +9,10 @@ De Tekst TV GPT-plugin voor WordPress gebruikt OpenAI's GPT-modellen om automati
 - **Integratie met OpenAI API:** Maakt gebruik van OpenAI's geavanceerde verwerking van natuurlijke taal om samenvattingen te creëren die zowel nauwkeurig als samenhangend zijn.
 - **Foutafhandeling:** Handelt fouten netjes af, zoals onvoldoende woordenaantal of ontbrekende API-sleutels.
 
-## Installatie
+## Installatie en configuratie
 1. Upload de pluginbestanden naar de `/wp-content/plugins/` directory.
 2. Activeer de plugin via het 'Plugins' scherm in WordPress.
-3. Gebruik de plugin via de editor waar de `generateSummary` knop beschikbaar is.
+3. Ga in WordPress naar *Instellingen* > *Tekst TV GPT* en vul de API Key, het aantal woorden en het model (`gpt3.5-turbo` `gpt-4` of `gpt4-turbo` in)
 
 ## Gebruik
 - Zorg ervoor dat de OpenAI API-sleutel correct is geconfigureerd in de plugininstellingen.
@@ -20,13 +20,13 @@ De Tekst TV GPT-plugin voor WordPress gebruikt OpenAI's GPT-modellen om automati
 - De gegenereerde samenvatting wordt weergegeven in een speciaal tekstveld.
 
 ## Vereisten
-- Gebruik van het streekomroep WordPress-thema *
-- Classic Editor geactiveerd in WordPress
+- Gebruik van het streekomroep WordPress-thema.
+- Classic Editor geactiveerd in WordPress.
 - Een geldige OpenAI API-sleutel.
 - WordPress 6.0 of hoger.
-- PHP 8.1 of hoger.
+- PHP 7.4 of hoger.
 
-__* Deze plug-in is gemaakt als 'first party addon' voor het streekomroep WordPress-thema van ZuidWest TV. Dit thema is gratis te downloaden. Met kleine aanpassingen zou de plugin met ieder thema kunnen werken.__
+_Deze plug-in is gemaakt als 'first party addon' voor het streekomroep WordPress-thema van ZuidWest TV. Dit thema is gratis te downloaden. Met kleine aanpassingen zou de plugin met ieder thema kunnen werken._
 
 ## Licentie
 Deze plugin is gelicenseerd onder de [LICENTIE](LICENSE) die in de repository is opgenomen.
