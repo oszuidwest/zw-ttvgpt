@@ -65,7 +65,9 @@ class Plugin
         if (isset($_POST['content'])) {
             $content = sanitize_text_field(wp_unslash($_POST['content']));
             $summary = $this->generate_gpt_summary($content);
-            echo esc_html($summary);
+
+            header('Content-Type: text/plain; charset=utf-8');
+            echo $summary;
         }
 
         wp_die();
