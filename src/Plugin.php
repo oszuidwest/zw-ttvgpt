@@ -116,10 +116,12 @@ class Plugin
         $result = json_decode($body, true);
 
         if (isset($result['choices'][0]['message']['content'])) {
+            header('Content-Type: text/plain; charset=utf-8');
             $summary = $result['choices'][0]['message']['content'];
-            return trim($summary);
+            echo trim($summary);
         } else {
-            return 'Er ging iets mis bij het maken van het bericht.';
+            echo 'Er ging iets mis bij het maken van het bericht.';
+            wp_die();
         }
     }
 }
