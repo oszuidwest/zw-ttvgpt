@@ -42,6 +42,7 @@ function generateSummary() {
     .post(ajaxurl, {
       action: "generate_summary",
       content: content,
+      dataType: 'text',
       _ajax_nonce: ttvgpt_ajax_vars.nonce,
     })
     .done(function (summary) {
