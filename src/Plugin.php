@@ -65,7 +65,9 @@ class Plugin
         if (isset($_POST['content'])) {
             $content = sanitize_text_field(wp_unslash($_POST['content']));
             $summary = $this->generate_gpt_summary($content);
-            echo esc_html($summary);
+
+            header('Content-Type: text/plain; charset=utf-8');
+            echo $summary;
         }
 
         wp_die();
@@ -73,15 +75,13 @@ class Plugin
 
     private function generate_gpt_summary($content)
     {
-        header('Content-Type: text/plain; charset=utf-8');
-
         if (str_word_count($content) < 100) {
             echo 'Te weinig woorden om een bericht te maken. Er zijn er minimaal 100 nodig.';
             wp_die();
         }
 
         if (empty($this->api_key)) {
-            echo 'API Key niet ingevuld. Kan geen bericht genereren.';
+            return 'API Key niet ingevuld. Kan geen bericht genereren.';
         }
 
         $endpoint_url = 'https://api.openai.com/v1/chat/completions';
@@ -112,7 +112,7 @@ class Plugin
         ]);
 
         if (is_wp_error($response)) {
-            echo $response->get_error_message();
+            return $response->get_error_message();
         }
 
         $body = wp_remote_retrieve_body($response);
@@ -120,10 +120,9 @@ class Plugin
 
         if (isset($result['choices'][0]['message']['content'])) {
             $summary = $result['choices'][0]['message']['content'];
-            echo trim($summary);
-            wp_die();
+            return trim($summary);
         } else {
-            echo 'Er ging iets mis bij het maken van het bericht.';
+            return 'Er ging iets mis bij het maken van het bericht.';
         }
     }
 }
