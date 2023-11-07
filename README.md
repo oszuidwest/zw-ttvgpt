@@ -1,6 +1,6 @@
-# TextTV GPT WordPress Plugin
+# Tekst TV GPT WordPress Plugin
 
-De TextTV GPT-plugin voor WordPress gebruikt OpenAI's GPT-modellen om automatisch korte versies van artikelen te maken. Deze kunnen gebruikt worden voor een tekst tv-uitzending ('kabelkrant') of teletekst.
+De Tekst TV GPT-plugin voor WordPress gebruikt OpenAI's GPT-modellen om automatisch korte versies van artikelen te maken. Deze kunnen gebruikt worden voor een tekst tv-uitzending ('kabelkrant') of teletekst.
 
 ## Kenmerken
 - **AJAX-aangedreven samenvattingsgeneratie:** Genereert samenvattingen zonder de pagina te herladen voor een naadloze gebruikerservaring.
