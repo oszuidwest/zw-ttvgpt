@@ -18,13 +18,13 @@ De TextTV GPT-plugin voor WordPress gebruikt OpenAI's GPT-modellen om automatisc
 - De gegenereerde samenvatting wordt weergegeven in een speciaal tekstveld.
 
 ## Vereisten
-- Gebruik van het streekomroep Wordpress-thema *
-- Classic Editor in Wordpress
+- Gebruik van het streekomroep WordPress-thema *
+- Classic Editor geactiveerd in WordPress
 - Een geldige OpenAI API-sleutel.
 - WordPress 6.0 of hoger.
-- PHP 8.1 of hoger
+- PHP 8.1 of hoger.
 
-* Deze plug-in is gemaakt als 'first party addon' voor het streekomroep Wordpress-thema van ZuidWest TV. Dit thema is gratis te downloaden. Met kleine aanpassingen zou de plugin met ieder thema kunnen werken.
+__* Deze plug-in is gemaakt als 'first party addon' voor het streekomroep WordPress-thema van ZuidWest TV. Dit thema is gratis te downloaden. Met kleine aanpassingen zou de plugin met ieder thema kunnen werken.__
 
 ## Licentie
 Deze plugin is gelicenseerd onder de [LICENTIE](LICENSE) die in de repository is opgenomen.
