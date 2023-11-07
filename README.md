@@ -28,7 +28,7 @@ De beste resultaten worden met GPT 4 behaald. Dit model is echter traag (20 seco
 - Een geldige OpenAI API-sleutel.
 - WordPress 6.0 of hoger met PHP 7.4 of hoger.
 
-_Deze plug-in is gemaakt als 'first party addon' voor het WordPress-thema van ZuidWest TV. Dit thema is gratis te downloaden. Met kleine aanpassingen zou de plugin met ieder thema kunnen werken._
+_Deze plug-in is gemaakt als 'first party addon' voor het WordPress-thema van ZuidWest TV. Dit thema is [gratis te downloaden]([url](https://github.com/oszuidwest/streekomroep-wp)). Met kleine aanpassingen zou de plugin met ieder thema kunnen werken._
 
 ## Licentie
 Deze plugin is gelicenseerd onder de [LICENTIE](LICENSE) die in de repository is opgenomen.
