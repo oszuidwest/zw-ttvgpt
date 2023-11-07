@@ -76,8 +76,7 @@ class Plugin
     private function generate_gpt_summary($content)
     {
         if (str_word_count($content) < 100) {
-            echo 'Te weinig woorden om een bericht te maken. Er zijn er minimaal 100 nodig.';
-            wp_die();
+            return 'Te weinig woorden om een bericht te maken. Er zijn er minimaal 100 nodig.';
         }
 
         if (empty($this->api_key)) {
