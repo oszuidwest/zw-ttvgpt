@@ -77,6 +77,7 @@ class Plugin
 
         if (str_word_count($content) < 100) {
             echo 'Te weinig woorden om een bericht te maken. Er zijn er minimaal 100 nodig.';
+            wp_die();
         }
 
         if (empty($this->api_key)) {
@@ -120,6 +121,7 @@ class Plugin
         if (isset($result['choices'][0]['message']['content'])) {
             $summary = $result['choices'][0]['message']['content'];
             echo trim($summary);
+            wp_die();
         } else {
             echo 'Er ging iets mis bij het maken van het bericht.';
         }
