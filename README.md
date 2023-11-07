@@ -14,6 +14,9 @@ De Tekst TV GPT-plugin voor WordPress gebruikt OpenAI's GPT-modellen om automati
 2. Activeer de plugin via het 'Plugins' scherm in WordPress.
 3. Ga in WordPress naar *Instellingen* > *Tekst TV GPT* en vul de API Key, het aantal woorden en het model (`gpt3.5-turbo` `gpt-4` of `gpt4-turbo` in)
 
+### Modelselectie
+De beste resultaten worden met GPT 4 behaald. Dit model is echter traag (20 seconden voor één samenvatting). De kwaliteit van GPT 3.5 is lager, maar de snelheid is veel acceptabeler. GPT 4 Tubo is op moment van schrijven ongetest.
+ 
 ## Gebruik
 - Zorg ervoor dat de OpenAI API-sleutel correct is geconfigureerd in de plugininstellingen.
 - In de WordPress-editor ziet u een "Genereer Samenvatting" knop. Door op deze knop te klikken, wordt het proces van samenvattingsgeneratie geactiveerd.
