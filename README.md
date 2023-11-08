@@ -7,7 +7,7 @@ De Tekst TV GPT-plugin voor WordPress gebruikt OpenAI's GPT-modellen om automati
 ## Kenmerken
 - **AJAX-aangedreven samenvattingsgeneratie:** Genereert samenvattingen en plaatst deze automatisch in het juiste veld.
 - **Integratie met OpenAI API:** Maakt gebruik van een van OpenAI's vrij te kiezen taalmodellen.
-- **Foutafhandeling:** Handelt fouten netjes af, zoals te kote berichten of ontbrekende API-sleutels.
+- **Foutafhandeling:** Handelt fouten netjes af, zoals te korte berichten of ontbrekende API-sleutels.
 
 ## Installatie en configuratie
 1. Upload de pluginbestanden naar de `/wp-content/plugins/` directory.
@@ -15,11 +15,11 @@ De Tekst TV GPT-plugin voor WordPress gebruikt OpenAI's GPT-modellen om automati
 3. Ga in WordPress naar *Instellingen* > *Tekst TV GPT* en vul de API Key, het aantal woorden en het model (`gpt3.5-turbo`, `gpt-4` of `gpt-4-1106-preview` (dit is GPT 4 Turbo)) in.
 
 ### Modelselectie
-De beste resultaten worden met GPT 4 behaald. Dit model is echter traag (20 seconden voor één samenvatting). De kwaliteit van GPT 3.5 is lager, maar de snelheid is veel acceptabeler. GPT 4 Tubo is op moment van schrijven ongetest.
+De beste resultaten worden met GPT 4 behaald. Dit model is echter traag (20 seconden voor één samenvatting). De kwaliteit van GPT 3.5 is lager, maar de snelheid is veel acceptabeler. GPT 4 Turbo is op moment van schrijven ongetest.
  
 ## Gebruik
 - Zorg ervoor dat de OpenAI API-sleutel correct is geconfigureerd in de plugininstellingen.
-- In de WordPress-editor ziet u een "Genereer Samenvatting" knop. Door op deze knop te klikken, wordt het proces van samenvattingsgeneratie geactiveerd.
+- In de WordPress-editor staat onder het veld voor de tekst tv-versie van een bericht een "Genereer" knop. Door op deze knop te klikken, wordt het proces van samenvattingsgeneratie geactiveerd.
 - De gegenereerde samenvatting wordt weergegeven in een speciaal tekstveld.
 
 ## Vereisten
