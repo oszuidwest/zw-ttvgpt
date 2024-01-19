@@ -1,4 +1,4 @@
-# Tekst TV GPT WordPress Plugin
+# Tekst TV GPT
 
 De Tekst TV GPT-plugin voor WordPress gebruikt OpenAI's GPT-modellen om automatisch korte versies van artikelen te maken. Deze kunnen gebruikt worden voor een tekst tv-uitzending ('kabelkrant') of teletekst.
 
