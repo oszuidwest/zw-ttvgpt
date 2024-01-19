@@ -43,3 +43,4 @@ jobs:
             late_escaping
             plugin_review_phpcs
             file_type
+            plugin_readme
