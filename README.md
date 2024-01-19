@@ -26,7 +26,7 @@ De beste resultaten worden met GPT 4 behaald. Dit model is echter traag (20 seco
 - Gebruik van het ZuidWest TV WordPress-thema.
 - Classic Editor geactiveerd in WordPress. Block Editor wordt niet ondersteund en is niet getest.
 - Een geldige OpenAI API-sleutel.
-- WordPress 6.0 of hoger met PHP 8.2 of hoger.
+- WordPress 6.4 of hoger met PHP 8.2 of hoger.
 
 _Deze plug-in is gemaakt als 'first party addon' voor het WordPress-thema van ZuidWest TV. Dit thema is [gratis te downloaden](https://github.com/oszuidwest/streekomroep-wp). Met kleine aanpassingen zou de plugin echter met ieder thema kunnen werken._
 

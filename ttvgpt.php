@@ -3,7 +3,7 @@
 Plugin Name: Tekst TV GPT
 Description: Maakt met OpenAI's GPT een samenvatting van een artikel voor op Tekst TV en plaatst dit in het juiste ACF-veld
 Version: 0.5
-Author: Raymon Mens
+Author: Streekomroep ZuidWest
 */
 
 use ZuidWest\TekstTVGPT\OptionsPage;
