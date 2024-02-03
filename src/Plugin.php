@@ -86,7 +86,7 @@ class Plugin
         $endpoint_url = 'https://api.openai.com/v1/chat/completions';
 
         $data = [
-            'max_tokens' => 4096,
+            'max_tokens' => 1024,
             'model' => $this->model,
             'temperature' => 0.8,
             'messages' => [
