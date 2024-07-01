@@ -37,7 +37,7 @@ jobs:
       - run: ./vendor/bin/phpstan analyse --error-format=checkstyle | cs2pr
 
       - name: Run wp-plugin-check
-        uses: swissspidy/wp-plugin-check-action@v1
+        uses: wordpress/plugin-check-action@v1
         with:
           exclude-checks: |
             late_escaping
