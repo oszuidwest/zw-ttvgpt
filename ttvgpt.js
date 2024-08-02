@@ -1,6 +1,7 @@
 function generateSummary() {
   const contentTextarea = document.querySelector(".wp-editor-area");
   const summaryTextarea = document.querySelector("#acf-field_5f21a06d22c58");
+  const summaryGptTextarea = document.querySelector("#acf-field_66ad2a3105371");
   const generateSummaryButton = document.querySelector(
     ".generate-summary-button",
   );
@@ -50,6 +51,7 @@ function generateSummary() {
 
       // Clear the placeholder and simulate typing effect by adding each character with random delays
       summaryTextarea.value = "";
+      summaryGptTextarea.value = summary;
       let i = 0;
 
       function typeCharacter() {
