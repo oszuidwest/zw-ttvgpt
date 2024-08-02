@@ -127,9 +127,9 @@ class Plugin
 }
 
 add_action('admin_head', function () {
-  echo '<style>
-    .acf-field-66ad2a3105371 {
-        display: none;
-    }
-  </style>';
+    echo '<style>
+        .acf-field-66ad2a3105371 {
+            display: none;
+        }
+    </style>';
 });
