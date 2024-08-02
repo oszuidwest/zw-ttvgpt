@@ -2,7 +2,7 @@
 /*
 Plugin Name: Tekst TV GPT
 Description: Maakt met OpenAI's GPT een samenvatting van een artikel voor op Tekst TV en plaatst dit in het juiste ACF-veld
-Version: 0.5
+Version: 0.6
 Author: Streekomroep ZuidWest
 */
 
