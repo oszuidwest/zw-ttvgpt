@@ -201,7 +201,7 @@ foreach ($posts as $post) {
     echo "<div class='card bg-white p-6 rounded-lg shadow'>
         <h3 class='card-title text-2xl font-bold mb-2'>" . esc_html($post->post_title) . "</h3>
         <div class='card-meta text-gray-500 text-sm mb-4'>Published on: " . date('Y-m-d', strtotime($post->post_date)) . " | Author: {$author_name} | Last edit: {$last_editor}</div>
-        <span class='card-status inline-block px-3 py-1 rounded-full {$status_class}'>{$status_label}</span>";
+        <span class='card-status text-xs font-bold uppercase tracking-tight inline-block px-3 py-1 rounded-full {$status_class}'>{$status_label}</span>";
 
     // Show the content if fully human-written or AI-written but not edited
     if ($status_label === 'Fully Human Written' || $status_label === 'AI Written, Not Edited') {
