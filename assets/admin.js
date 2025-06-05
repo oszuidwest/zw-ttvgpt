@@ -68,6 +68,12 @@
         e.preventDefault();
 
         const $button = $(this);
+        
+        // Prevent double clicks
+        if ($button.prop('disabled')) {
+            return;
+        }
+        
         const postId = $button.data('post-id');
         const content = getEditorContent();
 
@@ -82,8 +88,11 @@
         // Disable button and show loading state
         setLoadingState($button, true);
         
+        // Store button reference globally for other functions
+        $button.data('is-generating', true);
+        
         // Start showing loading messages in the ACF field
-        showLoadingMessages();
+        showLoadingMessages($button);
 
         // Make AJAX request
         $.ajax({
@@ -98,12 +107,15 @@
             },
             success: function(response) {
                 if (response.success) {
-                    handleSuccess(response.data);
+                    handleSuccess(response.data, $button);
                 } else {
                     clearLoadingMessages();
                     // WordPress wp_send_json_error sends the message in response.data
                     const errorMessage = typeof response.data === 'string' ? response.data : (response.data?.message || zwTTVGPT.strings.error);
                     showStatus('error', errorMessage);
+                    // Re-enable button on error
+                    setLoadingState($button, false);
+                    $button.data('is-generating', false);
                 }
             },
             error: function(xhr, status, error) {
@@ -123,9 +135,12 @@
                 }
                 
                 showStatus('error', errorMessage);
+                // Re-enable button on error
+                setLoadingState($button, false);
+                $button.data('is-generating', false);
             },
             complete: function() {
-                setLoadingState($button, false);
+                // Complete handler kept empty intentionally
             }
         });
     }
@@ -175,25 +190,42 @@
     /**
      * Handle successful response
      */
-    function handleSuccess(data) {
-        showStatus('success', zwTTVGPT.strings.success);
-
-        // Update ACF fields with animation
-        animateText($(SELECTORS.acfSummaryField), data.summary);
-        $(SELECTORS.acfGptField).val(data.summary);
+    function handleSuccess(data, $button) {
+        const $acfField = $(SELECTORS.acfSummaryField);
+        const getMessageCount = $acfField.data('message-count');
+        const currentMessageCount = getMessageCount ? getMessageCount() : 0;
+        
+        // Ensure at least 2 messages have been shown
+        const minMessages = 2;
+        const messagesNeeded = minMessages - currentMessageCount;
+        
+        if (messagesNeeded > 0) {
+            // Wait for remaining messages before showing summary
+            const waitTime = messagesNeeded * 2500; // 2.5 seconds per message
+            setTimeout(function() {
+                // Update ACF fields with animation
+                animateText($acfField, data.summary, $button);
+                $(SELECTORS.acfGptField).val(data.summary);
+            }, waitTime);
+        } else {
+            // Already shown enough messages
+            // Update ACF fields with animation
+            animateText($acfField, data.summary, $button);
+            $(SELECTORS.acfGptField).val(data.summary);
+        }
     }
 
     /**
      * Animate text typing effect - ChatGPT style
      */
-    function animateText($element, text) {
+    function animateText($element, text, $button) {
         let index = 0;
         let isThinking = true;
         const thinkingChars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
         let thinkingIndex = 0;
         let thinkingInterval;
         
-        // Clear any fun messages interval
+        // Clear any loading messages interval
         const messageInterval = $element.data('message-interval');
         if (messageInterval) {
             clearInterval(messageInterval);
@@ -218,8 +250,9 @@
 
         function typeCharacter() {
             if (index < text.length) {
-                // Type multiple characters at once for faster effect
-                const charsToType = Math.random() < 0.5 ? 3 : Math.random() < 0.8 ? 2 : 1;
+                // Type multiple characters at once for faster effect - more random chunks
+                const rand = Math.random();
+                const charsToType = rand < 0.15 ? 5 : rand < 0.35 ? 4 : rand < 0.6 ? 3 : rand < 0.85 ? 2 : 1;
                 let newText = '';
                 
                 for (let i = 0; i < charsToType && index < text.length; i++) {
@@ -232,20 +265,21 @@
                 // Scroll to bottom if needed
                 $element[0].scrollTop = $element[0].scrollHeight;
 
-                // Variable delay for more natural typing (3x faster)
+                // Much faster and more random delays
                 let delay;
-                if (text.charAt(index - 1) === '.' || text.charAt(index - 1) === '!' || text.charAt(index - 1) === '?') {
-                    // Longer pause after sentences
-                    delay = Math.random() * 30 + 50;
-                } else if (text.charAt(index - 1) === ',' || text.charAt(index - 1) === ';') {
-                    // Medium pause after commas
-                    delay = Math.random() * 15 + 25;
-                } else if (text.charAt(index - 1) === ' ') {
-                    // Short pause after words
-                    delay = Math.random() * 10 + 7;
-                } else {
-                    // Fast typing within words
+                const lastChar = text.charAt(index - 1);
+                if (lastChar === '.' || lastChar === '!' || lastChar === '?') {
+                    // Short pause after sentences
+                    delay = Math.random() * 20 + 15;
+                } else if (lastChar === ',' || lastChar === ';') {
+                    // Tiny pause after commas
+                    delay = Math.random() * 8 + 5;
+                } else if (lastChar === ' ') {
+                    // Almost no pause after words
                     delay = Math.random() * 5 + 2;
+                } else {
+                    // Very fast typing within words
+                    delay = Math.random() * 3 + 1;
                 }
 
                 setTimeout(typeCharacter, delay);
@@ -255,6 +289,12 @@
                 setTimeout(function() {
                     $element.removeClass('zw-ttvgpt-complete');
                     $element.prop('disabled', false);
+                    
+                    // Ensure button is re-enabled when typing completes
+                    if ($button && $button.data('is-generating')) {
+                        setLoadingState($button, false);
+                        $button.data('is-generating', false);
+                    }
                 }, 300);
             }
         }
@@ -267,9 +307,27 @@
         if (isLoading) {
             $button
                 .prop('disabled', true)
-                .addClass('updating-message')
-                .text(zwTTVGPT.strings.generating);
+                .addClass('updating-message');
+            
+            // Start thinking animation
+            const thinkingChars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+            let thinkingIndex = 0;
+            
+            const thinkingInterval = setInterval(function() {
+                $button.html(thinkingChars[thinkingIndex % thinkingChars.length] + ' ' + zwTTVGPT.strings.generating);
+                thinkingIndex++;
+            }, 80);
+            
+            // Store interval for cleanup
+            $button.data('thinking-interval', thinkingInterval);
         } else {
+            // Clear thinking animation
+            const thinkingInterval = $button.data('thinking-interval');
+            if (thinkingInterval) {
+                clearInterval(thinkingInterval);
+                $button.removeData('thinking-interval');
+            }
+            
             $button
                 .prop('disabled', false)
                 .removeClass('updating-message')
@@ -321,7 +379,7 @@
     /**
      * Show loading messages in ACF field while generating
      */
-    function showLoadingMessages() {
+    function showLoadingMessages($button) {
         const $acfField = $(SELECTORS.acfSummaryField);
         if ($acfField.length === 0 || !zwTTVGPT.strings.loadingMessages) return;
         
@@ -333,6 +391,7 @@
         }
         
         let messageIndex = 0;
+        let messageCount = 0;
         let messageInterval;
         
         // Clear the field and disable it
@@ -341,6 +400,7 @@
         // Show first message immediately
         $acfField.val(messages[messageIndex]);
         messageIndex++;
+        messageCount++;
         
         // Cycle through randomized messages
         messageInterval = setInterval(function() {
@@ -368,10 +428,18 @@
             }, 20);
             
             messageIndex++;
+            messageCount++;
+            
+            // Re-enable button after showing 2 messages (only if still generating)
+            if (messageCount === 2 && $button && $button.data('is-generating')) {
+                setLoadingState($button, false);
+                // Don't remove is-generating flag here, let completion handle it
+            }
         }, 2500);
         
-        // Store interval for cleanup
+        // Store interval and count for cleanup
         $acfField.data('message-interval', messageInterval);
+        $acfField.data('message-count', () => messageCount);
     }
 
     // Initialize when ready
