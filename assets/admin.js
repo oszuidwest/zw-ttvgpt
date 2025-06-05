@@ -20,11 +20,22 @@
         space: 30
     };
 
+    const THINKING_CHARS = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+    const THINKING_SPEED = 80; // ms between thinking chars
+
+    // Cache frequently used elements
+    let $cachedAcfField = null;
+    let $cachedGptField = null;
+
     /**
      * Initialize the plugin
      */
     function init() {
         $(document).ready(function() {
+            // Cache elements
+            $cachedAcfField = $(SELECTORS.acfSummaryField);
+            $cachedGptField = $(SELECTORS.acfGptField);
+            
             bindEvents();
             injectGenerateButton();
         });
@@ -41,8 +52,7 @@
      * Inject generate button into ACF field
      */
     function injectGenerateButton() {
-        const $acfField = $(SELECTORS.acfSummaryField);
-        if ($acfField.length === 0) {
+        if (!$cachedAcfField || $cachedAcfField.length === 0) {
             return;
         }
 
@@ -55,7 +65,7 @@
             .text(zwTTVGPT.strings.buttonText)
             .css('margin-top', '8px');
 
-        $acfField.parent().append($button);
+        $cachedAcfField.parent().append($button);
 
         // Bind click event to the new button
         $button.on('click', handleGenerateClick);
@@ -188,11 +198,42 @@
     }
 
     /**
+     * Utility: Fisher-Yates shuffle
+     */
+    function shuffleArray(array) {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    }
+
+    /**
+     * Manage thinking animation with unified interval handling
+     */
+    function startThinkingAnimation(element, text = '') {
+        let index = 0;
+        const isButton = element instanceof jQuery && element.is('button');
+        
+        const interval = setInterval(function() {
+            const char = THINKING_CHARS[index % THINKING_CHARS.length];
+            if (isButton) {
+                element.html(char + (text ? ' ' + text : ''));
+            } else {
+                element.val(char);
+            }
+            index++;
+        }, THINKING_SPEED);
+        
+        return interval;
+    }
+
+    /**
      * Handle successful response
      */
     function handleSuccess(data, $button) {
-        const $acfField = $(SELECTORS.acfSummaryField);
-        const getMessageCount = $acfField.data('message-count');
+        const getMessageCount = $cachedAcfField.data('message-count');
         const currentMessageCount = getMessageCount ? getMessageCount() : 0;
         
         // Ensure at least 2 messages have been shown
@@ -204,14 +245,14 @@
             const waitTime = messagesNeeded * 2500; // 2.5 seconds per message
             setTimeout(function() {
                 // Update ACF fields with animation
-                animateText($acfField, data.summary, $button);
-                $(SELECTORS.acfGptField).val(data.summary);
+                animateText($cachedAcfField, data.summary, $button);
+                $cachedGptField.val(data.summary);
             }, waitTime);
         } else {
             // Already shown enough messages
             // Update ACF fields with animation
-            animateText($acfField, data.summary, $button);
-            $(SELECTORS.acfGptField).val(data.summary);
+            animateText($cachedAcfField, data.summary, $button);
+            $cachedGptField.val(data.summary);
         }
     }
 
@@ -220,10 +261,6 @@
      */
     function animateText($element, text, $button) {
         let index = 0;
-        let isThinking = true;
-        const thinkingChars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
-        let thinkingIndex = 0;
-        let thinkingInterval;
         
         // Clear any loading messages interval
         const messageInterval = $element.data('message-interval');
@@ -235,16 +272,12 @@
         $element.val('').prop('disabled', true);
         
         // Show thinking animation first
-        thinkingInterval = setInterval(function() {
-            $element.val(thinkingChars[thinkingIndex % thinkingChars.length]);
-            thinkingIndex++;
-        }, 50);
+        const thinkingInterval = startThinkingAnimation($element);
         
         // Start typing after a brief "thinking" period
         setTimeout(function() {
             clearInterval(thinkingInterval);
             $element.val('');
-            isThinking = false;
             typeCharacter();
         }, 300);
 
@@ -310,16 +343,8 @@
                 .addClass('zw-ttvgpt-generating');
             
             // Start thinking animation
-            const thinkingChars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
-            let thinkingIndex = 0;
-            
-            const thinkingInterval = setInterval(function() {
-                $button.html(thinkingChars[thinkingIndex % thinkingChars.length] + ' ' + zwTTVGPT.strings.generating);
-                thinkingIndex++;
-            }, 80);
-            
-            // Store interval for cleanup
-            $button.data('thinking-interval', thinkingInterval);
+            const interval = startThinkingAnimation($button, zwTTVGPT.strings.generating);
+            $button.data('thinking-interval', interval);
         } else {
             // Clear thinking animation
             const thinkingInterval = $button.data('thinking-interval');
@@ -340,8 +365,7 @@
      */
     function showStatus(type, message) {
         // Create a temporary notice above the ACF field
-        const $acfField = $(SELECTORS.acfSummaryField);
-        if ($acfField.length === 0) return;
+        if (!$cachedAcfField || $cachedAcfField.length === 0) return;
         
         // Remove any existing status
         $('.zw-ttvgpt-status').remove();
@@ -349,7 +373,7 @@
         const cssClass = type === 'error' ? 'notice-error' : 'notice-success';
         const $status = $(`<div class="notice ${cssClass} zw-ttvgpt-status" style="margin: 10px 0;"><p>${message}</p></div>`);
         
-        $acfField.parent().prepend($status);
+        $cachedAcfField.parent().prepend($status);
         $status.slideDown();
 
         // Auto-hide success messages
@@ -366,39 +390,33 @@
      * Clear loading messages and restore ACF field
      */
     function clearLoadingMessages() {
-        const $acfField = $(SELECTORS.acfSummaryField);
-        const messageInterval = $acfField.data('message-interval');
+        const messageInterval = $cachedAcfField.data('message-interval');
         if (messageInterval) {
             clearInterval(messageInterval);
-            $acfField.removeData('message-interval');
+            $cachedAcfField.removeData('message-interval');
         }
         // Restore original placeholder if it had one
-        $acfField.val('').prop('disabled', false).removeAttr('placeholder');
+        $cachedAcfField.val('').prop('disabled', false).removeAttr('placeholder');
     }
 
     /**
      * Show loading messages in ACF field while generating
      */
     function showLoadingMessages($button) {
-        const $acfField = $(SELECTORS.acfSummaryField);
-        if ($acfField.length === 0 || !zwTTVGPT.strings.loadingMessages) return;
+        if (!$cachedAcfField || $cachedAcfField.length === 0 || !zwTTVGPT.strings.loadingMessages) return;
         
         // Create a shuffled copy of messages
-        const messages = [...zwTTVGPT.strings.loadingMessages];
-        for (let i = messages.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [messages[i], messages[j]] = [messages[j], messages[i]];
-        }
+        let messages = shuffleArray(zwTTVGPT.strings.loadingMessages);
         
         let messageIndex = 0;
         let messageCount = 0;
         let messageInterval;
         
         // Clear the field and disable it
-        $acfField.prop('disabled', true).attr('placeholder', '');
+        $cachedAcfField.prop('disabled', true).attr('placeholder', '');
         
         // Show first message immediately
-        $acfField.val(messages[messageIndex]);
+        $cachedAcfField.val(messages[messageIndex]);
         messageIndex++;
         messageCount++;
         
@@ -406,10 +424,7 @@
         messageInterval = setInterval(function() {
             if (messageIndex >= messages.length) {
                 // Reshuffle when we've shown all messages
-                for (let i = messages.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [messages[i], messages[j]] = [messages[j], messages[i]];
-                }
+                messages = shuffleArray(messages);
                 messageIndex = 0;
             }
             
@@ -420,7 +435,7 @@
             // Gradually replace current text with next message
             const transitionInterval = setInterval(function() {
                 if (charIndex <= nextMessage.length) {
-                    $acfField.val(nextMessage.substring(0, charIndex));
+                    $cachedAcfField.val(nextMessage.substring(0, charIndex));
                     charIndex += 2; // Type 2 chars at a time for smooth transition
                 } else {
                     clearInterval(transitionInterval);
@@ -438,8 +453,8 @@
         }, 2500);
         
         // Store interval and count for cleanup
-        $acfField.data('message-interval', messageInterval);
-        $acfField.data('message-count', () => messageCount);
+        $cachedAcfField.data('message-interval', messageInterval);
+        $cachedAcfField.data('message-count', () => messageCount);
     }
 
     // Initialize when ready
