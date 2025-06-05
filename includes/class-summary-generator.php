@@ -70,6 +70,12 @@ class TTVGPTSummaryGenerator {
 			wp_send_json_error( __( 'Onvoldoende rechten', 'zw-ttvgpt' ), 403 );
 		}
 
+		// Check if API key is configured
+		if ( empty( TTVGPTSettingsManager::get_api_key() ) ) {
+			$this->logger->error( 'API key not configured' );
+			wp_send_json_error( __( 'API key niet geconfigureerd. Ga naar Instellingen > ZW Tekst TV GPT om een API key in te stellen.', 'zw-ttvgpt' ), 400 );
+		}
+
 		// Get and validate input
 		$content = isset( $_POST['content'] ) ? wp_unslash( $_POST['content'] ) : '';
 		$post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;

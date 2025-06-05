@@ -29,7 +29,10 @@
     </rule>
 
     <rule ref="WordPress-Docs"/>
-    <rule ref="WordPress-Extra"/>
+    <rule ref="WordPress-Extra">
+        <!-- Exclude deprecated sniff -->
+        <exclude name="Generic.Functions.CallTimePassByReference"/>
+    </rule>
     <rule ref="WordPress.WP.I18n"/>
     <rule ref="PHPCompatibilityWP"/>
 
