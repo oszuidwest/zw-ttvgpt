@@ -215,6 +215,7 @@ class TTVGPTAdmin {
 						__( '🌟 Sterren van de hemel schrijven...', 'zw-ttvgpt' ),
 						__( '🎪 Jongleren met woorden...', 'zw-ttvgpt' ),
 						__( '🎯 Precies op het doel...', 'zw-ttvgpt' ),
+						__( '🎨 Bob Ross mode: happy little words...', 'zw-ttvgpt' ),
 						__( '🎸 Don\'t stop me now, I\'m having AI...', 'zw-ttvgpt' ),
 						__( '🚀 Houston, we hebben een samenvatting...', 'zw-ttvgpt' ),
 						__( '🎬 Lights, camera, samenvatting!', 'zw-ttvgpt' ),
