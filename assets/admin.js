@@ -121,6 +121,7 @@
 			},
 			success(response) {
 				if (response.success) {
+					clearLoadingMessages();
 					handleSuccess(response.data, $button);
 				} else {
 					clearLoadingMessages();
