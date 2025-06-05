@@ -260,15 +260,23 @@
 	 * @param $button
 	 */
 	function handleSuccess(data, $button) {
+		// Get current message count
 		const getMessageCount = $cachedAcfField.data('message-count'),
-			currentMessageCount = getMessageCount ? getMessageCount() : 0,
-			// Ensure at least 2 messages have been shown
-			minMessages = 2,
+			currentMessageCount =
+				getMessageCount && typeof getMessageCount === 'function'
+					? getMessageCount()
+					: 0;
+
+		// Ensure at least 2 messages have been shown
+		const minMessages = 2,
 			messagesNeeded = minMessages - currentMessageCount;
 
 		if (messagesNeeded > 0) {
-			// Wait for remaining messages before showing summary
-			const waitTime = messagesNeeded * 2500; // 2.5 seconds per message
+			/*
+			 * Calculate proper wait time
+			 * First message shows immediately, so we only wait for additional messages
+			 */
+			const waitTime = messagesNeeded * 2500 + 500; // 500ms buffer for transition
 			setTimeout(function () {
 				// Update ACF fields with animation
 				animateText($cachedAcfField, data.summary, $button);
@@ -277,10 +285,12 @@
 		} else {
 			/*
 			 * Already shown enough messages
-			 * Update ACF fields with animation
+			 * Add small delay to ensure last transition completes
 			 */
-			animateText($cachedAcfField, data.summary, $button);
-			$cachedGptField.val(data.summary);
+			setTimeout(function () {
+				animateText($cachedAcfField, data.summary, $button);
+				$cachedGptField.val(data.summary);
+			}, 500);
 		}
 	}
 
@@ -300,10 +310,11 @@
 			$element.removeData('message-interval');
 		}
 
-		$element.val('').prop('disabled', true);
-
-		// Start typing immediately
-		typeCharacter();
+		// Small delay to prevent collision with loading messages
+		setTimeout(function () {
+			$element.val('').prop('disabled', true);
+			typeCharacter();
+		}, 100);
 
 		function typeCharacter() {
 			if (index < text.length) {
@@ -415,11 +426,24 @@
 			clearInterval(messageInterval);
 			$cachedAcfField.removeData('message-interval');
 		}
-		// Restore original placeholder if it had one
-		$cachedAcfField
-			.val('')
-			.prop('disabled', false)
-			.removeAttr('placeholder');
+
+		// Clear any active transition
+		const getActiveTransition = $cachedAcfField.data('active-transition');
+		if (getActiveTransition && typeof getActiveTransition === 'function') {
+			const activeTransition = getActiveTransition();
+			if (activeTransition) {
+				clearInterval(activeTransition);
+			}
+			$cachedAcfField.removeData('active-transition');
+		}
+
+		// Clear count data
+		$cachedAcfField.removeData('message-count');
+
+		/*
+		 * Don't clear the value or re-enable here - let animateText handle it
+		 * This prevents the collision between loading messages and typed text
+		 */
 	}
 
 	/**
@@ -437,7 +461,8 @@
 		// Create a shuffled copy of messages
 		let messages = shuffleArray(zwTTVGPT.strings.loadingMessages),
 			messageIndex = 0,
-			messageCount = 0;
+			messageCount = 0,
+			activeTransition = null;
 
 		// Clear the field and disable it
 		$cachedAcfField.prop('disabled', true).attr('placeholder', '');
@@ -447,36 +472,44 @@
 		messageIndex++;
 		messageCount++;
 
-		// Cycle through randomized messages
-		const messageInterval = setInterval(function () {
+		// Function to show next message
+		function showNextMessage() {
 			if (messageIndex >= messages.length) {
 				// Reshuffle when we've shown all messages
 				messages = shuffleArray(messages);
 				messageIndex = 0;
 			}
 
-			// Smooth transition to next message
+			// Get next message
 			const nextMessage = messages[messageIndex];
 			let charIndex = 0;
 
+			// Clear any existing transition
+			if (activeTransition) {
+				clearInterval(activeTransition);
+			}
+
 			// Gradually replace current text with next message
-			const transitionInterval = setInterval(function () {
+			activeTransition = setInterval(function () {
 				if (charIndex <= nextMessage.length) {
 					$cachedAcfField.val(nextMessage.substring(0, charIndex));
 					charIndex += 2; // Type 2 chars at a time for smooth transition
 				} else {
-					clearInterval(transitionInterval);
+					clearInterval(activeTransition);
+					activeTransition = null;
 				}
 			}, 20);
 
 			messageIndex++;
 			messageCount++;
+		}
 
-			// Keep button disabled while generating - it will be re-enabled when typing completes
-		}, 2500);
+		// Cycle through messages
+		const messageInterval = setInterval(showNextMessage, 2500);
 
-		// Store interval and count for cleanup
+		// Store intervals and count getter for cleanup
 		$cachedAcfField.data('message-interval', messageInterval);
+		$cachedAcfField.data('active-transition', () => activeTransition);
 		$cachedAcfField.data('message-count', () => messageCount);
 	}
 

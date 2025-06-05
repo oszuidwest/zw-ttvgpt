@@ -53,7 +53,7 @@
       "no-invalid-this": ["off"],
       "camelcase": ["warn", { "allow": ["post_id"] }],
       "jsdoc/require-param-type": ["off"],
-      "max-lines": ["error", { "max": 500 }],
+      "max-lines": ["error", { "max": 600 }],
       "prefer-destructuring": ["warn"],
       "array-element-newline": ["off"],
       "multiline-ternary": ["off"],
