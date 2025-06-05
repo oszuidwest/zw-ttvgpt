@@ -82,8 +82,8 @@
         // Disable button and show loading state
         setLoadingState($button, true);
         
-        // Start showing fun messages in the ACF field
-        showFunMessages();
+        // Start showing loading messages in the ACF field
+        showLoadingMessages();
 
         // Make AJAX request
         $.ajax({
@@ -100,7 +100,7 @@
                 if (response.success) {
                     handleSuccess(response.data);
                 } else {
-                    clearFunMessages();
+                    clearLoadingMessages();
                     // WordPress wp_send_json_error sends the message in response.data
                     const errorMessage = typeof response.data === 'string' ? response.data : (response.data?.message || zwTTVGPT.strings.error);
                     showStatus('error', errorMessage);
@@ -108,7 +108,7 @@
             },
             error: function(xhr, status, error) {
                 console.error('ZW TTVGPT Error:', error, xhr.responseText);
-                clearFunMessages();
+                clearLoadingMessages();
                 
                 // Try to parse error message from response
                 let errorMessage = zwTTVGPT.strings.error;
@@ -305,9 +305,9 @@
     }
 
     /**
-     * Clear fun messages and restore ACF field
+     * Clear loading messages and restore ACF field
      */
-    function clearFunMessages() {
+    function clearLoadingMessages() {
         const $acfField = $(SELECTORS.acfSummaryField);
         const messageInterval = $acfField.data('message-interval');
         if (messageInterval) {
@@ -319,14 +319,14 @@
     }
 
     /**
-     * Show fun messages in ACF field while generating
+     * Show loading messages in ACF field while generating
      */
-    function showFunMessages() {
+    function showLoadingMessages() {
         const $acfField = $(SELECTORS.acfSummaryField);
-        if ($acfField.length === 0 || !zwTTVGPT.strings.funMessages) return;
+        if ($acfField.length === 0 || !zwTTVGPT.strings.loadingMessages) return;
         
         // Create a shuffled copy of messages
-        const messages = [...zwTTVGPT.strings.funMessages];
+        const messages = [...zwTTVGPT.strings.loadingMessages];
         for (let i = messages.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [messages[i], messages[j]] = [messages[j], messages[i]];
