@@ -14,10 +14,10 @@ namespace ZW_TTVGPT_Core;
  */
 class TTVGPTHelper {
 	/**
-	 * Create error response array
+	 * Create standardized error response array
 	 *
-	 * @param string $error_message Error message.
-	 * @return array
+	 * @param string $error_message Error message to include
+	 * @return array{success: false, error: string} Error response with success flag and error message
 	 */
 	public static function error_response( string $error_message ): array {
 		return array(
@@ -27,10 +27,10 @@ class TTVGPTHelper {
 	}
 
 	/**
-	 * Create success response array
+	 * Create standardized success response array
 	 *
-	 * @param mixed $data Response data.
-	 * @return array
+	 * @param mixed $data Response data to include
+	 * @return array{success: true, data: mixed} Success response with success flag and data
 	 */
 	public static function success_response( $data ): array {
 		return array(
@@ -40,7 +40,7 @@ class TTVGPTHelper {
 	}
 
 	/**
-	 * Clean up database transients
+	 * Remove all plugin-related transients from database
 	 *
 	 * @global \wpdb $wpdb WordPress database object
 	 * @return void
@@ -48,7 +48,6 @@ class TTVGPTHelper {
 	public static function cleanup_transients(): void {
 		global $wpdb;
 
-		// Delete rate limit transients.
 		$wpdb->query(
 			$wpdb->prepare(
 				"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
@@ -65,22 +64,19 @@ class TTVGPTHelper {
 	}
 
 	/**
-	 * Clean up all plugin data
+	 * Remove all plugin data including settings and transients
 	 *
 	 * @return void
 	 */
 	public static function cleanup_plugin_data(): void {
-		// Delete settings.
 		TTVGPTSettingsManager::delete_settings();
-
-		// Clean up transients.
 		self::cleanup_transients();
 	}
 
 	/**
-	 * Get ACF field IDs for JavaScript localization
+	 * Generate ACF field selectors for JavaScript usage
 	 *
-	 * @return array
+	 * @return array Field selector mappings for client-side access
 	 */
 	public static function get_acf_field_ids(): array {
 		return array(
@@ -90,20 +86,20 @@ class TTVGPTHelper {
 	}
 
 	/**
-	 * Validate API key format
+	 * Validate OpenAI API key format
 	 *
-	 * @param string $api_key API key to validate.
-	 * @return bool
+	 * @param string $api_key API key to validate
+	 * @return bool True if key format is valid (starts with 'sk-')
 	 */
 	public static function is_valid_api_key( string $api_key ): bool {
 		return ! empty( $api_key ) && strpos( $api_key, 'sk-' ) === 0;
 	}
 
 	/**
-	 * Get user-friendly error message for API status codes
+	 * Convert HTTP status codes to user-friendly Dutch error messages
 	 *
-	 * @param int $status_code HTTP status code.
-	 * @return string
+	 * @param int $status_code HTTP status code from API response
+	 * @return string Localized error message for end users
 	 */
 	public static function get_api_error_message( int $status_code ): string {
 		$messages = array(

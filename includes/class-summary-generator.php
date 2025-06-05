@@ -13,8 +13,6 @@ namespace ZW_TTVGPT_Core;
  * Core functionality for generating summaries
  */
 class TTVGPTSummaryGenerator {
-	// Constants are now in TTVGPTConstants class
-
 	/**
 	 * API handler instance
 	 *
@@ -37,46 +35,41 @@ class TTVGPTSummaryGenerator {
 	private TTVGPTLogger $logger;
 
 	/**
-	 * Constructor
+	 * Initialize summary generator with dependencies and register AJAX handler
 	 *
-	 * @param TTVGPTApiHandler $api_handler API handler instance
-	 * @param int              $word_limit  Word limit for summaries
-	 * @param TTVGPTLogger     $logger      Logger instance
+	 * @param TTVGPTApiHandler $api_handler API handler for OpenAI communication
+	 * @param int              $word_limit  Maximum words allowed in summaries
+	 * @param TTVGPTLogger     $logger      Logger instance for debugging
 	 */
 	public function __construct( TTVGPTApiHandler $api_handler, int $word_limit, TTVGPTLogger $logger ) {
 		$this->api_handler = $api_handler;
 		$this->word_limit  = $word_limit;
 		$this->logger      = $logger;
 
-		// Register AJAX handler
 		add_action( 'wp_ajax_zw_ttvgpt_generate', array( $this, 'handle_ajax_request' ) );
 	}
 
 	/**
-	 * Handle AJAX request for summary generation
+	 * Process AJAX request for generating summary with security and validation
 	 *
 	 * @return void
 	 */
 	public function handle_ajax_request(): void {
-		// Verify nonce
 		if ( ! check_ajax_referer( 'zw_ttvgpt_nonce', 'nonce', false ) ) {
 			$this->logger->error( 'Security check failed: invalid nonce' );
 			wp_send_json_error( __( 'Beveiligingscontrole mislukt', 'zw-ttvgpt' ), 403 );
 		}
 
-		// Check capabilities
 		if ( ! current_user_can( TTVGPTConstants::EDIT_CAPABILITY ) ) {
 			$this->logger->error( 'Insufficient capabilities for summary generation' );
 			wp_send_json_error( __( 'Onvoldoende rechten', 'zw-ttvgpt' ), 403 );
 		}
 
-		// Check if API key is configured
 		if ( empty( TTVGPTSettingsManager::get_api_key() ) ) {
 			$this->logger->error( 'API key not configured' );
 			wp_send_json_error( __( 'API key niet geconfigureerd. Ga naar Instellingen > ZW Tekst TV GPT om een API key in te stellen.', 'zw-ttvgpt' ), 400 );
 		}
 
-		// Get and validate input
 		$content = isset( $_POST['content'] ) ? wp_unslash( $_POST['content'] ) : '';
 		$post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
 
@@ -88,10 +81,8 @@ class TTVGPTSummaryGenerator {
 			wp_send_json_error( __( 'Ongeldig bericht ID', 'zw-ttvgpt' ), 400 );
 		}
 
-		// Strip HTML tags for processing
 		$clean_content = wp_strip_all_tags( $content );
 
-		// Validate word count
 		$word_count = str_word_count( $clean_content );
 		if ( $word_count < TTVGPTConstants::MIN_WORD_COUNT ) {
 			$this->logger->debug(
@@ -112,12 +103,10 @@ class TTVGPTSummaryGenerator {
 			);
 		}
 
-		// Check rate limiting
 		if ( $this->is_rate_limited() ) {
 			wp_send_json_error( __( 'Te veel aanvragen. Wacht even voordat je opnieuw probeert.', 'zw-ttvgpt' ), 429 );
 		}
 
-		// Generate summary
 		$result = $this->api_handler->generate_summary( $clean_content, $this->word_limit );
 
 		if ( ! $result['success'] ) {
@@ -125,23 +114,16 @@ class TTVGPTSummaryGenerator {
 			wp_send_json_error( $error, 500 );
 		}
 
-		// Get selected regions if available
 		$regions = isset( $_POST['regions'] ) ? array_map( 'sanitize_text_field', (array) $_POST['regions'] ) : array();
 		$summary = isset( $result['data'] ) ? $result['data'] : '';
 
-		// Prepend regions to summary if provided
 		if ( ! empty( $regions ) ) {
 			$regions_text = implode( ' / ', array_map( 'strtoupper', $regions ) );
 			$summary      = $regions_text . ' - ' . $summary;
 		}
 
-		// Always save to ACF fields
 		$this->save_to_acf( $post_id, $summary );
-
-		// Update rate limiting
 		$this->update_rate_limit();
-
-		// Minimale logging bij succes
 		$this->logger->debug( 'Summary generated for post ' . $post_id );
 
 		wp_send_json_success(
@@ -153,10 +135,10 @@ class TTVGPTSummaryGenerator {
 	}
 
 	/**
-	 * Save summary to ACF fields
+	 * Save generated summary to ACF fields and mark as AI-generated
 	 *
-	 * @param int    $post_id Post ID
-	 * @param string $summary Generated summary
+	 * @param int    $post_id Post ID to update
+	 * @param string $summary Generated summary text
 	 * @return void
 	 */
 	private function save_to_acf( int $post_id, string $summary ): void {
@@ -165,10 +147,7 @@ class TTVGPTSummaryGenerator {
 			return;
 		}
 
-		// Update summary field
 		update_field( TTVGPTConstants::ACF_SUMMARY_FIELD, $summary, $post_id );
-
-		// Mark as GPT-generated
 		update_field( TTVGPTConstants::ACF_GPT_MARKER_FIELD, $summary, $post_id );
 
 		$this->logger->debug(
@@ -180,9 +159,9 @@ class TTVGPTSummaryGenerator {
 	}
 
 	/**
-	 * Check if user is rate limited
+	 * Check if current user has exceeded rate limit for API requests
 	 *
-	 * @return bool
+	 * @return bool True if user is rate limited
 	 */
 	private function is_rate_limited(): bool {
 		$user_id       = get_current_user_id();
@@ -193,7 +172,7 @@ class TTVGPTSummaryGenerator {
 	}
 
 	/**
-	 * Update rate limit counter
+	 * Increment rate limit counter for current user
 	 *
 	 * @return void
 	 */

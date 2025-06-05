@@ -39,14 +39,13 @@ class TTVGPTLogger {
 	}
 
 	/**
-	 * Log a debug message
+	 * Log debug message when debug mode is enabled
 	 *
-	 * @param string $message The message to log.
-	 * @param array  $context Additional context data.
+	 * @param string $message Debug message to log
+	 * @param array  $context Additional context data for debugging
 	 * @return void
 	 */
 	public function debug( string $message, array $context = array() ): void {
-		// Log alleen als plugin debug mode aan staat.
 		if ( ! $this->debug_mode ) {
 			return;
 		}
@@ -56,15 +55,13 @@ class TTVGPTLogger {
 
 
 	/**
-	 * Log an error message
+	 * Log error message with conditional context inclusion
 	 *
-	 * @param string $message The message to log.
-	 * @param array  $context Additional context data.
+	 * @param string $message Error message to log
+	 * @param array  $context Additional context data (only included in debug mode)
 	 * @return void
 	 */
 	public function error( string $message, array $context = array() ): void {
-		// Errors worden altijd gelogd naar PHP error log.
-		// Voeg alleen context toe als debug mode aan staat.
 		if ( ! $this->debug_mode ) {
 			$context = array();
 		}
@@ -73,11 +70,11 @@ class TTVGPTLogger {
 	}
 
 	/**
-	 * Write log entry
+	 * Write formatted log entry to PHP error log
 	 *
-	 * @param string $level   Log level (DEBUG or ERROR).
-	 * @param string $message The message to log.
-	 * @param array  $context Additional context data.
+	 * @param string $level   Log level (DEBUG or ERROR)
+	 * @param string $message Message to log
+	 * @param array  $context Additional context data
 	 * @return void
 	 */
 	private function write_log( string $level, string $message, array $context = array() ): void {

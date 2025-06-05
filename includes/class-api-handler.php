@@ -20,8 +20,6 @@ class TTVGPTApiHandler {
 	 */
 	private const API_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 
-	// API timeout is now in TTVGPTConstants
-
 	/**
 	 * Maximum tokens for API response
 	 *
@@ -30,7 +28,7 @@ class TTVGPTApiHandler {
 	private const MAX_TOKENS = 2048;
 
 	/**
-	 * Temperature for API responses
+	 * Temperature for API responses (controls randomness)
 	 *
 	 * @var float
 	 */
@@ -58,11 +56,11 @@ class TTVGPTApiHandler {
 	private TTVGPTLogger $logger;
 
 	/**
-	 * Constructor
+	 * Initialize API handler with credentials and dependencies
 	 *
-	 * @param string       $api_key API key for OpenAI
-	 * @param string       $model   Model to use
-	 * @param TTVGPTLogger $logger  Logger instance
+	 * @param string       $api_key API key for OpenAI authentication
+	 * @param string       $model   Model identifier to use for requests
+	 * @param TTVGPTLogger $logger  Logger instance for debugging and errors
 	 */
 	public function __construct( string $api_key, string $model, TTVGPTLogger $logger ) {
 		$this->api_key = $api_key;
@@ -71,14 +69,13 @@ class TTVGPTApiHandler {
 	}
 
 	/**
-	 * Generate a summary using OpenAI API
+	 * Generate text summary using OpenAI Chat Completions API
 	 *
 	 * @param string $content    Content to summarize
 	 * @param int    $word_limit Maximum words for summary
-	 * @return array{success: bool, data?: string, error?: string}
+	 * @return array{success: bool, data?: string, error?: string} API response with success status
 	 */
 	public function generate_summary( string $content, int $word_limit ): array {
-		// Log alleen in debug mode
 		$this->logger->debug(
 			'Starting API request',
 			array(
@@ -88,18 +85,11 @@ class TTVGPTApiHandler {
 			)
 		);
 
-		// Validate API key
 		if ( empty( $this->api_key ) ) {
 			$this->logger->error( 'API key is missing' );
-			/**
-			 * Return error response
-			 *
-			 * @var array{success: bool, data?: string, error?: string}
-			 */
 			return TTVGPTHelper::error_response( __( 'API key niet geconfigureerd', 'zw-ttvgpt' ) );
 		}
 
-		// Prepare system prompt
 		$system_prompt = sprintf(
 			'Please summarize the following news article in a clear and concise manner that is easy to understand for a general audience. ' .
 			'Use short sentences. Do it in Dutch. ' .
@@ -108,9 +98,7 @@ class TTVGPTApiHandler {
 			'Use maximal %d words.',
 			$word_limit
 		);
-
-		// Prepare API request
-		$request_body = array(
+		$request_body  = array(
 			'model'       => $this->model,
 			'messages'    => array(
 				array(
@@ -126,7 +114,6 @@ class TTVGPTApiHandler {
 			'temperature' => self::TEMPERATURE,
 		);
 
-		// Make API request
 		$response = wp_remote_post(
 			self::API_ENDPOINT,
 			array(
@@ -139,15 +126,8 @@ class TTVGPTApiHandler {
 			)
 		);
 
-		// Handle WordPress HTTP errors
 		if ( is_wp_error( $response ) ) {
-			// Minimale logging zonder debug mode
 			$this->logger->error( 'OpenAI API request failed: ' . $response->get_error_message() );
-			/**
-			 * Return network error response
-			 *
-			 * @var array{success: bool, data?: string, error?: string}
-			 */
 			return TTVGPTHelper::error_response(
 				sprintf(
 					/* translators: %s: Error message */
@@ -157,10 +137,8 @@ class TTVGPTApiHandler {
 			);
 		}
 
-		// Check HTTP status code
 		$status_code = (int) wp_remote_retrieve_response_code( $response );
 		if ( 200 !== $status_code ) {
-			// Log alleen status code zonder response body in non-debug mode
 			$this->logger->error(
 				'OpenAI API error: HTTP ' . $status_code,
 				array(
@@ -170,15 +148,9 @@ class TTVGPTApiHandler {
 			);
 
 			$error_message = $this->get_api_error_message( $status_code );
-			/**
-			 * Return API error response
-			 *
-			 * @var array{success: bool, data?: string, error?: string}
-			 */
 			return TTVGPTHelper::error_response( $error_message );
 		}
 
-		// Parse response
 		$body = wp_remote_retrieve_body( $response );
 		$data = json_decode( $body, true );
 
@@ -189,15 +161,9 @@ class TTVGPTApiHandler {
 					'json_error' => json_last_error_msg(),
 				)
 			);
-			/**
-			 * Return JSON parse error response
-			 *
-			 * @var array{success: bool, data?: string, error?: string}
-			 */
 			return TTVGPTHelper::error_response( __( 'Ongeldig antwoord van API', 'zw-ttvgpt' ) );
 		}
 
-		// Extract summary from response
 		if ( ! is_array( $data ) || ! isset( $data['choices'][0]['message']['content'] ) ) {
 			$this->logger->error(
 				'Unexpected API response structure',
@@ -205,22 +171,11 @@ class TTVGPTApiHandler {
 					'response' => $data,
 				)
 			);
-			/**
-			 * Return unexpected format error response
-			 *
-			 * @var array{success: bool, data?: string, error?: string}
-			 */
 			return TTVGPTHelper::error_response( __( 'Onverwacht API antwoord formaat', 'zw-ttvgpt' ) );
 		}
 
-		/**
-		 * Cast data to expected structure
-		 *
-		 * @var array{choices: array{0: array{message: array{content: string}}}} $data
-		 */
 		$summary = trim( $data['choices'][0]['message']['content'] );
 
-		// Minimale logging bij succes
 		$this->logger->debug(
 			'Summary generated successfully',
 			array(
@@ -228,19 +183,17 @@ class TTVGPTApiHandler {
 			)
 		);
 
-		/**
-		 * Return success response with summary
-		 *
-		 * @var array{success: bool, data?: string, error?: string}
-		 */
-		return TTVGPTHelper::success_response( $summary );
+		return array(
+			'success' => true,
+			'data'    => $summary,
+		);
 	}
 
 	/**
-	 * Get user-friendly error message for API status codes
+	 * Convert HTTP status codes to localized error messages
 	 *
-	 * @param int $status_code HTTP status code
-	 * @return string Error message
+	 * @param int $status_code HTTP status code from API response
+	 * @return string Localized error message for end users
 	 */
 	private function get_api_error_message( int $status_code ): string {
 		$messages = array(

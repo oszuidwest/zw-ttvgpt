@@ -1,12 +1,8 @@
 <?php
-// Load WordPress
 require_once '../wp-load.php';
 
-// Sanitize and get the year and month from the query string
 $year  = isset( $_GET['year'] ) ? absint( $_GET['year'] ) : null;
 $month = isset( $_GET['month'] ) ? absint( $_GET['month'] ) : null;
-
-// Redirect to the most recent month with posts if year or month is not specified
 if ( ! $year || ! $month ) {
 	$most_recent_month = get_most_recent_month_with_posts();
 	if ( $most_recent_month ) {
@@ -25,28 +21,24 @@ if ( ! $year || ! $month ) {
 	}
 }
 
-// Fetch posts for the selected month
 $posts = get_posts_for_month( $year, $month );
 
-// Initialize counters for each category
 $counts = array(
 	'fully_human_written'   => 0,
 	'ai_written_not_edited' => 0,
 	'ai_written_edited'     => 0,
 );
 
-// Process posts to count each category
 foreach ( $posts as $post ) {
 	categorize_post( $post, $counts );
 }
 
-// Display the dashboard
 display_dashboard( $posts, $counts, $year, $month );
 
 /**
- * Fetches the most recent month with relevant posts.
+ * Get the most recent month that has relevant posts for analysis
  *
- * @return array|null Returns an associative array with 'year' and 'month' or null if no posts found.
+ * @return array|null Array with 'year' and 'month' keys or null if no posts found
  */
 function get_most_recent_month_with_posts() {
 	global $wpdb;
@@ -74,11 +66,11 @@ function get_most_recent_month_with_posts() {
 }
 
 /**
- * Fetches posts for a specific month and year.
+ * Retrieve all posts for analysis from specific month and year
  *
- * @param int $year
- * @param int $month
- * @return array
+ * @param int $year Target year
+ * @param int $month Target month (1-12)
+ * @return array Array of WP_Post objects
  */
 function get_posts_for_month( $year, $month ) {
 	$meta_query = array(
@@ -117,10 +109,10 @@ function get_posts_for_month( $year, $month ) {
 }
 
 /**
- * Categorizes a post and updates the counts.
+ * Analyze post to determine AI vs human content status and update counters
  *
- * @param WP_Post $post
- * @param array   &$counts
+ * @param WP_Post $post Post to analyze
+ * @param array   &$counts Counters array passed by reference
  */
 function categorize_post( $post, &$counts ) {
 	$ai_content    = strip_before_dash( trim( get_post_meta( $post->ID, 'post_kabelkrant_content_gpt', true ) ) );
@@ -136,10 +128,10 @@ function categorize_post( $post, &$counts ) {
 }
 
 /**
- * Strips content before and including ' - '.
+ * Remove region prefix from content (everything before and including ' - ')
  *
- * @param string $content
- * @return string
+ * @param string $content Content that may have region prefix
+ * @return string Content with region prefix removed
  */
 function strip_before_dash( $content ) {
 	if ( ( $pos = strpos( $content, ' - ' ) ) !== false ) {
@@ -149,17 +141,16 @@ function strip_before_dash( $content ) {
 }
 
 /**
- * Generates a word-by-word diff between two strings.
+ * Generate word-by-word diff using longest common subsequence algorithm
  *
- * @param string $old
- * @param string $new
- * @return array
+ * @param string $old Original text
+ * @param string $new Modified text
+ * @return array Array with 'before' and 'after' keys containing HTML diff
  */
 function generate_word_diff( $old, $new ) {
 	$old_words = preg_split( '/\s+/', trim( $old ) );
 	$new_words = preg_split( '/\s+/', trim( $new ) );
 
-	// Build the table of longest common subsequence lengths
 	$lcs_table = array();
 	$old_count = count( $old_words );
 	$new_count = count( $new_words );
@@ -178,7 +169,6 @@ function generate_word_diff( $old, $new ) {
 		}
 	}
 
-	// Recover the LCS
 	$i   = $j = 0;
 	$lcs = array();
 	while ( $i < $old_count && $j < $new_count ) {
@@ -192,15 +182,12 @@ function generate_word_diff( $old, $new ) {
 			++$j;
 		}
 	}
-
-	// Generate diff
 	$diff_before = '';
 	$diff_after  = '';
 	$i_old       = $i_new = $i_lcs = 0;
 
 	while ( $i_old < $old_count || $i_new < $new_count ) {
 		if ( $i_lcs < count( $lcs ) && $i_old < $old_count && $i_new < $new_count && $old_words[ $i_old ] === $lcs[ $i_lcs ] && $new_words[ $i_new ] === $lcs[ $i_lcs ] ) {
-			// Words are the same
 			$word         = esc_html( $old_words[ $i_old ] );
 			$diff_before .= "{$word} ";
 			$diff_after  .= "{$word} ";
@@ -208,7 +195,6 @@ function generate_word_diff( $old, $new ) {
 			++$i_new;
 			++$i_lcs;
 		} else {
-			// Words are different
 			if ( $i_old < $old_count && ( $i_lcs >= count( $lcs ) || $old_words[ $i_old ] !== $lcs[ $i_lcs ] ) ) {
 				$word         = esc_html( $old_words[ $i_old ] );
 				$diff_before .= "<del class='text-red-500 line-through'>{$word}</del> ";
@@ -229,15 +215,14 @@ function generate_word_diff( $old, $new ) {
 }
 
 /**
- * Displays the dashboard.
+ * Render complete dashboard HTML with posts analysis and navigation
  *
- * @param array $posts
- * @param array $counts
- * @param int   $year
- * @param int   $month
+ * @param array $posts Array of WP_Post objects to display
+ * @param array $counts Categorization counters for statistics
+ * @param int   $year Current year being viewed
+ * @param int   $month Current month being viewed
  */
 function display_dashboard( $posts, $counts, $year, $month ) {
-	// Start of HTML output
 	?>
 	<!DOCTYPE html>
 	<html lang="en">
@@ -246,14 +231,11 @@ function display_dashboard( $posts, $counts, $year, $month ) {
 		<title>Tekst TV GPT Dashboard</title>
 		<meta name="robots" content="noindex">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<!-- Tailwind CSS CDN -->
 		<script src="https://cdn.tailwindcss.com"></script>
 	</head>
 	<body class="bg-gray-100 font-sans">
-	<!-- Pagination Top Bar -->
 	<?php display_pagination( $year, $month ); ?>
 	<div class="max-w-5xl mx-auto p-8">
-		<!-- Stats Overview -->
 		<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
 			<?php
 			foreach ( $counts as $key => $count ) :
@@ -266,7 +248,6 @@ function display_dashboard( $posts, $counts, $year, $month ) {
 			<?php endforeach; ?>
 		</div>
 
-		<!-- Post List -->
 		<div class="grid grid-cols-1 gap-6">
 			<?php
 			global $post;
@@ -281,7 +262,6 @@ function display_dashboard( $posts, $counts, $year, $month ) {
 				$ai_content       = strip_before_dash( trim( get_post_meta( $post_id, 'post_kabelkrant_content_gpt', true ) ) );
 				$human_content    = strip_before_dash( trim( get_post_meta( $post_id, 'post_kabelkrant_content', true ) ) );
 
-				// Determine the status and classes
 				if ( empty( $ai_content ) ) {
 					$status_label = 'Fully Human Written';
 					$status_class = 'bg-blue-100 text-blue-800';
@@ -333,13 +313,12 @@ function display_dashboard( $posts, $counts, $year, $month ) {
 }
 
 /**
- * Displays pagination links as a full-width top bar with small text only.
+ * Display month navigation bar at top of page
  *
- * @param int $year
- * @param int $month
+ * @param int $year Current year
+ * @param int $month Current month
  */
 function display_pagination( $year, $month ) {
-	// Fetch months with posts
 	global $wpdb;
 	$months_with_posts = $wpdb->get_results(
 		"
@@ -356,7 +335,6 @@ function display_pagination( $year, $month ) {
     "
 	);
 
-	// Build an array of months
 	$months_array = array();
 	foreach ( $months_with_posts as $month_with_post ) {
 		$months_array[] = array(
@@ -365,7 +343,6 @@ function display_pagination( $year, $month ) {
 		);
 	}
 
-	// Find current index
 	$current_index = null;
 	foreach ( $months_array as $index => $month_item ) {
 		if ( $month_item['year'] === $year && $month_item['month'] === $month ) {
@@ -377,7 +354,6 @@ function display_pagination( $year, $month ) {
 	$previous_month = isset( $months_array[ $current_index + 1 ] ) ? $months_array[ $current_index + 1 ] : null;
 	$next_month     = isset( $months_array[ $current_index - 1 ] ) ? $months_array[ $current_index - 1 ] : null;
 
-	// Display pagination links as a full-width top bar with small text
 	echo '<div class="w-full bg-gray-200 text-sm text-gray-700 py-2 px-4 flex justify-between items-center">';
 	if ( $previous_month ) {
 		$prev_url = add_query_arg(
@@ -391,7 +367,6 @@ function display_pagination( $year, $month ) {
 		echo '<span></span>';
 	}
 
-	// Display current month and year
 	$current_month_name = date( 'F Y', mktime( 0, 0, 0, $month, 1, $year ) );
 	echo '<span class="text-center">' . esc_html( $current_month_name ) . '</span>';
 

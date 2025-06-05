@@ -21,21 +21,20 @@ class TTVGPTAdmin {
 	private TTVGPTLogger $logger;
 
 	/**
-	 * Constructor
+	 * Initialize admin interface and register WordPress hooks
 	 *
-	 * @param TTVGPTLogger $logger Logger instance
+	 * @param TTVGPTLogger $logger Logger instance for debugging
 	 */
 	public function __construct( TTVGPTLogger $logger ) {
 		$this->logger = $logger;
 
-		// Admin hooks
 		add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
 	}
 
 	/**
-	 * Add admin menu
+	 * Add plugin settings page to WordPress admin menu
 	 *
 	 * @return void
 	 */
@@ -50,7 +49,7 @@ class TTVGPTAdmin {
 	}
 
 	/**
-	 * Register plugin settings
+	 * Register all plugin settings, sections, and fields with WordPress
 	 *
 	 * @return void
 	 */
@@ -63,7 +62,6 @@ class TTVGPTAdmin {
 			)
 		);
 
-		// API Settings Section
 		add_settings_section(
 			'zw_ttvgpt_api_section',
 			__( 'API Instellingen', 'zw-ttvgpt' ),
@@ -87,7 +85,6 @@ class TTVGPTAdmin {
 			'zw_ttvgpt_api_section'
 		);
 
-		// Summary Settings Section
 		add_settings_section(
 			'zw_ttvgpt_summary_section',
 			__( 'Samenvatting Instellingen', 'zw-ttvgpt' ),
@@ -103,7 +100,6 @@ class TTVGPTAdmin {
 			'zw_ttvgpt_summary_section'
 		);
 
-		// Debug Settings Section
 		add_settings_section(
 			'zw_ttvgpt_debug_section',
 			__( 'Debug Instellingen', 'zw-ttvgpt' ),
@@ -121,31 +117,26 @@ class TTVGPTAdmin {
 	}
 
 	/**
-	 * Enqueue admin assets
+	 * Load CSS and JavaScript assets on post edit screens with cache busting
 	 *
 	 * @param string $hook Current admin page hook
 	 * @return void
 	 */
 	public function enqueue_admin_assets( string $hook ): void {
-		// Only load on post edit screens
 		if ( ! in_array( $hook, array( 'post.php', 'post-new.php' ), true ) ) {
 			return;
 		}
 
-		// Check if we're on a supported post type
 		$screen = get_current_screen();
 		if ( ! $screen || TTVGPTConstants::SUPPORTED_POST_TYPE !== $screen->post_type ) {
 			return;
 		}
 
-		// Determine version for cache busting
 		$version = ZW_TTVGPT_VERSION;
 		if ( TTVGPTSettingsManager::is_debug_mode() ) {
-			// Add timestamp for cache busting in debug mode
 			$version .= '.' . time();
 		}
 
-		// Enqueue styles
 		wp_enqueue_style(
 			'zw-ttvgpt-admin',
 			ZW_TTVGPT_URL . 'assets/admin.css',
@@ -153,7 +144,6 @@ class TTVGPTAdmin {
 			$version
 		);
 
-		// Enqueue scripts
 		wp_enqueue_script(
 			'zw-ttvgpt-admin',
 			ZW_TTVGPT_URL . 'assets/admin.js',
@@ -161,8 +151,6 @@ class TTVGPTAdmin {
 			$version,
 			true
 		);
-
-		// Localize script
 		wp_localize_script(
 			'zw-ttvgpt-admin',
 			'zwTTVGPT',

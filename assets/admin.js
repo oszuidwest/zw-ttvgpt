@@ -1,41 +1,35 @@
 /**
  * ZW TTVGPT Admin JavaScript
  *
- * Handles the admin interface interactions
- * @param $
+ * Manages summary generation interface with typing animations and loading states
+ * @param $ jQuery object
  */
 (function ($) {
 	'use strict';
 
-	// Constants
 	const SELECTORS = {
 			contentEditor: '.wp-editor-area',
 			acfSummaryField: `#${zwTTVGPT.acfFields.summary}`,
 			acfGptField: `#${zwTTVGPT.acfFields.gpt_marker}`,
 			regionCheckboxes: '#regiochecklist input[type="checkbox"]:checked',
 		},
-		// Animation delay configuration removed - not currently used
-
 		THINKING_CHARS = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'],
-		THINKING_SPEED = 80, // Ms between thinking chars
-		// Typing delay lookup
+		THINKING_SPEED = 80,
 		TYPING_DELAYS = {
-			sentence: [8, 12], // [min, variance] - faster
+			sentence: [8, 12],
 			comma: [3, 5],
 			space: [1, 2],
 			default: [0.5, 1.5],
 		};
 
-	// Cache frequently used elements
 	let $cachedAcfField = null,
 		$cachedGptField = null;
 
 	/**
-	 * Initialize the plugin
+	 * Initialize plugin components and cache DOM elements
 	 */
 	function init() {
 		$(document).ready(function () {
-			// Cache elements
 			$cachedAcfField = $(SELECTORS.acfSummaryField);
 			$cachedGptField = $(SELECTORS.acfGptField);
 
@@ -45,14 +39,14 @@
 	}
 
 	/**
-	 * Bind event handlers
+	 * Bind event handlers (currently handled in injectGenerateButton)
 	 */
 	function bindEvents() {
-		// Event binding now handled in injectGenerateButton
+		// Event binding delegated to injectGenerateButton for now
 	}
 
 	/**
-	 * Inject generate button into ACF field
+	 * Create and inject generate button below ACF summary field
 	 */
 	function injectGenerateButton() {
 		if (!$cachedAcfField || $cachedAcfField.length === 0) {
@@ -69,21 +63,18 @@
 			.css('margin-top', '8px');
 
 		$cachedAcfField.parent().append($button);
-
-		// Bind click event to the new button
 		$button.on('click', handleGenerateClick);
 	}
 
 	/**
-	 * Handle generate button click
-	 * @param e
+	 * Process generate button click and initiate summary generation
+	 * @param {Event} e Click event
 	 */
 	function handleGenerateClick(e) {
 		e.preventDefault();
 
 		const $button = $(this);
 
-		// Prevent double clicks
 		if ($button.prop('disabled')) {
 			return;
 		}
@@ -96,19 +87,12 @@
 			return;
 		}
 
-		// Get selected regions
 		const regions = getSelectedRegions();
 
-		// Disable button and show loading state
 		setLoadingState($button, true);
-
-		// Store button reference globally for other functions
 		$button.data('is-generating', true);
-
-		// Start showing loading messages in the ACF field
 		showLoadingMessages();
 
-		// Make AJAX request
 		$.ajax({
 			url: zwTTVGPT.ajaxUrl,
 			type: 'POST',
@@ -125,13 +109,11 @@
 					handleSuccess(response.data, $button);
 				} else {
 					clearLoadingMessages();
-					// WordPress wp_send_json_error sends the message in response.data
 					const errorMessage =
 						typeof response.data === 'string'
 							? response.data
 							: response.data?.message || zwTTVGPT.strings.error;
 					showStatus('error', errorMessage);
-					// Re-enable button on error
 					setLoadingState($button, false);
 					$button.data('is-generating', false);
 				}
@@ -140,7 +122,6 @@
 				console.error('ZW TTVGPT Error:', error, xhr.responseText);
 				clearLoadingMessages();
 
-				// Try to parse error message from response
 				let errorMessage = zwTTVGPT.strings.error;
 				try {
 					const response = JSON.parse(xhr.responseText);
@@ -151,28 +132,23 @@
 								: response.data.message || errorMessage;
 					}
 				} catch (parseError) {
-					// If parsing fails, use generic error
 					errorMessage = error
 						? `${zwTTVGPT.strings.error}: ${error}`
 						: zwTTVGPT.strings.error;
 				}
 
 				showStatus('error', errorMessage);
-				// Re-enable button on error
 				setLoadingState($button, false);
 				$button.data('is-generating', false);
-			},
-			complete() {
-				// Complete handler kept empty intentionally
 			},
 		});
 	}
 
 	/**
-	 * Get content from the editor
+	 * Extract content from active editor (TinyMCE, textarea, or Gutenberg)
+	 * @return {string} Editor content as plain text
 	 */
 	function getEditorContent() {
-		// Try to get content from TinyMCE first
 		if (
 			typeof tinyMCE !== 'undefined' &&
 			tinyMCE.activeEditor &&
@@ -181,13 +157,11 @@
 			return tinyMCE.activeEditor.getContent({ format: 'text' });
 		}
 
-		// Fall back to textarea
 		const $textarea = $(SELECTORS.contentEditor);
 		if ($textarea.length > 0) {
 			return $textarea.val();
 		}
 
-		// Try Gutenberg
 		if (
 			typeof wp !== 'undefined' &&
 			wp.data &&
@@ -196,7 +170,6 @@
 			const content = wp.data
 					.select('core/editor')
 					.getEditedPostContent(),
-				// Strip HTML tags
 				temp = document.createElement('div');
 			temp.innerHTML = content;
 			return temp.textContent || temp.innerText || '';
@@ -206,7 +179,8 @@
 	}
 
 	/**
-	 * Get selected regions from checkboxes
+	 * Extract selected region names from taxonomy checkboxes
+	 * @return {Array<string>} Array of selected region names
 	 */
 	function getSelectedRegions() {
 		const regions = [];
@@ -221,8 +195,9 @@
 	}
 
 	/**
-	 * Utility: Fisher-Yates shuffle
-	 * @param array
+	 * Randomize array order using Fisher-Yates shuffle algorithm
+	 * @param {Array} array Array to shuffle
+	 * @return {Array} New shuffled array
 	 */
 	function shuffleArray(array) {
 		const shuffled = [...array];
@@ -234,9 +209,10 @@
 	}
 
 	/**
-	 * Manage thinking animation with unified interval handling
-	 * @param element
-	 * @param text
+	 * Start animated thinking indicator with cycling characters
+	 * @param {jQuery|HTMLElement} element Element to animate
+	 * @param {string}             text    Optional text to append after spinner
+	 * @return {number} Interval ID for cleanup
 	 */
 	function startThinkingAnimation(element, text = '') {
 		let index = 0;

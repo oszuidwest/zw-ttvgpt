@@ -10,7 +10,7 @@ namespace ZW_TTVGPT_Core;
 /**
  * Constants class
  *
- * Centralizes all plugin constants to avoid repetition
+ * Centralizes all plugin constants and provides default configuration values
  */
 class TTVGPTConstants {
 	/**
@@ -72,9 +72,9 @@ class TTVGPTConstants {
 	const ANIMATION_DELAY_SPACE = 30;
 
 	/**
-	 * Default settings array
+	 * Get default plugin settings
 	 *
-	 * @return array
+	 * @return array Default settings configuration
 	 */
 	public static function get_default_settings(): array {
 		return array(
@@ -86,10 +86,10 @@ class TTVGPTConstants {
 	}
 
 	/**
-	 * Get rate limit transient key for user
+	 * Generate rate limit transient key for specific user
 	 *
-	 * @param int $user_id User ID
-	 * @return string
+	 * @param int $user_id User ID to generate key for
+	 * @return string Transient key for rate limiting
 	 */
 	public static function get_rate_limit_key( int $user_id ): string {
 		return self::RATE_LIMIT_PREFIX . $user_id;
