@@ -47,22 +47,6 @@
     }
 }
 
-/* Completion animation - simplified pulse */
-textarea.zw-ttvgpt-complete {
-    animation: zw-ttvgpt-complete 0.3s ease-in-out;
-    border-color: #46b450 !important;
-}
-
-@keyframes zw-ttvgpt-complete {
-    0%, 100% {
-        box-shadow: 0 0 0 1px #46b450;
-    }
-    50% {
-        box-shadow: 0 0 8px 2px rgba(70, 180, 80, 0.5);
-    }
-}
-
-
 /* Generate button during generation */
 .button.zw-ttvgpt-generating {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #667eea 100%);

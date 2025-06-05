@@ -339,18 +339,14 @@
 				const delay = delayConfig[0] + Math.random() * delayConfig[1];
 				setTimeout(typeCharacter, delay);
 			} else {
-				// Add a subtle pulse effect when done
-				$element.addClass('zw-ttvgpt-complete');
-				setTimeout(function () {
-					$element.removeClass('zw-ttvgpt-complete');
-					$element.prop('disabled', false);
+				// Re-enable field immediately when done
+				$element.prop('disabled', false);
 
-					// Ensure button is re-enabled when typing completes
-					if ($button && $button.data('is-generating')) {
-						setLoadingState($button, false);
-						$button.data('is-generating', false);
-					}
-				}, 300);
+				// Ensure button is re-enabled when typing completes
+				if ($button && $button.data('is-generating')) {
+					setLoadingState($button, false);
+					$button.data('is-generating', false);
+				}
 			}
 		}
 	}
