@@ -179,10 +179,10 @@ class TTVGPTAdmin {
 					'successMessage' => TTVGPTConstants::SUCCESS_MESSAGE_TIMEOUT,
 				),
 				'strings'        => array(
-					'generating'  => __( 'Genereren', 'zw-ttvgpt' ),
-					'error'       => __( 'Er is een fout opgetreden', 'zw-ttvgpt' ),
-					'success'     => __( 'Samenvatting gegenereerd', 'zw-ttvgpt' ),
-					'buttonText'  => __( 'Genereer', 'zw-ttvgpt' ),
+					'generating'      => __( 'Genereren', 'zw-ttvgpt' ),
+					'error'           => __( 'Er is een fout opgetreden', 'zw-ttvgpt' ),
+					'success'         => __( 'Samenvatting gegenereerd', 'zw-ttvgpt' ),
+					'buttonText'      => __( 'Genereer', 'zw-ttvgpt' ),
 					'loadingMessages' => array(
 						__( '🤔 Even nadenken...', 'zw-ttvgpt' ),
 						__( '📰 Artikel aan het lezen...', 'zw-ttvgpt' ),

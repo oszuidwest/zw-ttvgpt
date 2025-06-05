@@ -33,10 +33,23 @@
         "phpcs": "phpcs",
         "phpcbf": "phpcbf",
         "phpstan": "php -d memory_limit=1G vendor/bin/phpstan analyse",
+        "lint:js": "npm run lint:js",
+        "lint:js:fix": "npm run lint:js:fix",
         "test": [
             "@phpcs",
-            "@phpstan"
+            "@phpstan",
+            "@lint:js"
         ],
-        "fix": "@phpcbf"
+        "fix": [
+            "@phpcbf",
+            "@lint:js:fix"
+        ],
+        "post-install-cmd": [
+            "@npm-install"
+        ],
+        "post-update-cmd": [
+            "@npm-install"
+        ],
+        "npm-install": "[ -f package.json ] && npm install || echo 'No package.json found'"
     }
 }

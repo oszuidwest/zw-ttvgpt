@@ -9,23 +9,19 @@
     // Constants
     const SELECTORS = {
         contentEditor: '.wp-editor-area',
-        acfSummaryField: '#' + zwTTVGPT.acfFields.summary,
-        acfGptField: '#' + zwTTVGPT.acfFields.gpt_marker,
+        acfSummaryField: `#${zwTTVGPT.acfFields.summary}`,
+        acfGptField: `#${zwTTVGPT.acfFields.gpt_marker}`,
         regionCheckboxes: '#regiochecklist input[type="checkbox"]:checked'
     };
 
-    const ANIMATION_DELAY = zwTTVGPT.animationDelay || {
-        min: 20,
-        max: 50,
-        space: 30
-    };
+    // Animation delay configuration removed - not currently used
 
     const THINKING_CHARS = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
     const THINKING_SPEED = 80; // ms between thinking chars
 
     // Typing delay lookup
     const TYPING_DELAYS = {
-        sentence: [15, 20],    // [min, variance]
+        sentence: [15, 20], // [min, variance]
         comma: [5, 8],
         space: [2, 5],
         default: [1, 3]
@@ -43,7 +39,7 @@
             // Cache elements
             $cachedAcfField = $(SELECTORS.acfSummaryField);
             $cachedGptField = $(SELECTORS.acfGptField);
-            
+
             bindEvents();
             injectGenerateButton();
         });
@@ -86,14 +82,14 @@
         e.preventDefault();
 
         const $button = $(this);
-        
+
         // Prevent double clicks
         if ($button.prop('disabled')) {
             return;
         }
-        
-        const postId = $button.data('post-id');
+
         const content = getEditorContent();
+        const postId = $button.data('post-id');
 
         if (!content) {
             showStatus('error', 'Geen content gevonden om samen te vatten.');
@@ -105,10 +101,10 @@
 
         // Disable button and show loading state
         setLoadingState($button, true);
-        
+
         // Store button reference globally for other functions
         $button.data('is-generating', true);
-        
+
         // Start showing loading messages in the ACF field
         showLoadingMessages($button);
 
@@ -120,8 +116,8 @@
                 action: 'zw_ttvgpt_generate',
                 nonce: zwTTVGPT.nonce,
                 post_id: postId,
-                content: content,
-                regions: regions
+                content,
+                regions
             },
             success: function(response) {
                 if (response.success) {
@@ -139,7 +135,7 @@
             error: function(xhr, status, error) {
                 console.error('ZW TTVGPT Error:', error, xhr.responseText);
                 clearLoadingMessages();
-                
+
                 // Try to parse error message from response
                 let errorMessage = zwTTVGPT.strings.error;
                 try {
@@ -147,11 +143,11 @@
                     if (response && response.data) {
                         errorMessage = typeof response.data === 'string' ? response.data : (response.data.message || errorMessage);
                     }
-                } catch (e) {
+                } catch (parseError) {
                     // If parsing fails, use generic error
                     errorMessage = error ? `${zwTTVGPT.strings.error}: ${error}` : zwTTVGPT.strings.error;
                 }
-                
+
                 showStatus('error', errorMessage);
                 // Re-enable button on error
                 setLoadingState($button, false);
@@ -223,17 +219,17 @@
     function startThinkingAnimation(element, text = '') {
         let index = 0;
         const isButton = element instanceof jQuery && element.is('button');
-        
+
         const interval = setInterval(function() {
             const char = THINKING_CHARS[index % THINKING_CHARS.length];
             if (isButton) {
-                element.html(char + (text ? ' ' + text : ''));
+                element.html(char + (text ? ` ${text}` : ''));
             } else {
                 element.val(char);
             }
             index++;
         }, THINKING_SPEED);
-        
+
         return interval;
     }
 
@@ -243,11 +239,11 @@
     function handleSuccess(data, $button) {
         const getMessageCount = $cachedAcfField.data('message-count');
         const currentMessageCount = getMessageCount ? getMessageCount() : 0;
-        
+
         // Ensure at least 2 messages have been shown
         const minMessages = 2;
         const messagesNeeded = minMessages - currentMessageCount;
-        
+
         if (messagesNeeded > 0) {
             // Wait for remaining messages before showing summary
             const waitTime = messagesNeeded * 2500; // 2.5 seconds per message
@@ -269,19 +265,19 @@
      */
     function animateText($element, text, $button) {
         let index = 0;
-        
+
         // Clear any loading messages interval
         const messageInterval = $element.data('message-interval');
         if (messageInterval) {
             clearInterval(messageInterval);
             $element.removeData('message-interval');
         }
-        
+
         $element.val('').prop('disabled', true);
-        
+
         // Show thinking animation first
         const thinkingInterval = startThinkingAnimation($element);
-        
+
         // Start typing after a brief "thinking" period
         setTimeout(function() {
             clearInterval(thinkingInterval);
@@ -295,16 +291,16 @@
                 const charsToType = Math.floor(Math.random() * 4) + 1; // 1-4 chars
                 const newText = text.substr(index, charsToType);
                 index += newText.length;
-                
+
                 $element.val($element.val() + newText);
-                
+
                 // Scroll to bottom if needed
                 $element[0].scrollTop = $element[0].scrollHeight;
 
                 // Simplified delay calculation
                 const lastChar = text.charAt(index - 1);
                 let delayConfig = TYPING_DELAYS.default;
-                
+
                 if ('.!?'.includes(lastChar)) {
                     delayConfig = TYPING_DELAYS.sentence;
                 } else if (',;'.includes(lastChar)) {
@@ -312,7 +308,7 @@
                 } else if (lastChar === ' ') {
                     delayConfig = TYPING_DELAYS.space;
                 }
-                
+
                 const delay = delayConfig[0] + Math.random() * delayConfig[1];
                 setTimeout(typeCharacter, delay);
             } else {
@@ -321,7 +317,7 @@
                 setTimeout(function() {
                     $element.removeClass('zw-ttvgpt-complete');
                     $element.prop('disabled', false);
-                    
+
                     // Ensure button is re-enabled when typing completes
                     if ($button && $button.data('is-generating')) {
                         setLoadingState($button, false);
@@ -340,7 +336,7 @@
             $button
                 .prop('disabled', true)
                 .addClass('zw-ttvgpt-generating');
-            
+
             // Start thinking animation
             const interval = startThinkingAnimation($button, zwTTVGPT.strings.generating);
             $button.data('thinking-interval', interval);
@@ -351,7 +347,7 @@
                 clearInterval(thinkingInterval);
                 $button.removeData('thinking-interval');
             }
-            
+
             $button
                 .prop('disabled', false)
                 .removeClass('zw-ttvgpt-generating')
@@ -364,14 +360,16 @@
      */
     function showStatus(type, message) {
         // Create a temporary notice above the ACF field
-        if (!$cachedAcfField || $cachedAcfField.length === 0) return;
-        
+        if (!$cachedAcfField || $cachedAcfField.length === 0) {
+            return;
+        }
+
         // Remove any existing status
         $('.zw-ttvgpt-status').remove();
-        
+
         const cssClass = type === 'error' ? 'notice-error' : 'notice-success';
         const $status = $(`<div class="notice ${cssClass} zw-ttvgpt-status" style="margin: 10px 0;"><p>${message}</p></div>`);
-        
+
         $cachedAcfField.parent().prepend($status);
         $status.slideDown();
 
@@ -402,35 +400,36 @@
      * Show loading messages in ACF field while generating
      */
     function showLoadingMessages($button) {
-        if (!$cachedAcfField || $cachedAcfField.length === 0 || !zwTTVGPT.strings.loadingMessages) return;
-        
+        if (!$cachedAcfField || $cachedAcfField.length === 0 || !zwTTVGPT.strings.loadingMessages) {
+            return;
+        }
+
         // Create a shuffled copy of messages
         let messages = shuffleArray(zwTTVGPT.strings.loadingMessages);
-        
+
         let messageIndex = 0;
         let messageCount = 0;
-        let messageInterval;
-        
+
         // Clear the field and disable it
         $cachedAcfField.prop('disabled', true).attr('placeholder', '');
-        
+
         // Show first message immediately
         $cachedAcfField.val(messages[messageIndex]);
         messageIndex++;
         messageCount++;
-        
+
         // Cycle through randomized messages
-        messageInterval = setInterval(function() {
+        const messageInterval = setInterval(function() {
             if (messageIndex >= messages.length) {
                 // Reshuffle when we've shown all messages
                 messages = shuffleArray(messages);
                 messageIndex = 0;
             }
-            
+
             // Smooth transition to next message
             const nextMessage = messages[messageIndex];
             let charIndex = 0;
-            
+
             // Gradually replace current text with next message
             const transitionInterval = setInterval(function() {
                 if (charIndex <= nextMessage.length) {
@@ -440,17 +439,17 @@
                     clearInterval(transitionInterval);
                 }
             }, 20);
-            
+
             messageIndex++;
             messageCount++;
-            
+
             // Re-enable button after showing 2 messages (only if still generating)
             if (messageCount === 2 && $button && $button.data('is-generating')) {
                 setLoadingState($button, false);
                 // Don't remove is-generating flag here, let completion handle it
             }
         }, 2500);
-        
+
         // Store interval and count for cleanup
         $cachedAcfField.data('message-interval', messageInterval);
         $cachedAcfField.data('message-count', () => messageCount);
@@ -458,5 +457,4 @@
 
     // Initialize when ready
     init();
-
 })(jQuery);
