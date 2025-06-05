@@ -1,0 +1,68 @@
+{
+  "name": "zw-ttvgpt",
+  "version": "0.9.0",
+  "description": "JavaScript assets for ZW TTVGPT WordPress plugin",
+  "private": true,
+  "scripts": {
+    "lint:js": "eslint assets/*.js",
+    "lint:js:fix": "eslint assets/*.js --fix",
+    "lint": "npm run lint:js"
+  },
+  "devDependencies": {
+    "@wordpress/eslint-plugin": "^17.0.0",
+    "eslint": "^8.57.0"
+  },
+  "eslintConfig": {
+    "env": {
+      "browser": true,
+      "jquery": true,
+      "es6": true
+    },
+    "globals": {
+      "zwTTVGPT": "readonly",
+      "wp": "readonly",
+      "tinyMCE": "readonly"
+    },
+    "extends": [
+      "eslint:all",
+      "plugin:@wordpress/eslint-plugin/recommended"
+    ],
+    "parserOptions": {
+      "ecmaVersion": 2020,
+      "sourceType": "script"
+    },
+    "rules": {
+      "no-magic-numbers": ["off"],
+      "func-style": ["error", "declaration"],
+      "no-plusplus": ["off"],
+      "max-lines-per-function": ["error", { "max": 100 }],
+      "max-statements": ["error", 30],
+      "sort-keys": ["off"],
+      "one-var": ["off"],
+      "id-length": ["error", { "min": 2, "exceptions": ["$", "i", "j", "e"] }],
+      "func-names": ["off"],
+      "no-inline-comments": ["off"],
+      "line-comment-position": ["off"],
+      "no-use-before-define": ["error", { "functions": false }],
+      "no-ternary": ["off"],
+      "sort-vars": ["off"],
+      "capitalized-comments": ["off"],
+      "strict": ["off"],
+      "prefer-arrow-callback": ["off"],
+      "object-shorthand": ["warn"],
+      "no-invalid-this": ["off"],
+      "camelcase": ["warn", { "allow": ["post_id"] }],
+      "jsdoc/require-param-type": ["off"],
+      "max-lines": ["error", { "max": 600 }],
+      "prefer-destructuring": ["warn"],
+      "array-element-newline": ["off"],
+      "multiline-ternary": ["off"],
+      "no-negated-condition": ["warn"],
+      "prefer-template": ["warn"],
+      "prefer-named-capture-group": ["off"],
+      "require-unicode-regexp": ["off"],
+      "no-console": ["error", { "allow": ["error", "warn"] }],
+      "@wordpress/no-unused-vars-before-return": ["off"]
+    }
+  }
+}

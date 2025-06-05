@@ -1,0 +1,95 @@
+/**
+ * ZW TTVGPT Admin Styles
+ */
+
+/* Status messages */
+.zw-ttvgpt-status {
+    margin: 10px 0;
+    padding: 10px;
+    border-left: 4px solid;
+}
+
+.zw-ttvgpt-status.notice-error {
+    border-left-color: #dc3232;
+    background: #fbeaea;
+}
+
+.zw-ttvgpt-status.notice-success {
+    border-left-color: #46b450;
+    background: #ecf7ed;
+}
+
+/* Inline generate button for ACF field */
+.zw-ttvgpt-inline-generate {
+    margin-top: 8px !important;
+    display: block;
+}
+
+/* Loading state animations */
+@keyframes zw-ttvgpt-gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes zw-ttvgpt-shimmer {
+    0% {
+        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+    100% {
+        transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
+}
+
+/* Generate button during generation */
+.button.zw-ttvgpt-generating {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #667eea 100%);
+    background-size: 400% 400%;
+    border-color: #667eea;
+    color: #fff;
+    animation: zw-ttvgpt-gradient 3s ease infinite;
+    position: relative;
+    overflow: hidden;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.button.zw-ttvgpt-generating:hover {
+    color: #fff;
+}
+
+/* Add shimmer effect to button while generating */
+.button.zw-ttvgpt-generating:after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        45deg,
+        transparent 30%,
+        rgba(255, 255, 255, 0.3) 50%,
+        transparent 70%
+    );
+    animation: zw-ttvgpt-shimmer 1.5s infinite;
+}
+
+/* Settings page */
+.zw-ttvgpt-settings-section {
+    margin-top: 20px;
+}
+
+.zw-ttvgpt-settings-section th {
+    padding-left: 0;
+}
+
+/* Hide the GPT marker field */
+.acf-field-66ad2a3105371 {
+    display: none !important;
+}
