@@ -74,7 +74,7 @@ textarea.zw-ttvgpt-complete {
 }
 
 /* Make the generate button more prominent during generation */
-.button.updating-message {
+.button.zw-ttvgpt-generating {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #667eea 100%);
     background-size: 400% 400%;
     border-color: #667eea;
@@ -85,12 +85,12 @@ textarea.zw-ttvgpt-complete {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-.button.updating-message:hover {
+.button.zw-ttvgpt-generating:hover {
     color: #fff;
 }
 
 /* Add shimmer effect to button while generating */
-.button.updating-message:after {
+.button.zw-ttvgpt-generating:after {
     content: '';
     position: absolute;
     top: -50%;

@@ -307,7 +307,7 @@
         if (isLoading) {
             $button
                 .prop('disabled', true)
-                .addClass('updating-message');
+                .addClass('zw-ttvgpt-generating');
             
             // Start thinking animation
             const thinkingChars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
@@ -330,7 +330,7 @@
             
             $button
                 .prop('disabled', false)
-                .removeClass('updating-message')
+                .removeClass('zw-ttvgpt-generating')
                 .text(zwTTVGPT.strings.buttonText);
         }
     }
