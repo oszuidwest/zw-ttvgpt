@@ -10,6 +10,7 @@
     <exclude-pattern>*/node_modules/*</exclude-pattern>
     <exclude-pattern>*.min.js</exclude-pattern>
     <exclude-pattern>*.min.css</exclude-pattern>
+    <exclude-pattern>tools/audit.php</exclude-pattern>
 
     <!-- Arguments -->
     <arg value="sp"/>
@@ -34,6 +35,14 @@
 
     <!-- Allow short array syntax -->
     <rule ref="Generic.Arrays.DisallowShortArraySyntax.Found">
+        <severity>0</severity>
+    </rule>
+
+    <!-- Disable annoying comment punctuation rules -->
+    <rule ref="Squiz.Commenting.InlineComment.InvalidEndChar">
+        <severity>0</severity>
+    </rule>
+    <rule ref="Squiz.Commenting.FunctionComment.ParamCommentFullStop">
         <severity>0</severity>
     </rule>
 
