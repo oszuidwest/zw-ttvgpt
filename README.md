@@ -1,71 +1,34 @@
-# ZW Tekst TV GPT
+# Tekst TV GPT
 
-WordPress plugin voor het automatisch genereren van Tekst TV samenvattingen met OpenAI GPT.
+De Tekst TV GPT-plugin voor WordPress gebruikt OpenAI's GPT-modellen om automatisch korte versies van artikelen te maken. Deze kunnen gebruikt worden voor een tekst tv-uitzending ('kabelkrant') of teletekst.
 
-## Features
+![preview](https://github.com/oszuidwest/teksttvgpt/assets/6742496/f6c84ab1-edca-4245-bdbd-70c83d6a3e12)
 
-- **AI-gestuurde samenvattingen**: Genereert automatisch Nederlandse samenvattingen met OpenAI GPT
-- **Typing animatie**: ChatGPT-stijl typing effect voor gegenereerde content  
-- **ACF integratie**: Directe knop in ACF velden voor eenvoudig gebruik
-- **Rate limiting**: 10 requests per minuut bescherming
-- **Multi-editor ondersteuning**: Werkt met TinyMCE, Gutenberg en textarea editors
+## Kenmerken
+- **AJAX-aangedreven samenvattingsgeneratie:** Genereert samenvattingen en plaatst deze automatisch in het juiste veld.
+- **Integratie met OpenAI API:** Maakt gebruik van een van OpenAI's vrij te kiezen taalmodellen.
+- **Foutafhandeling:** Handelt fouten netjes af, zoals te korte berichten of ontbrekende API-sleutels.
+
+## Installatie en configuratie
+1. Upload de pluginbestanden naar de `/wp-content/plugins/` directory.
+2. Activeer de plugin via het _Plugins_ scherm in WordPress.
+3. Ga in WordPress naar *Instellingen* > *Tekst TV GPT* en vul de API Key, het aantal woorden en het model (`gpt-3.5-turbo`, `gpt-4o` of `gpt-4-turbo` in.
+
+### Modelselectie
+De beste resultaten worden met de GPT 4-varianten behaald. Deze modellen zijn echter trager dan 3.5. De kwaliteit van GPT 3.5 is lager, maar de snelheid is veel acceptabeler. Het beste resultaat wordt met een fine-tuned model behaald.
+ 
+## Gebruik
+- Zorg ervoor dat de OpenAI API-sleutel correct is geconfigureerd in de plugininstellingen.
+- In de WordPress-editor staat onder het veld voor de tekst tv-versie van een bericht een "Genereer" knop. Door op deze knop te klikken, wordt het proces van samenvattingsgeneratie geactiveerd.
+- De gegenereerde samenvatting wordt weergegeven in een speciaal tekstveld.
 
 ## Vereisten
+- Gebruik van het ZuidWest TV WordPress-thema.
+- Classic Editor geactiveerd in WordPress. Block Editor wordt niet ondersteund en is niet getest.
+- Een geldige OpenAI API-sleutel.
+- WordPress 6.4 of hoger met PHP 8.2 of hoger.
 
-- WordPress 6.0+
-- PHP 8.2+
-- Advanced Custom Fields (ACF)
-- OpenAI API key
-
-## Installatie
-
-1. Upload naar `/wp-content/plugins/zw-ttvgpt/`
-2. Activeer de plugin
-3. Ga naar Instellingen > ZW Tekst TV GPT
-4. Voer je OpenAI API key in
-
-## Configuratie
-
-**API Instellingen**:
-- OpenAI API key (verplicht)
-- Model: Standaard GPT-4o, ondersteunt custom models
-- Woordlimiet: 50-500 woorden
-
-**Debug Modus**: Uit voor productie, aan voor troubleshooting (logt naar PHP error log)
-
-## Gebruik
-
-1. Open een post in de editor
-2. Gebruik de "Genereer Samenvatting" knop in de ACF meta box of onder het ACF veld
-3. De samenvatting wordt automatisch gegenereerd met typing animatie
-4. Geselecteerde regio's worden automatisch toegevoegd
-
-## Development
-
-```bash
-# Setup
-composer install
-
-# Code quality
-composer test               # Alle checks (PHP + JS)
-composer phpcs              # PHP CodeSniffer  
-composer phpstan            # PHPStan level max
-composer lint:js            # ESLint strict
-
-# Fixes
-composer fix               # Auto-fix PHP + JS issues
-```
-
-**Code Standards**: WordPress coding standards, PHPStan level max, ESLint strict mode
-
-## Changelog
-
-### 0.9.0
-- Beta release met verbeterde timing en animaties
-- Optimized typing speeds en loading message flow
-- Production-ready code quality (PHPStan max, strict linting)
-- Enhanced error handling en type safety
+_Deze plug-in is gemaakt als 'first party addon' voor het WordPress-thema van ZuidWest TV. Dit thema is [gratis te downloaden](https://github.com/oszuidwest/streekomroep-wp). Met kleine aanpassingen zou de plugin echter met ieder thema kunnen werken._
 
 ## Licentie
-
-GPL v3+ - Ontwikkeld door [Streekomroep ZuidWest](https://www.zuidwesttv.nl)
+Deze plugin is gelicenseerd onder de [LICENTIE](LICENSE) die in de repository is opgenomen.
