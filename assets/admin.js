@@ -302,15 +302,8 @@
 
 		$element.val('').prop('disabled', true);
 
-		// Show thinking animation first
-		const thinkingInterval = startThinkingAnimation($element);
-
-		// Start typing after a brief "thinking" period
-		setTimeout(function () {
-			clearInterval(thinkingInterval);
-			$element.val('');
-			typeCharacter();
-		}, 300);
+		// Start typing immediately
+		typeCharacter();
 
 		function typeCharacter() {
 			if (index < text.length) {
