@@ -13,14 +13,18 @@
 .DS_Store
 Thumbs.db
 
-# Composer
+# Package managers
 composer.lock
+package-lock.json
 
-# Build
+# Build / Testing
 *.log
 .phpunit.result.cache
+.eslintcache
 
 # WordPress
 wp-config.php
 .htaccess
+
+# AI assistant files
 CLAUDE.md
