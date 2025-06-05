@@ -274,9 +274,18 @@
 		if (messagesNeeded > 0) {
 			/*
 			 * Calculate proper wait time
-			 * First message shows immediately, so we only wait for additional messages
+			 * First message shows immediately (0ms)
+			 * Second message shows after 1200ms
 			 */
-			const waitTime = messagesNeeded * 2500 + 500; // 500ms buffer for transition
+			let waitTime = 0;
+			if (currentMessageCount === 0) {
+				// Need to wait for both messages
+				waitTime = 1700; // 1200ms for second message + 500ms buffer
+			} else if (currentMessageCount === 1) {
+				// Only need to wait for second message to finish
+				waitTime = 700; // Buffer for transition to complete
+			}
+
 			setTimeout(function () {
 				// Update ACF fields with animation
 				animateText($cachedAcfField, data.summary, $button);
@@ -504,7 +513,10 @@
 			messageCount++;
 		}
 
-		// Cycle through messages
+		// Show second message quickly, then normal speed for rest
+		setTimeout(showNextMessage, 1200); // Show second message after 1.2s
+
+		// Then cycle through remaining messages at normal speed
 		const messageInterval = setInterval(showNextMessage, 2500);
 
 		// Store intervals and count getter for cleanup
