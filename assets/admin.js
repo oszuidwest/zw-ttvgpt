@@ -106,7 +106,7 @@
         $button.data('is-generating', true);
 
         // Start showing loading messages in the ACF field
-        showLoadingMessages($button);
+        showLoadingMessages();
 
         // Make AJAX request
         $.ajax({
@@ -399,7 +399,7 @@
     /**
      * Show loading messages in ACF field while generating
      */
-    function showLoadingMessages($button) {
+    function showLoadingMessages() {
         if (!$cachedAcfField || $cachedAcfField.length === 0 || !zwTTVGPT.strings.loadingMessages) {
             return;
         }
@@ -443,11 +443,7 @@
             messageIndex++;
             messageCount++;
 
-            // Re-enable button after showing 2 messages (only if still generating)
-            if (messageCount === 2 && $button && $button.data('is-generating')) {
-                setLoadingState($button, false);
-                // Don't remove is-generating flag here, let completion handle it
-            }
+            // Keep button disabled while generating - it will be re-enabled when typing completes
         }, 2500);
 
         // Store interval and count for cleanup
