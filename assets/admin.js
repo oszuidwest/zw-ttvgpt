@@ -20,10 +20,10 @@
 		THINKING_SPEED = 80, // Ms between thinking chars
 		// Typing delay lookup
 		TYPING_DELAYS = {
-			sentence: [15, 20], // [min, variance]
-			comma: [5, 8],
-			space: [2, 5],
-			default: [1, 3],
+			sentence: [8, 12], // [min, variance] - faster
+			comma: [3, 5],
+			space: [1, 2],
+			default: [0.5, 1.5],
 		};
 
 	// Cache frequently used elements
@@ -327,8 +327,8 @@
 
 		function typeCharacter() {
 			if (index < text.length) {
-				// Type multiple characters at once - simplified
-				const charsToType = Math.floor(Math.random() * 4) + 1, // 1-4 chars
+				// Type multiple characters at once - faster
+				const charsToType = Math.floor(Math.random() * 6) + 2, // 2-7 chars
 					newText = text.substr(index, charsToType);
 				index += newText.length;
 
