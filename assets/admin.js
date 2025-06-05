@@ -8,11 +8,6 @@
 
     // Constants
     const SELECTORS = {
-        button: '#zw-ttvgpt-generate',
-        status: '#zw-ttvgpt-status',
-        result: '#zw-ttvgpt-result',
-        summary: '#zw-ttvgpt-summary',
-        wordCount: '#zw-ttvgpt-word-count',
         contentEditor: '.wp-editor-area',
         acfSummaryField: '#' + zwTTVGPT.acfFields.summary,
         acfGptField: '#' + zwTTVGPT.acfFields.gpt_marker,
@@ -39,7 +34,7 @@
      * Bind event handlers
      */
     function bindEvents() {
-        $(document).on('click', SELECTORS.button, handleGenerateClick);
+        // Event binding now handled in injectGenerateButton
     }
 
     /**
@@ -86,6 +81,9 @@
 
         // Disable button and show loading state
         setLoadingState($button, true);
+        
+        // Start showing fun messages in the ACF field
+        showFunMessages();
 
         // Make AJAX request
         $.ajax({
@@ -96,19 +94,35 @@
                 nonce: zwTTVGPT.nonce,
                 post_id: postId,
                 content: content,
-                regions: regions,
-                save_to_acf: $button.hasClass('zw-ttvgpt-inline-generate') ? 1 : 0
+                regions: regions
             },
             success: function(response) {
                 if (response.success) {
-                    handleSuccess(response.data, $button.hasClass('zw-ttvgpt-inline-generate'));
+                    handleSuccess(response.data);
                 } else {
-                    showStatus('error', response.data || zwTTVGPT.strings.error);
+                    clearFunMessages();
+                    // WordPress wp_send_json_error sends the message in response.data
+                    const errorMessage = typeof response.data === 'string' ? response.data : (response.data?.message || zwTTVGPT.strings.error);
+                    showStatus('error', errorMessage);
                 }
             },
             error: function(xhr, status, error) {
-                console.error('ZW TTVGPT Error:', error);
-                showStatus('error', zwTTVGPT.strings.error + ': ' + error);
+                console.error('ZW TTVGPT Error:', error, xhr.responseText);
+                clearFunMessages();
+                
+                // Try to parse error message from response
+                let errorMessage = zwTTVGPT.strings.error;
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response && response.data) {
+                        errorMessage = typeof response.data === 'string' ? response.data : (response.data.message || errorMessage);
+                    }
+                } catch (e) {
+                    // If parsing fails, use generic error
+                    errorMessage = error ? `${zwTTVGPT.strings.error}: ${error}` : zwTTVGPT.strings.error;
+                }
+                
+                showStatus('error', errorMessage);
             },
             complete: function() {
                 setLoadingState($button, false);
@@ -161,45 +175,89 @@
     /**
      * Handle successful response
      */
-    function handleSuccess(data, saveToAcf) {
+    function handleSuccess(data) {
         showStatus('success', zwTTVGPT.strings.success);
 
-        if (saveToAcf) {
-            // Update ACF fields with animation
-            animateText($(SELECTORS.acfSummaryField), data.summary);
-            $(SELECTORS.acfGptField).val(data.summary);
-        } else {
-            // Show in meta box
-            $(SELECTORS.result).slideDown();
-            $(SELECTORS.summary).val(data.summary);
-            $(SELECTORS.wordCount).text(`Aantal woorden: ${data.word_count}`);
-        }
+        // Update ACF fields with animation
+        animateText($(SELECTORS.acfSummaryField), data.summary);
+        $(SELECTORS.acfGptField).val(data.summary);
     }
 
     /**
-     * Animate text typing effect
+     * Animate text typing effect - ChatGPT style
      */
     function animateText($element, text) {
         let index = 0;
+        let isThinking = true;
+        const thinkingChars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+        let thinkingIndex = 0;
+        let thinkingInterval;
+        
+        // Clear any fun messages interval
+        const messageInterval = $element.data('message-interval');
+        if (messageInterval) {
+            clearInterval(messageInterval);
+            $element.removeData('message-interval');
+        }
+        
         $element.val('').prop('disabled', true);
+        
+        // Show thinking animation first
+        thinkingInterval = setInterval(function() {
+            $element.val(thinkingChars[thinkingIndex % thinkingChars.length]);
+            thinkingIndex++;
+        }, 50);
+        
+        // Start typing after a brief "thinking" period
+        setTimeout(function() {
+            clearInterval(thinkingInterval);
+            $element.val('');
+            isThinking = false;
+            typeCharacter();
+        }, 300);
 
         function typeCharacter() {
             if (index < text.length) {
-                $element.val($element.val() + text.charAt(index));
-                index++;
+                // Type multiple characters at once for faster effect
+                const charsToType = Math.random() < 0.5 ? 3 : Math.random() < 0.8 ? 2 : 1;
+                let newText = '';
+                
+                for (let i = 0; i < charsToType && index < text.length; i++) {
+                    newText += text.charAt(index);
+                    index++;
+                }
+                
+                $element.val($element.val() + newText);
+                
+                // Scroll to bottom if needed
+                $element[0].scrollTop = $element[0].scrollHeight;
 
-                let delay = Math.random() * (ANIMATION_DELAY.max - ANIMATION_DELAY.min) + ANIMATION_DELAY.min;
-                if (text.charAt(index - 1) === ' ') {
-                    delay += ANIMATION_DELAY.space;
+                // Variable delay for more natural typing (3x faster)
+                let delay;
+                if (text.charAt(index - 1) === '.' || text.charAt(index - 1) === '!' || text.charAt(index - 1) === '?') {
+                    // Longer pause after sentences
+                    delay = Math.random() * 30 + 50;
+                } else if (text.charAt(index - 1) === ',' || text.charAt(index - 1) === ';') {
+                    // Medium pause after commas
+                    delay = Math.random() * 15 + 25;
+                } else if (text.charAt(index - 1) === ' ') {
+                    // Short pause after words
+                    delay = Math.random() * 10 + 7;
+                } else {
+                    // Fast typing within words
+                    delay = Math.random() * 5 + 2;
                 }
 
                 setTimeout(typeCharacter, delay);
             } else {
-                $element.prop('disabled', false);
+                // Add a subtle pulse effect when done
+                $element.addClass('zw-ttvgpt-complete');
+                setTimeout(function() {
+                    $element.removeClass('zw-ttvgpt-complete');
+                    $element.prop('disabled', false);
+                }, 300);
             }
         }
-
-        typeCharacter();
     }
 
     /**
@@ -223,21 +281,97 @@
      * Show status message
      */
     function showStatus(type, message) {
-        const $status = $(SELECTORS.status);
+        // Create a temporary notice above the ACF field
+        const $acfField = $(SELECTORS.acfSummaryField);
+        if ($acfField.length === 0) return;
+        
+        // Remove any existing status
+        $('.zw-ttvgpt-status').remove();
+        
         const cssClass = type === 'error' ? 'notice-error' : 'notice-success';
-
-        $status
-            .removeClass('notice-error notice-success')
-            .addClass(`notice ${cssClass}`)
-            .html(`<p>${message}</p>`)
-            .slideDown();
+        const $status = $(`<div class="notice ${cssClass} zw-ttvgpt-status" style="margin: 10px 0;"><p>${message}</p></div>`);
+        
+        $acfField.parent().prepend($status);
+        $status.slideDown();
 
         // Auto-hide success messages
         if (type === 'success') {
             setTimeout(function() {
-                $status.slideUp();
+                $status.slideUp(function() {
+                    $(this).remove();
+                });
             }, zwTTVGPT.timeouts.successMessage || 3000);
         }
+    }
+
+    /**
+     * Clear fun messages and restore ACF field
+     */
+    function clearFunMessages() {
+        const $acfField = $(SELECTORS.acfSummaryField);
+        const messageInterval = $acfField.data('message-interval');
+        if (messageInterval) {
+            clearInterval(messageInterval);
+            $acfField.removeData('message-interval');
+        }
+        // Restore original placeholder if it had one
+        $acfField.val('').prop('disabled', false).removeAttr('placeholder');
+    }
+
+    /**
+     * Show fun messages in ACF field while generating
+     */
+    function showFunMessages() {
+        const $acfField = $(SELECTORS.acfSummaryField);
+        if ($acfField.length === 0 || !zwTTVGPT.strings.funMessages) return;
+        
+        // Create a shuffled copy of messages
+        const messages = [...zwTTVGPT.strings.funMessages];
+        for (let i = messages.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [messages[i], messages[j]] = [messages[j], messages[i]];
+        }
+        
+        let messageIndex = 0;
+        let messageInterval;
+        
+        // Clear the field and disable it
+        $acfField.prop('disabled', true).attr('placeholder', '');
+        
+        // Show first message immediately
+        $acfField.val(messages[messageIndex]);
+        messageIndex++;
+        
+        // Cycle through randomized messages
+        messageInterval = setInterval(function() {
+            if (messageIndex >= messages.length) {
+                // Reshuffle when we've shown all messages
+                for (let i = messages.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [messages[i], messages[j]] = [messages[j], messages[i]];
+                }
+                messageIndex = 0;
+            }
+            
+            // Smooth transition to next message
+            const nextMessage = messages[messageIndex];
+            let charIndex = 0;
+            
+            // Gradually replace current text with next message
+            const transitionInterval = setInterval(function() {
+                if (charIndex <= nextMessage.length) {
+                    $acfField.val(nextMessage.substring(0, charIndex));
+                    charIndex += 2; // Type 2 chars at a time for smooth transition
+                } else {
+                    clearInterval(transitionInterval);
+                }
+            }, 20);
+            
+            messageIndex++;
+        }, 2500);
+        
+        // Store interval for cleanup
+        $acfField.data('message-interval', messageInterval);
     }
 
     // Initialize when ready

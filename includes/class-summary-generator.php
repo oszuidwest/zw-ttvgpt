@@ -134,10 +134,8 @@ class TTVGPTSummaryGenerator {
 			$summary      = $regions_text . ' - ' . $summary;
 		}
 
-		// Save to ACF fields if requested
-		if ( ! empty( $_POST['save_to_acf'] ) ) {
-			$this->save_to_acf( $post_id, $summary );
-		}
+		// Always save to ACF fields
+		$this->save_to_acf( $post_id, $summary );
 
 		// Update rate limiting
 		$this->update_rate_limit();

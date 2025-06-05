@@ -32,7 +32,6 @@ class TTVGPTAdmin {
 		add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
-		add_action( 'add_meta_boxes', array( $this, 'add_meta_box' ) );
 	}
 
 	/**
@@ -139,12 +138,19 @@ class TTVGPTAdmin {
 			return;
 		}
 
+		// Determine version for cache busting
+		$version = ZW_TTVGPT_VERSION;
+		if ( TTVGPTSettingsManager::is_debug_mode() ) {
+			// Add timestamp for cache busting in debug mode
+			$version .= '.' . time();
+		}
+
 		// Enqueue styles
 		wp_enqueue_style(
 			'zw-ttvgpt-admin',
 			ZW_TTVGPT_URL . 'assets/admin.css',
 			array(),
-			ZW_TTVGPT_VERSION
+			$version
 		);
 
 		// Enqueue scripts
@@ -152,7 +158,7 @@ class TTVGPTAdmin {
 			'zw-ttvgpt-admin',
 			ZW_TTVGPT_URL . 'assets/admin.js',
 			array( 'jquery' ),
-			ZW_TTVGPT_VERSION,
+			$version,
 			true
 		);
 
@@ -173,61 +179,153 @@ class TTVGPTAdmin {
 					'successMessage' => TTVGPTConstants::SUCCESS_MESSAGE_TIMEOUT,
 				),
 				'strings'        => array(
-					'generating' => __( 'Samenvatting genereren...', 'zw-ttvgpt' ),
-					'error'      => __( 'Er is een fout opgetreden', 'zw-ttvgpt' ),
-					'success'    => __( 'Samenvatting gegenereerd', 'zw-ttvgpt' ),
-					'buttonText' => __( 'Genereer Samenvatting', 'zw-ttvgpt' ),
+					'generating'  => __( 'Genereren', 'zw-ttvgpt' ),
+					'error'       => __( 'Er is een fout opgetreden', 'zw-ttvgpt' ),
+					'success'     => __( 'Samenvatting gegenereerd', 'zw-ttvgpt' ),
+					'buttonText'  => __( 'Genereer', 'zw-ttvgpt' ),
+					'funMessages' => array(
+						__( '🤔 Even nadenken...', 'zw-ttvgpt' ),
+						__( '📰 Artikel aan het lezen...', 'zw-ttvgpt' ),
+						__( '✨ AI magie aan het werk...', 'zw-ttvgpt' ),
+						__( '🔍 De essentie aan het vinden...', 'zw-ttvgpt' ),
+						__( '📝 Aan het samenvatten...', 'zw-ttvgpt' ),
+						__( '🎯 Belangrijkste punten selecteren...', 'zw-ttvgpt' ),
+						__( '🧠 Neuronen aan het vuren...', 'zw-ttvgpt' ),
+						__( '💭 In diepe gedachten...', 'zw-ttvgpt' ),
+						__( '🚀 Tekst TV klaar maken...', 'zw-ttvgpt' ),
+						__( '🎨 Tekst aan het polijsten...', 'zw-ttvgpt' ),
+						__( '📺 Voor het scherm optimaliseren...', 'zw-ttvgpt' ),
+						__( '🎪 AI kunstjes uithalen...', 'zw-ttvgpt' ),
+						__( '🌟 Briljante samenvatting maken...', 'zw-ttvgpt' ),
+						__( '🏃 Snel even de hoofdzaken...', 'zw-ttvgpt' ),
+						__( '🎭 Drama eruit, feiten erin...', 'zw-ttvgpt' ),
+						__( '🔧 Laatste aanpassingen...', 'zw-ttvgpt' ),
+						__( '🎬 Perfecte TV-tekst regisseren...', 'zw-ttvgpt' ),
+						__( '🌈 Kleurtje aan het geven...', 'zw-ttvgpt' ),
+						__( '🎸 Rock \'n roll met AI...', 'zw-ttvgpt' ),
+						__( '🍕 Pizza bestellen... grapje!', 'zw-ttvgpt' ),
+						__( '🦄 Eenhoorn-krachten activeren...', 'zw-ttvgpt' ),
+						__( '🌊 Surfen door de tekst...', 'zw-ttvgpt' ),
+						__( '🎪 Circusact met woorden...', 'zw-ttvgpt' ),
+						__( '🚁 Helikopterview nemen...', 'zw-ttvgpt' ),
+						__( '🎯 Bullseye raken...', 'zw-ttvgpt' ),
+						__( '🎪 De show moet doorgaan...', 'zw-ttvgpt' ),
+						__( '🎸 Sweet dreams are made of AI...', 'zw-ttvgpt' ),
+						__( '🚂 Volle kracht vooruit...', 'zw-ttvgpt' ),
+						__( '🌟 Sterren van de hemel schrijven...', 'zw-ttvgpt' ),
+						__( '🎪 Jongleren met woorden...', 'zw-ttvgpt' ),
+						__( '🎯 Precies op het doel...', 'zw-ttvgpt' ),
+						__( '🎸 Don\'t stop me now, I\'m having AI...', 'zw-ttvgpt' ),
+						__( '🚀 Houston, we hebben een samenvatting...', 'zw-ttvgpt' ),
+						__( '🎬 Lights, camera, samenvatting!', 'zw-ttvgpt' ),
+						__( '🎸 Is dit het echte leven?', 'zw-ttvgpt' ),
+						__( '🎯 In de roos schieten...', 'zw-ttvgpt' ),
+						__( '🌟 Twinkle twinkle little AI...', 'zw-ttvgpt' ),
+						__( '🎭 To be or not to be... samengevat!', 'zw-ttvgpt' ),
+						__( '🚁 Vogelperspectief activeren...', 'zw-ttvgpt' ),
+						__( '🎸 Wake me up before you AI-go...', 'zw-ttvgpt' ),
+						__( '🌊 Met de stroom mee...', 'zw-ttvgpt' ),
+						__( '🎪 Koorddansen met zinnen...', 'zw-ttvgpt' ),
+						__( '🎯 Kaarsrecht op het doel af...', 'zw-ttvgpt' ),
+						__( '🎬 Take 1: De perfecte samenvatting...', 'zw-ttvgpt' ),
+						__( '🌟 Fonkelende formuleringen...', 'zw-ttvgpt' ),
+						__( '🎸 We will, we will... samenvatten!', 'zw-ttvgpt' ),
+						__( '🎭 Het doek gaat op...', 'zw-ttvgpt' ),
+						__( '🎸 Total eclipse of the tekst...', 'zw-ttvgpt' ),
+						__( '🌊 Surfen op de informatiegolf...', 'zw-ttvgpt' ),
+						__( '🎪 Salto\'s maken met syllables...', 'zw-ttvgpt' ),
+						__( '🎯 Pijl en boog spannen...', 'zw-ttvgpt' ),
+						__( '🚀 Warp-snelheid bereikt...', 'zw-ttvgpt' ),
+						__( '🎬 And... action!', 'zw-ttvgpt' ),
+						__( '🌟 Sterrenstof strooien...', 'zw-ttvgpt' ),
+						__( '🎸 Another one bites the tekst...', 'zw-ttvgpt' ),
+						__( '🎭 Applaus voor de AI...', 'zw-ttvgpt' ),
+						__( '🚁 Eagle eye perspectief...', 'zw-ttvgpt' ),
+						__( '🌊 Zeilen op zee van tekst...', 'zw-ttvgpt' ),
+						__( '🎪 Trapeze-act met taal...', 'zw-ttvgpt' ),
+						__( '🎯 Laser-focus aan...', 'zw-ttvgpt' ),
+						__( '🚀 Turbo-modus geactiveerd...', 'zw-ttvgpt' ),
+						__( '🎬 De Oscar gaat naar...', 'zw-ttvgpt' ),
+						__( '🌟 Glitter en glamour toevoegen...', 'zw-ttvgpt' ),
+						__( '🎸 Stairway to samenvatting...', 'zw-ttvgpt' ),
+						__( '🚁 Vanaf grote hoogte bekijken...', 'zw-ttvgpt' ),
+						__( '🌊 Drijven op de datastroom...', 'zw-ttvgpt' ),
+						__( '🎪 Clownerie met content...', 'zw-ttvgpt' ),
+						__( '🎯 Target acquired...', 'zw-ttvgpt' ),
+						__( '🚀 Hyperdrive inschakelen...', 'zw-ttvgpt' ),
+						__( '🎬 Popcorn erbij pakken...', 'zw-ttvgpt' ),
+						__( '🌟 Sprankje magie toevoegen...', 'zw-ttvgpt' ),
+						__( '🎸 Thunderstruck door AI...', 'zw-ttvgpt' ),
+						__( '🎭 Standing ovation voorbereiden...', 'zw-ttvgpt' ),
+						__( '🚁 Birdseye bootcamp...', 'zw-ttvgpt' ),
+						__( '🌊 Meedobberen op de info-oceaan...', 'zw-ttvgpt' ),
+						__( '🎪 Goochelen met grammatica...', 'zw-ttvgpt' ),
+						__( '🎯 Bulls-eye loading...', 'zw-ttvgpt' ),
+						__( '🚀 Countdown gestart...', 'zw-ttvgpt' ),
+						__( '🎬 Silence... AI in actie!', 'zw-ttvgpt' ),
+						__( '🌟 Sprankelende resultaten komen eraan...', 'zw-ttvgpt' ),
+						__( '🚁 Panorama-modus aan...', 'zw-ttvgpt' ),
+						__( '🎪 Balanceren op de betekenis...', 'zw-ttvgpt' ),
+						__( '🎯 Doelwit in zicht...', 'zw-ttvgpt' ),
+						__( '🚀 Raketwetenschap toepassen...', 'zw-ttvgpt' ),
+						__( '🎬 De regisseur zegt: "Cut!"...', 'zw-ttvgpt' ),
+						__( '🌟 Sterallures krijgen...', 'zw-ttvgpt' ),
+						__( '🎸 Highway to tekst-hell...', 'zw-ttvgpt' ),
+						__( '🎭 Bravo! Bravo! Bis!', 'zw-ttvgpt' ),
+						__( '🚁 Luchtfoto\'s maken...', 'zw-ttvgpt' ),
+						__( '🎸 Eye of the AI-ger...', 'zw-ttvgpt' ),
+						__( '🌊 Kitesurfen door content...', 'zw-ttvgpt' ),
+						__( '🎪 Vuurspuwen met feiten...', 'zw-ttvgpt' ),
+						__( '🎯 Scherpschutter-modus...', 'zw-ttvgpt' ),
+						__( '🚀 Versnellers aanzetten...', 'zw-ttvgpt' ),
+						__( '🎬 De trailer maken...', 'zw-ttvgpt' ),
+						__( '🌟 Glinsteren en glanzen...', 'zw-ttvgpt' ),
+						__( '🎸 Smoke on the water... AI on fire!', 'zw-ttvgpt' ),
+						__( '🎭 Toegift! Toegift!', 'zw-ttvgpt' ),
+						__( '🚁 Helikopter-ouders mode...', 'zw-ttvgpt' ),
+						__( '🎸 I want to break free... met AI!', 'zw-ttvgpt' ),
+						__( '🌊 Parasailen over paragrafen...', 'zw-ttvgpt' ),
+						__( '🎪 Zwaard slikken... of toch niet...', 'zw-ttvgpt' ),
+						__( '🎯 Vizier scherp stellen...', 'zw-ttvgpt' ),
+						__( '🚀 Booster rockets aan...', 'zw-ttvgpt' ),
+						__( '🎬 Behind the scenes kijken...', 'zw-ttvgpt' ),
+						__( '🌟 Bling bling toevoegen...', 'zw-ttvgpt' ),
+						__( '🎸 Born to be AI\'d...', 'zw-ttvgpt' ),
+						__( '🎭 Het publiek wordt wild...', 'zw-ttvgpt' ),
+						__( '🚁 Quadcopter-kwaliteit...', 'zw-ttvgpt' ),
+						__( '🎸 Under pressure... AI edition...', 'zw-ttvgpt' ),
+						__( '🌊 Bodyboarden op bytes...', 'zw-ttvgpt' ),
+						__( '🎪 Piramide bouwen met woorden...', 'zw-ttvgpt' ),
+						__( '🎯 Doelgericht denken...', 'zw-ttvgpt' ),
+						__( '🚀 Naar de maan en terug...', 'zw-ttvgpt' ),
+						__( '🎬 Blooper reel vermijden...', 'zw-ttvgpt' ),
+						__( '🌟 Schitteren als een diamant...', 'zw-ttvgpt' ),
+						__( '🎸 Whole lotta AI going on...', 'zw-ttvgpt' ),
+						__( '🎭 Staande ovatie incoming...', 'zw-ttvgpt' ),
+						__( '🚁 Luchtacrobatiek met letters...', 'zw-ttvgpt' ),
+						__( '🌊 Waterskiën over woorden...', 'zw-ttvgpt' ),
+						__( '🎪 Menselijke piramide van zinnen...', 'zw-ttvgpt' ),
+						__( '🎯 360 no-scope samenvatting...', 'zw-ttvgpt' ),
+						__( '🚀 Interstellaire intelligentie...', 'zw-ttvgpt' ),
+						__( '🎬 Post-productie magic...', 'zw-ttvgpt' ),
+						__( '🌟 Fonkelen als vuurwerk...', 'zw-ttvgpt' ),
+						__( '🎸 Knockin\' on heaven\'s AI...', 'zw-ttvgpt' ),
+						__( '🎭 Encore! Encore!', 'zw-ttvgpt' ),
+						__( '🚁 Top Gun modus...', 'zw-ttvgpt' ),
+						__( '🎸 Another brick in the AI...', 'zw-ttvgpt' ),
+						__( '🌊 Wakeboarden op woorden...', 'zw-ttvgpt' ),
+						__( '🎪 Dompteur van de data...', 'zw-ttvgpt' ),
+						__( '🎯 Precisiebombardement...', 'zw-ttvgpt' ),
+						__( '🚀 Mars-missie van maken...', 'zw-ttvgpt' ),
+						__( '🎬 Directors cut klaarmaken...', 'zw-ttvgpt' ),
+						__( '🌟 Sterrenstelsel van woorden...', 'zw-ttvgpt' ),
+						__( '🎸 AI\'s just wanna have fun...', 'zw-ttvgpt' ),
+						__( '🎭 Het applaus daveren...', 'zw-ttvgpt' ),
+						__( '🚁 Maverick-manoeuvres...', 'zw-ttvgpt' ),
+					),
 				),
 			)
 		);
-	}
-
-	/**
-	 * Add meta box to post edit screen
-	 *
-	 * @return void
-	 */
-	public function add_meta_box(): void {
-		add_meta_box(
-			'zw-ttvgpt-generator',
-			__( 'Tekst TV Samenvatting Generator', 'zw-ttvgpt' ),
-			array( $this, 'render_meta_box' ),
-			TTVGPTConstants::SUPPORTED_POST_TYPE,
-			'side',
-			'high'
-		);
-	}
-
-	/**
-	 * Render meta box content
-	 *
-	 * @param \WP_Post $post Current post object
-	 * @return void
-	 */
-	public function render_meta_box( \WP_Post $post ): void {
-		?>
-		<div id="zw-ttvgpt-meta-box">
-			<p class="description">
-				<?php esc_html_e( 'Genereer automatisch een samenvatting voor Tekst TV op basis van de inhoud van dit artikel.', 'zw-ttvgpt' ); ?>
-			</p>
-			
-			<div id="zw-ttvgpt-status" style="display: none;"></div>
-			
-			<p>
-				<button type="button" id="zw-ttvgpt-generate" class="button button-primary" data-post-id="<?php echo esc_attr( (string) $post->ID ); ?>">
-					<?php esc_html_e( 'Genereer Samenvatting', 'zw-ttvgpt' ); ?>
-				</button>
-			</p>
-			
-			<div id="zw-ttvgpt-result" style="display: none; margin-top: 10px;">
-				<label for="zw-ttvgpt-summary"><?php esc_html_e( 'Gegenereerde samenvatting:', 'zw-ttvgpt' ); ?></label>
-				<textarea id="zw-ttvgpt-summary" class="widefat" rows="5" readonly></textarea>
-				<p class="description">
-					<span id="zw-ttvgpt-word-count"></span>
-				</p>
-			</div>
-		</div>
-		<?php
 	}
 
 	/**

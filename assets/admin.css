@@ -2,37 +2,21 @@
  * ZW TTVGPT Admin Styles
  */
 
-/* Meta box styles */
-#zw-ttvgpt-meta-box {
-    padding: 10px 0;
-}
-
-#zw-ttvgpt-meta-box .button {
-    width: 100%;
-    text-align: center;
-}
-
-#zw-ttvgpt-status {
+/* Status messages */
+.zw-ttvgpt-status {
     margin: 10px 0;
     padding: 10px;
     border-left: 4px solid;
 }
 
-#zw-ttvgpt-status.notice-error {
+.zw-ttvgpt-status.notice-error {
     border-left-color: #dc3232;
     background: #fbeaea;
 }
 
-#zw-ttvgpt-status.notice-success {
+.zw-ttvgpt-status.notice-success {
     border-left-color: #46b450;
     background: #ecf7ed;
-}
-
-#zw-ttvgpt-result textarea {
-    margin-top: 10px;
-    font-family: monospace;
-    font-size: 13px;
-    line-height: 1.5;
 }
 
 /* Inline generate button for ACF field */
@@ -41,27 +25,85 @@
     display: block;
 }
 
-/* Loading state */
-.button.updating-message:before {
-    content: '\f463';
-    font-family: dashicons;
-    display: inline-block;
-    margin-right: 5px;
+/* Loading state animations */
+@keyframes zw-ttvgpt-gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
 }
 
-/* Reusable rotation animation */
-.zw-ttvgpt-rotating,
-.button.updating-message:before {
-    animation: zw-ttvgpt-rotation 2s infinite linear;
+@keyframes zw-ttvgpt-shimmer {
+    0% {
+        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+    100% {
+        transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
 }
 
-@keyframes zw-ttvgpt-rotation {
-    from {
-        transform: rotate(0deg);
+/* ChatGPT-style typing animation */
+textarea.zw-ttvgpt-complete {
+    animation: zw-ttvgpt-pulse 0.3s ease-in-out;
+    border-color: #46b450 !important;
+    box-shadow: 0 0 0 1px #46b450;
+}
+
+@keyframes zw-ttvgpt-pulse {
+    0% {
+        box-shadow: 0 0 0 1px #46b450;
     }
-    to {
-        transform: rotate(359deg);
+    50% {
+        box-shadow: 0 0 8px 2px rgba(70, 180, 80, 0.5);
     }
+    100% {
+        box-shadow: 0 0 0 1px #46b450;
+    }
+}
+
+/* Thinking dots animation */
+.zw-ttvgpt-thinking {
+    font-size: 20px;
+    color: #666;
+    letter-spacing: 0.5em;
+}
+
+/* Make the generate button more prominent during generation */
+.button.updating-message {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #667eea 100%);
+    background-size: 400% 400%;
+    border-color: #667eea;
+    color: #fff;
+    animation: zw-ttvgpt-gradient 3s ease infinite;
+    position: relative;
+    overflow: hidden;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.button.updating-message:hover {
+    color: #fff;
+}
+
+/* Add shimmer effect to button while generating */
+.button.updating-message:after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        45deg,
+        transparent 30%,
+        rgba(255, 255, 255, 0.3) 50%,
+        transparent 70%
+    );
+    animation: zw-ttvgpt-shimmer 1.5s infinite;
 }
 
 /* Settings page */
@@ -76,12 +118,4 @@
 /* Hide the GPT marker field */
 .acf-field-66ad2a3105371 {
     display: none !important;
-}
-
-/* Responsive adjustments */
-@media screen and (max-width: 782px) {
-    #zw-ttvgpt-meta-box .button {
-        padding: 10px 15px;
-        font-size: 14px;
-    }
 }
