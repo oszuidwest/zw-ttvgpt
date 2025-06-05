@@ -121,12 +121,13 @@ class TTVGPTSummaryGenerator {
 		$result = $this->api_handler->generate_summary( $clean_content, $this->word_limit );
 
 		if ( ! $result['success'] ) {
-			wp_send_json_error( $result['error'], 500 );
+			$error = isset( $result['error'] ) ? $result['error'] : __( 'Onbekende fout', 'zw-ttvgpt' );
+			wp_send_json_error( $error, 500 );
 		}
 
 		// Get selected regions if available
 		$regions = isset( $_POST['regions'] ) ? array_map( 'sanitize_text_field', (array) $_POST['regions'] ) : array();
-		$summary = $result['data'];
+		$summary = isset( $result['data'] ) ? $result['data'] : '';
 
 		// Prepend regions to summary if provided
 		if ( ! empty( $regions ) ) {

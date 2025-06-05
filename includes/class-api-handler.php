@@ -91,6 +91,11 @@ class TTVGPTApiHandler {
 		// Validate API key
 		if ( empty( $this->api_key ) ) {
 			$this->logger->error( 'API key is missing' );
+			/**
+			 * Return error response
+			 *
+			 * @var array{success: bool, data?: string, error?: string}
+			 */
 			return TTVGPTHelper::error_response( __( 'API key niet geconfigureerd', 'zw-ttvgpt' ) );
 		}
 
@@ -130,7 +135,7 @@ class TTVGPTApiHandler {
 					'Authorization' => 'Bearer ' . $this->api_key,
 					'Content-Type'  => 'application/json',
 				),
-				'body'    => wp_json_encode( $request_body ),
+				'body'    => ( wp_json_encode( $request_body ) !== false ) ? wp_json_encode( $request_body ) : '',
 			)
 		);
 
@@ -138,6 +143,11 @@ class TTVGPTApiHandler {
 		if ( is_wp_error( $response ) ) {
 			// Minimale logging zonder debug mode
 			$this->logger->error( 'OpenAI API request failed: ' . $response->get_error_message() );
+			/**
+			 * Return network error response
+			 *
+			 * @var array{success: bool, data?: string, error?: string}
+			 */
 			return TTVGPTHelper::error_response(
 				sprintf(
 					/* translators: %s: Error message */
@@ -148,7 +158,7 @@ class TTVGPTApiHandler {
 		}
 
 		// Check HTTP status code
-		$status_code = wp_remote_retrieve_response_code( $response );
+		$status_code = (int) wp_remote_retrieve_response_code( $response );
 		if ( 200 !== $status_code ) {
 			// Log alleen status code zonder response body in non-debug mode
 			$this->logger->error(
@@ -160,6 +170,11 @@ class TTVGPTApiHandler {
 			);
 
 			$error_message = $this->get_api_error_message( $status_code );
+			/**
+			 * Return API error response
+			 *
+			 * @var array{success: bool, data?: string, error?: string}
+			 */
 			return TTVGPTHelper::error_response( $error_message );
 		}
 
@@ -174,20 +189,35 @@ class TTVGPTApiHandler {
 					'json_error' => json_last_error_msg(),
 				)
 			);
+			/**
+			 * Return JSON parse error response
+			 *
+			 * @var array{success: bool, data?: string, error?: string}
+			 */
 			return TTVGPTHelper::error_response( __( 'Ongeldig antwoord van API', 'zw-ttvgpt' ) );
 		}
 
 		// Extract summary from response
-		if ( ! isset( $data['choices'][0]['message']['content'] ) ) {
+		if ( ! is_array( $data ) || ! isset( $data['choices'][0]['message']['content'] ) ) {
 			$this->logger->error(
 				'Unexpected API response structure',
 				array(
 					'response' => $data,
 				)
 			);
+			/**
+			 * Return unexpected format error response
+			 *
+			 * @var array{success: bool, data?: string, error?: string}
+			 */
 			return TTVGPTHelper::error_response( __( 'Onverwacht API antwoord formaat', 'zw-ttvgpt' ) );
 		}
 
+		/**
+		 * Cast data to expected structure
+		 *
+		 * @var array{choices: array{0: array{message: array{content: string}}}} $data
+		 */
 		$summary = trim( $data['choices'][0]['message']['content'] );
 
 		// Minimale logging bij succes
@@ -198,6 +228,11 @@ class TTVGPTApiHandler {
 			)
 		);
 
+		/**
+		 * Return success response with summary
+		 *
+		 * @var array{success: bool, data?: string, error?: string}
+		 */
 		return TTVGPTHelper::success_response( $summary );
 	}
 

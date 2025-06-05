@@ -23,194 +23,46 @@
       "wp": "readonly",
       "tinyMCE": "readonly"
     },
-    "extends": ["eslint:recommended"],
+    "extends": [
+      "eslint:all",
+      "plugin:@wordpress/eslint-plugin/recommended"
+    ],
     "parserOptions": {
       "ecmaVersion": 2020,
       "sourceType": "script"
     },
     "rules": {
-      "indent": ["error", 4, {
-        "SwitchCase": 1,
-        "VariableDeclarator": 1,
-        "outerIIFEBody": 1,
-        "MemberExpression": 1,
-        "FunctionDeclaration": {
-          "parameters": 1,
-          "body": 1
-        },
-        "FunctionExpression": {
-          "parameters": 1,
-          "body": 1
-        },
-        "CallExpression": {
-          "arguments": 1
-        },
-        "ArrayExpression": 1,
-        "ObjectExpression": 1
-      }],
-      "linebreak-style": ["error", "unix"],
-      "quotes": ["error", "single", {
-        "avoidEscape": true,
-        "allowTemplateLiterals": true
-      }],
-      "semi": ["error", "always"],
-      "semi-spacing": ["error", {
-        "before": false,
-        "after": true
-      }],
-      "no-unused-vars": ["error", {
-        "args": "after-used",
-        "ignoreRestSiblings": true,
-        "varsIgnorePattern": "^_"
-      }],
-      "no-console": ["error", {
-        "allow": ["error", "warn"]
-      }],
-      "eqeqeq": ["error", "always", {
-        "null": "ignore"
-      }],
-      "curly": ["error", "all"],
-      "brace-style": ["error", "1tbs", {
-        "allowSingleLine": false
-      }],
-      "comma-dangle": ["error", "never"],
-      "comma-spacing": ["error", {
-        "before": false,
-        "after": true
-      }],
-      "comma-style": ["error", "last"],
-      "keyword-spacing": ["error", {
-        "before": true,
-        "after": true
-      }],
-      "space-before-blocks": ["error", "always"],
-      "space-before-function-paren": ["error", {
-        "anonymous": "never",
-        "named": "never",
-        "asyncArrow": "always"
-      }],
-      "space-in-parens": ["error", "never"],
-      "space-infix-ops": ["error"],
-      "space-unary-ops": ["error", {
-        "words": true,
-        "nonwords": false
-      }],
-      "object-curly-spacing": ["error", "always"],
-      "array-bracket-spacing": ["error", "never"],
-      "computed-property-spacing": ["error", "never"],
-      "func-call-spacing": ["error", "never"],
-      "key-spacing": ["error", {
-        "beforeColon": false,
-        "afterColon": true,
-        "mode": "strict"
-      }],
-      "no-trailing-spaces": ["warn"],
-      "no-multiple-empty-lines": ["error", {
-        "max": 1,
-        "maxEOF": 0,
-        "maxBOF": 0
-      }],
-      "no-whitespace-before-property": ["error"],
-      "padded-blocks": ["error", "never"],
-      "padding-line-between-statements": ["off"],
-      "block-scoped-var": ["error"],
-      "consistent-return": ["error"],
-      "no-else-return": ["error", {
-        "allowElseIf": false
-      }],
-      "no-implicit-coercion": ["error"],
-      "no-implied-eval": ["error"],
-      "no-lone-blocks": ["error"],
-      "no-loop-func": ["error"],
-      "no-multi-spaces": ["error"],
-      "no-new": ["error"],
-      "no-new-func": ["error"],
-      "no-new-wrappers": ["error"],
-      "no-param-reassign": ["error"],
-      "no-redeclare": ["error"],
-      "no-return-assign": ["error", "always"],
-      "no-self-compare": ["error"],
-      "no-sequences": ["error"],
-      "no-throw-literal": ["error"],
-      "no-unmodified-loop-condition": ["error"],
-      "no-unused-expressions": ["error", {
-        "allowShortCircuit": true,
-        "allowTernary": true
-      }],
-      "no-useless-call": ["error"],
-      "no-useless-concat": ["error"],
-      "no-useless-return": ["error"],
-      "no-void": ["error"],
-      "no-with": ["error"],
-      "prefer-const": ["error", {
-        "destructuring": "all"
-      }],
-      "radix": ["error", "always"],
-      "wrap-iife": ["error", "inside"],
-      "yoda": ["error", "never"],
-      "no-shadow": ["error"],
-      "no-shadow-restricted-names": ["error"],
-      "no-undef-init": ["error"],
-      "no-use-before-define": ["error", {
-        "functions": false,
-        "classes": true,
-        "variables": true
-      }],
-      "array-callback-return": ["error"],
-      "camelcase": ["warn", {
-        "properties": "always",
-        "ignoreDestructuring": false,
-        "allow": ["post_id", "post_ID"]
-      }],
-      "consistent-this": ["error", "self"],
-      "func-style": ["error", "declaration", {
-        "allowArrowFunctions": false
-      }],
-      "max-depth": ["error", 4],
-      "max-nested-callbacks": ["error", 3],
-      "max-params": ["error", 5],
-      "new-cap": ["error", {
-        "newIsCap": true,
-        "capIsNew": true
-      }],
-      "no-array-constructor": ["error"],
-      "no-lonely-if": ["error"],
-      "no-negated-condition": ["error"],
-      "no-nested-ternary": ["error"],
-      "no-new-object": ["error"],
-      "no-unneeded-ternary": ["error"],
-      "one-var": ["error", "never"],
-      "operator-assignment": ["error", "always"],
-      "prefer-object-spread": ["error"],
-      "quote-props": ["error", "as-needed"],
-      "spaced-comment": ["error", "always", {
-        "exceptions": ["-", "+", "*"],
-        "markers": ["!", "/"]
-      }],
-      "arrow-body-style": ["error", "as-needed"],
-      "arrow-parens": ["error", "always"],
-      "arrow-spacing": ["error", {
-        "before": true,
-        "after": true
-      }],
-      "no-confusing-arrow": ["error"],
-      "no-duplicate-imports": ["error"],
-      "no-useless-computed-key": ["error"],
-      "no-useless-constructor": ["error"],
-      "no-useless-rename": ["error"],
-      "no-var": ["error"],
-      "object-shorthand": ["warn", "properties"],
+      "no-magic-numbers": ["off"],
+      "func-style": ["error", "declaration"],
+      "no-plusplus": ["off"],
+      "max-lines-per-function": ["error", { "max": 100 }],
+      "max-statements": ["error", 30],
+      "sort-keys": ["off"],
+      "one-var": ["off"],
+      "id-length": ["error", { "min": 2, "exceptions": ["$", "i", "j", "e"] }],
+      "func-names": ["off"],
+      "no-inline-comments": ["off"],
+      "line-comment-position": ["off"],
+      "no-use-before-define": ["error", { "functions": false }],
+      "no-ternary": ["off"],
+      "sort-vars": ["off"],
+      "capitalized-comments": ["off"],
+      "strict": ["off"],
       "prefer-arrow-callback": ["off"],
-      "prefer-destructuring": ["error", {
-        "array": false,
-        "object": true
-      }],
-      "prefer-numeric-literals": ["error"],
-      "prefer-rest-params": ["error"],
-      "prefer-spread": ["error"],
+      "object-shorthand": ["warn"],
+      "no-invalid-this": ["off"],
+      "camelcase": ["warn", { "allow": ["post_id"] }],
+      "jsdoc/require-param-type": ["off"],
+      "max-lines": ["error", { "max": 500 }],
+      "prefer-destructuring": ["warn"],
+      "array-element-newline": ["off"],
+      "multiline-ternary": ["off"],
+      "no-negated-condition": ["warn"],
       "prefer-template": ["warn"],
-      "rest-spread-spacing": ["error", "never"],
-      "template-curly-spacing": ["error", "never"]
+      "prefer-named-capture-group": ["off"],
+      "require-unicode-regexp": ["off"],
+      "no-console": ["error", { "allow": ["error", "warn"] }],
+      "@wordpress/no-unused-vars-before-return": ["off"]
     }
   }
 }

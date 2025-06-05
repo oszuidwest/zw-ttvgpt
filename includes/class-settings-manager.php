@@ -27,10 +27,11 @@ class TTVGPTSettingsManager {
 	 */
 	public static function get_settings(): array {
 		if ( null === self::$settings_cache ) {
-			self::$settings_cache = get_option(
+			$settings             = get_option(
 				TTVGPTConstants::SETTINGS_OPTION_NAME,
 				TTVGPTConstants::get_default_settings()
 			);
+			self::$settings_cache = is_array( $settings ) ? $settings : TTVGPTConstants::get_default_settings();
 		}
 
 		return self::$settings_cache;
@@ -101,7 +102,8 @@ class TTVGPTSettingsManager {
 	 * @return string
 	 */
 	public static function get_api_key(): string {
-		return self::get_setting( 'api_key', '' );
+		$api_key = self::get_setting( 'api_key', '' );
+		return is_string( $api_key ) ? $api_key : '';
 	}
 
 	/**
@@ -110,7 +112,8 @@ class TTVGPTSettingsManager {
 	 * @return string
 	 */
 	public static function get_model(): string {
-		return self::get_setting( 'model', TTVGPTConstants::DEFAULT_MODEL );
+		$model = self::get_setting( 'model', TTVGPTConstants::DEFAULT_MODEL );
+		return is_string( $model ) ? $model : TTVGPTConstants::DEFAULT_MODEL;
 	}
 
 	/**
@@ -119,7 +122,8 @@ class TTVGPTSettingsManager {
 	 * @return int
 	 */
 	public static function get_word_limit(): int {
-		return (int) self::get_setting( 'word_limit', TTVGPTConstants::DEFAULT_WORD_LIMIT );
+		$word_limit = self::get_setting( 'word_limit', TTVGPTConstants::DEFAULT_WORD_LIMIT );
+		return is_numeric( $word_limit ) ? (int) $word_limit : TTVGPTConstants::DEFAULT_WORD_LIMIT;
 	}
 
 	/**
