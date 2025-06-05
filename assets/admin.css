@@ -1,0 +1,87 @@
+/**
+ * ZW TTVGPT Admin Styles
+ */
+
+/* Meta box styles */
+#zw-ttvgpt-meta-box {
+    padding: 10px 0;
+}
+
+#zw-ttvgpt-meta-box .button {
+    width: 100%;
+    text-align: center;
+}
+
+#zw-ttvgpt-status {
+    margin: 10px 0;
+    padding: 10px;
+    border-left: 4px solid;
+}
+
+#zw-ttvgpt-status.notice-error {
+    border-left-color: #dc3232;
+    background: #fbeaea;
+}
+
+#zw-ttvgpt-status.notice-success {
+    border-left-color: #46b450;
+    background: #ecf7ed;
+}
+
+#zw-ttvgpt-result textarea {
+    margin-top: 10px;
+    font-family: monospace;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+/* Inline generate button for ACF field */
+.zw-ttvgpt-inline-generate {
+    margin-top: 8px !important;
+    display: block;
+}
+
+/* Loading state */
+.button.updating-message:before {
+    content: '\f463';
+    font-family: dashicons;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+/* Reusable rotation animation */
+.zw-ttvgpt-rotating,
+.button.updating-message:before {
+    animation: zw-ttvgpt-rotation 2s infinite linear;
+}
+
+@keyframes zw-ttvgpt-rotation {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(359deg);
+    }
+}
+
+/* Settings page */
+.zw-ttvgpt-settings-section {
+    margin-top: 20px;
+}
+
+.zw-ttvgpt-settings-section th {
+    padding-left: 0;
+}
+
+/* Hide the GPT marker field */
+.acf-field-66ad2a3105371 {
+    display: none !important;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 782px) {
+    #zw-ttvgpt-meta-box .button {
+        padding: 10px 15px;
+        font-size: 14px;
+    }
+}

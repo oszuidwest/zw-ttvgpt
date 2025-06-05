@@ -1,5 +1,11 @@
 parameters:
-  level: 5
-  paths:
-    - ttvgpt.php
-    - src/
+    level: 6
+    paths:
+        - zw-ttvgpt.php
+        - includes/
+    bootstrapFiles:
+        - phpstan-bootstrap.php
+    excludePaths:
+        - vendor/
+    treatPhpDocTypesAsCertain: false
+    checkMissingIterableValueType: false

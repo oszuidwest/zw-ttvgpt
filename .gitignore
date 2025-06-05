@@ -1,5 +1,26 @@
+# Dependencies
+/vendor/
+/node_modules/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
 .DS_Store
+Thumbs.db
 
 # Composer
 composer.lock
-vendor/
+
+# Build
+*.log
+.phpunit.result.cache
+
+# WordPress
+wp-config.php
+.htaccess
+CLAUDE.md
