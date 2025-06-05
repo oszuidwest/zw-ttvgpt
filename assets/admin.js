@@ -23,6 +23,14 @@
     const THINKING_CHARS = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
     const THINKING_SPEED = 80; // ms between thinking chars
 
+    // Typing delay lookup
+    const TYPING_DELAYS = {
+        sentence: [15, 20],    // [min, variance]
+        comma: [5, 8],
+        space: [2, 5],
+        default: [1, 3]
+    };
+
     // Cache frequently used elements
     let $cachedAcfField = null;
     let $cachedGptField = null;
@@ -283,38 +291,29 @@
 
         function typeCharacter() {
             if (index < text.length) {
-                // Type multiple characters at once for faster effect - more random chunks
-                const rand = Math.random();
-                const charsToType = rand < 0.15 ? 5 : rand < 0.35 ? 4 : rand < 0.6 ? 3 : rand < 0.85 ? 2 : 1;
-                let newText = '';
-                
-                for (let i = 0; i < charsToType && index < text.length; i++) {
-                    newText += text.charAt(index);
-                    index++;
-                }
+                // Type multiple characters at once - simplified
+                const charsToType = Math.floor(Math.random() * 4) + 1; // 1-4 chars
+                const newText = text.substr(index, charsToType);
+                index += newText.length;
                 
                 $element.val($element.val() + newText);
                 
                 // Scroll to bottom if needed
                 $element[0].scrollTop = $element[0].scrollHeight;
 
-                // Much faster and more random delays
-                let delay;
+                // Simplified delay calculation
                 const lastChar = text.charAt(index - 1);
-                if (lastChar === '.' || lastChar === '!' || lastChar === '?') {
-                    // Short pause after sentences
-                    delay = Math.random() * 20 + 15;
-                } else if (lastChar === ',' || lastChar === ';') {
-                    // Tiny pause after commas
-                    delay = Math.random() * 8 + 5;
+                let delayConfig = TYPING_DELAYS.default;
+                
+                if ('.!?'.includes(lastChar)) {
+                    delayConfig = TYPING_DELAYS.sentence;
+                } else if (',;'.includes(lastChar)) {
+                    delayConfig = TYPING_DELAYS.comma;
                 } else if (lastChar === ' ') {
-                    // Almost no pause after words
-                    delay = Math.random() * 5 + 2;
-                } else {
-                    // Very fast typing within words
-                    delay = Math.random() * 3 + 1;
+                    delayConfig = TYPING_DELAYS.space;
                 }
-
+                
+                const delay = delayConfig[0] + Math.random() * delayConfig[1];
                 setTimeout(typeCharacter, delay);
             } else {
                 // Add a subtle pulse effect when done

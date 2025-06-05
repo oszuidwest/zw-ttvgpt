@@ -25,85 +25,52 @@
     display: block;
 }
 
-/* Loading state animations */
-@keyframes zw-ttvgpt-gradient {
+/* Loading state animation - combined gradient effect */
+@keyframes zw-ttvgpt-generating {
     0% {
         background-position: 0% 50%;
+        box-shadow: 0 0 5px rgba(102, 126, 234, 0.5);
     }
     50% {
         background-position: 100% 50%;
+        box-shadow: 0 0 20px rgba(240, 147, 251, 0.8);
     }
     100% {
         background-position: 0% 50%;
+        box-shadow: 0 0 5px rgba(102, 126, 234, 0.5);
     }
 }
 
-@keyframes zw-ttvgpt-shimmer {
-    0% {
-        transform: translateX(-100%) translateY(-100%) rotate(45deg);
-    }
-    100% {
-        transform: translateX(100%) translateY(100%) rotate(45deg);
-    }
-}
-
-/* ChatGPT-style typing animation */
+/* Completion animation - simplified pulse */
 textarea.zw-ttvgpt-complete {
-    animation: zw-ttvgpt-pulse 0.3s ease-in-out;
+    animation: zw-ttvgpt-complete 0.3s ease-in-out;
     border-color: #46b450 !important;
-    box-shadow: 0 0 0 1px #46b450;
 }
 
-@keyframes zw-ttvgpt-pulse {
-    0% {
+@keyframes zw-ttvgpt-complete {
+    0%, 100% {
         box-shadow: 0 0 0 1px #46b450;
     }
     50% {
         box-shadow: 0 0 8px 2px rgba(70, 180, 80, 0.5);
     }
-    100% {
-        box-shadow: 0 0 0 1px #46b450;
-    }
 }
 
-/* Thinking dots animation */
-.zw-ttvgpt-thinking {
-    font-size: 20px;
-    color: #666;
-    letter-spacing: 0.5em;
-}
 
-/* Make the generate button more prominent during generation */
+/* Generate button during generation - simplified */
 .button.zw-ttvgpt-generating {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #667eea 100%);
     background-size: 400% 400%;
-    border-color: #667eea;
+    border-color: transparent;
     color: #fff;
-    animation: zw-ttvgpt-gradient 3s ease infinite;
-    position: relative;
-    overflow: hidden;
+    animation: zw-ttvgpt-generating 3s ease infinite;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
 }
 
 .button.zw-ttvgpt-generating:hover {
     color: #fff;
-}
-
-/* Add shimmer effect to button while generating */
-.button.zw-ttvgpt-generating:after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: linear-gradient(
-        45deg,
-        transparent 30%,
-        rgba(255, 255, 255, 0.3) 50%,
-        transparent 70%
-    );
-    animation: zw-ttvgpt-shimmer 1.5s infinite;
+    transform: scale(1.02);
 }
 
 /* Settings page */
