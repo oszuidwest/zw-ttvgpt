@@ -185,8 +185,17 @@
 	function getSelectedRegions() {
 		const regions = [];
 		$(SELECTORS.regionCheckboxes).each(function () {
-			const $label = $(this).parent(),
-				labelText = $label.text().trim();
+			const $label = $(this).parent();
+			// Get only the direct text content, not from child elements
+			// This excludes text from Yoast's screen-reader-text spans
+			const labelText = $label
+				.contents()
+				.filter(function() {
+					return this.nodeType === 3; // Text nodes only
+				})
+				.text()
+				.trim();
+			
 			if (labelText) {
 				regions.push(labelText);
 			}
