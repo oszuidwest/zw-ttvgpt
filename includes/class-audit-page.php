@@ -283,39 +283,34 @@ class TTVGPTAuditPage {
 								<div class="row-actions">
 									<span class="edit">
 										<?php
-										// translators: %s is the post title.
+										/* translators: %s is the post title. */
+										$edit_aria_label = sprintf( __( 'Bewerk "%s"', 'zw-ttvgpt' ), get_the_title( $post->ID ) );
 										?>
-										<a href="<?php echo esc_url( $post_url ); ?>" aria-label="<?php echo esc_attr( sprintf( __( 'Bewerk "%s"', 'zw-ttvgpt' ), get_the_title( $post->ID ) ) ); ?>">
+										<a href="<?php echo esc_url( $post_url ); ?>" aria-label="<?php echo esc_attr( $edit_aria_label ); ?>">
 											<?php esc_html_e( 'Bewerken', 'zw-ttvgpt' ); ?>
 										</a> |
 									</span>
 									<span class="view">
 										<?php
-										// translators: %s is the post title.
+										/* translators: %s is the post title. */
+										$view_aria_label = sprintf( __( '"%s" bekijken', 'zw-ttvgpt' ), get_the_title( $post->ID ) );
 										?>
-										<a href="<?php echo esc_url( get_permalink( $post->ID ) ); ?>" rel="bookmark" aria-label="<?php echo esc_attr( sprintf( __( '"%s" bekijken', 'zw-ttvgpt' ), get_the_title( $post->ID ) ) ); ?>" target="_blank">
+										<a href="<?php echo esc_url( get_permalink( $post->ID ) ); ?>" rel="bookmark" aria-label="<?php echo esc_attr( $view_aria_label ); ?>" target="_blank">
 											<?php esc_html_e( 'Bekijken', 'zw-ttvgpt' ); ?>
 										</a>
 									</span>
+									<?php if ( 'ai_written_edited' === $status ) : ?>
+										<?php $diff = TTVGPTAuditHelper::generate_word_diff( $ai_content, $human_content ); ?>
+										| <span class="view-diff">
+											<a href="#" class="zw-audit-show-diff" data-post-id="<?php echo esc_attr( $post->ID ); ?>" 
+												data-diff-before="<?php echo esc_attr( wp_json_encode( $diff['before'] ) ); ?>"
+												data-diff-after="<?php echo esc_attr( wp_json_encode( $diff['after'] ) ); ?>"
+												aria-label="<?php esc_attr_e( 'Toon verschillen tussen AI en bewerkte versie', 'zw-ttvgpt' ); ?>">
+												<?php esc_html_e( 'Verschillen', 'zw-ttvgpt' ); ?>
+											</a>
+										</span>
+									<?php endif; ?>
 								</div>
-								<?php if ( 'ai_written_edited' === $status ) : ?>
-									<?php $diff = TTVGPTAuditHelper::generate_word_diff( $ai_content, $human_content ); ?>
-									<div class="zw-audit-content-diff">
-										<details>
-											<summary><?php esc_html_e( 'Toon verschillen', 'zw-ttvgpt' ); ?></summary>
-											<div class="zw-audit-diff">
-												<div class="zw-audit-diff-block before">
-													<div class="zw-audit-diff-header"><?php esc_html_e( 'AI Versie', 'zw-ttvgpt' ); ?></div>
-													<div class="zw-audit-diff-content"><?php echo wp_kses_post( $diff['before'] ); ?></div>
-												</div>
-												<div class="zw-audit-diff-block after">
-													<div class="zw-audit-diff-header"><?php esc_html_e( 'Geredigeerde Versie', 'zw-ttvgpt' ); ?></div>
-													<div class="zw-audit-diff-content"><?php echo wp_kses_post( $diff['after'] ); ?></div>
-												</div>
-											</div>
-										</details>
-									</div>
-								<?php endif; ?>
 								<button type="button" class="toggle-row"><span class="screen-reader-text"><?php esc_html_e( 'Meer details weergeven', 'zw-ttvgpt' ); ?></span></button>
 							</td>
 							<td class="author column-author" data-colname="<?php esc_attr_e( 'Auteur', 'zw-ttvgpt' ); ?>">
@@ -362,8 +357,34 @@ class TTVGPTAuditPage {
 				</tr>
 			</tfoot>
 		</table>
+		
+		<!-- WordPress Native Modal for Diff Display -->
+		<div id="zw-audit-diff-modal" style="display: none;">
+			<div class="zw-audit-diff-modal-content">
+				<div class="zw-audit-diff-modal-header">
+					<h3><?php esc_html_e( 'Verschillen tussen AI en Bewerkte Versie', 'zw-ttvgpt' ); ?></h3>
+					<button type="button" class="notice-dismiss zw-audit-diff-close">
+						<span class="screen-reader-text"><?php esc_html_e( 'Sluiten', 'zw-ttvgpt' ); ?></span>
+					</button>
+				</div>
+				<div class="zw-audit-diff-modal-body">
+					<div class="zw-audit-diff">
+						<div class="zw-audit-diff-block before">
+							<div class="zw-audit-diff-header"><?php esc_html_e( 'AI Versie', 'zw-ttvgpt' ); ?></div>
+							<div class="zw-audit-diff-content" id="zw-audit-diff-before"></div>
+						</div>
+						<div class="zw-audit-diff-block after">
+							<div class="zw-audit-diff-header"><?php esc_html_e( 'Geredigeerde Versie', 'zw-ttvgpt' ); ?></div>
+							<div class="zw-audit-diff-content" id="zw-audit-diff-after"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="zw-audit-diff-modal-backdrop"></div>
+		</div>
+		
 		<?php
-		// Add JavaScript for dropdown functionality
+		// Add JavaScript for dropdown functionality and modal
 		?>
 		<script type="text/javascript">
 		jQuery(document).ready(function($) {
@@ -396,6 +417,44 @@ class TTVGPTAuditPage {
 			$('#post-query-submit').on('click', function(e) {
 				e.preventDefault();
 				applyFilters();
+			});
+			
+			// Modal functionality
+			$('.zw-audit-show-diff').on('click', function(e) {
+				e.preventDefault();
+				
+				var diffBefore = $(this).data('diff-before');
+				var diffAfter = $(this).data('diff-after');
+				
+				try {
+					// Parse JSON data
+					var beforeContent = typeof diffBefore === 'string' ? JSON.parse(diffBefore) : diffBefore;
+					var afterContent = typeof diffAfter === 'string' ? JSON.parse(diffAfter) : diffAfter;
+					
+					// Set modal content
+					$('#zw-audit-diff-before').html(beforeContent);
+					$('#zw-audit-diff-after').html(afterContent);
+					
+					// Show modal
+					$('#zw-audit-diff-modal').show();
+					$('body').addClass('modal-open');
+				} catch (error) {
+					console.error('Error parsing diff data:', error);
+				}
+			});
+			
+			// Close modal functionality
+			$('.zw-audit-diff-close, .zw-audit-diff-modal-backdrop').on('click', function() {
+				$('#zw-audit-diff-modal').hide();
+				$('body').removeClass('modal-open');
+			});
+			
+			// Close modal on escape key
+			$(document).on('keydown', function(e) {
+				if (e.keyCode === 27 && $('#zw-audit-diff-modal').is(':visible')) {
+					$('#zw-audit-diff-modal').hide();
+					$('body').removeClass('modal-open');
+				}
 			});
 		});
 		</script>

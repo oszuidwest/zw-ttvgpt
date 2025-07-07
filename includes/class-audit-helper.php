@@ -382,8 +382,8 @@ class TTVGPTAuditHelper {
 		$matching_words = count( $common_words );
 
 		// Calculate change percentage
-		$similarity_ratio    = $matching_words / $max_words;
-		$change_percentage   = ( 1 - $similarity_ratio ) * 100;
+		$similarity_ratio  = $matching_words / $max_words;
+		$change_percentage = ( 1 - $similarity_ratio ) * 100;
 
 		return round( $change_percentage, 1 );
 	}
