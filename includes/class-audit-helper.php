@@ -130,7 +130,7 @@ class TTVGPTAuditHelper {
 	}
 
 	/**
-	 * Run comprehensive benchmark of all query strategies
+	 * Run comprehensive benchmark of all query strategies with detailed bottleneck analysis
 	 *
 	 * @param int $year Target year for benchmark
 	 * @param int $month Target month for benchmark
@@ -142,7 +142,12 @@ class TTVGPTAuditHelper {
 		$results    = array();
 		$strategies = array( 'strategy_1', 'strategy_2', 'strategy_3', 'strategy_4', 'strategy_5' );
 
-		// Get database info for context
+		// Enable query logging for detailed analysis
+		$wpdb->save_queries = true;
+		$initial_query_count = count( $wpdb->queries );
+
+		// Get database info for context with timing
+		$db_start = microtime( true );
 		$db_info = array(
 			'mysql_version'  => $wpdb->get_var( 'SELECT VERSION()' ),
 			'posts_count'    => $wpdb->get_var(
@@ -160,16 +165,21 @@ class TTVGPTAuditHelper {
 				'max_execution_time' => ini_get( 'max_execution_time' ),
 			),
 		);
+		$db_info_time = ( microtime( true ) - $db_start ) * 1000;
 
 		$results['database_info'] = $db_info;
 		$results['strategies']    = array();
+		$results['detailed_timings'] = array();
 
-		// Test each strategy 3 times and take average
+		// Test each strategy 3 times and take average with detailed timing
 		foreach ( $strategies as $strategy ) {
 			$times         = array();
 			$result_counts = array();
+			$detailed_runs = array();
 
 			for ( $run = 1; $run <= 3; $run++ ) {
+				$query_start_count = count( $wpdb->queries );
+				$memory_start = memory_get_usage();
 				$start_time = microtime( true );
 
 				switch ( $strategy ) {
@@ -190,9 +200,20 @@ class TTVGPTAuditHelper {
 						break;
 				}
 
-				$execution_time  = ( microtime( true ) - $start_time ) * 1000;
-				$times[]         = $execution_time;
+				$execution_time = ( microtime( true ) - $start_time ) * 1000;
+				$memory_used = ( memory_get_usage() - $memory_start ) / 1024 / 1024; // MB
+				$queries_executed = count( $wpdb->queries ) - $query_start_count;
+
+				$times[] = $execution_time;
 				$result_counts[] = count( $posts );
+				
+				$detailed_runs[] = array(
+					'run' => $run,
+					'time_ms' => round( $execution_time, 2 ),
+					'memory_mb' => round( $memory_used, 2 ),
+					'query_count' => $queries_executed,
+					'results' => count( $posts ),
+				);
 			}
 
 			$results['strategies'][ $strategy ] = array(
@@ -201,21 +222,55 @@ class TTVGPTAuditHelper {
 				'max_time_ms'  => round( max( $times ), 2 ),
 				'result_count' => $result_counts[0], // Should be same for all runs
 				'runs'         => $times,
+				'detailed_runs' => $detailed_runs,
 			);
 		}
 
-		// Test supporting queries
-		$start_time = microtime( true );
-		self::get_most_recent_month();
-		$recent_month_time = ( microtime( true ) - $start_time ) * 1000;
+		// Test supporting queries with detailed breakdown
+		$supporting_start = microtime( true );
+		$query_start_count = count( $wpdb->queries );
+		$memory_start = memory_get_usage();
+		
+		$recent_start = microtime( true );
+		$recent_result = self::get_most_recent_month();
+		$recent_month_time = ( microtime( true ) - $recent_start ) * 1000;
+		$recent_memory = ( memory_get_usage() - $memory_start ) / 1024 / 1024;
+		$recent_queries = count( $wpdb->queries ) - $query_start_count;
+		
+		$months_start = microtime( true );
+		$months_memory_start = memory_get_usage();
+		$months_query_start = count( $wpdb->queries );
+		$months_result = self::get_months();
+		$months_time = ( microtime( true ) - $months_start ) * 1000;
+		$months_memory = ( memory_get_usage() - $months_memory_start ) / 1024 / 1024;
+		$months_queries = count( $wpdb->queries ) - $months_query_start;
 
-		$start_time = microtime( true );
-		self::get_months();
-		$months_time = ( microtime( true ) - $start_time ) * 1000;
+		$total_supporting_time = ( microtime( true ) - $supporting_start ) * 1000;
 
 		$results['supporting_queries'] = array(
 			'get_most_recent_month_ms' => round( $recent_month_time, 2 ),
 			'get_months_ms'            => round( $months_time, 2 ),
+			'total_supporting_ms'      => round( $total_supporting_time, 2 ),
+			'detailed_breakdown' => array(
+				'get_most_recent_month' => array(
+					'time_ms' => round( $recent_month_time, 2 ),
+					'memory_mb' => round( $recent_memory, 2 ),
+					'query_count' => $recent_queries,
+					'result' => $recent_result ? 'found' : 'not_found',
+				),
+				'get_months' => array(
+					'time_ms' => round( $months_time, 2 ),
+					'memory_mb' => round( $months_memory, 2 ),
+					'query_count' => $months_queries,
+					'results_count' => count( $months_result ),
+				),
+			),
+		);
+
+		$results['detailed_timings'] = array(
+			'database_info_ms' => round( $db_info_time, 2 ),
+			'total_queries_executed' => count( $wpdb->queries ) - $initial_query_count,
+			'memory_peak_mb' => round( memory_get_peak_usage() / 1024 / 1024, 2 ),
 		);
 
 		// Calculate winner
@@ -262,13 +317,20 @@ class TTVGPTAuditHelper {
 		// Write JSON for programmatic access
 		file_put_contents( $benchmark_file, json_encode( $results, JSON_PRETTY_PRINT ) );
 
-		// Write human-readable format
+		// Write human-readable format with detailed bottleneck analysis
 		$readable_content  = "=== ZW TTVGPT Database Performance Benchmark ===\n\n";
 		$readable_content .= 'Benchmark Time: ' . $results['database_info']['benchmark_time'] . "\n";
 		$readable_content .= 'MySQL Version: ' . $results['database_info']['mysql_version'] . "\n";
 		$readable_content .= 'PHP Version: ' . $results['database_info']['server_info']['php_version'] . "\n";
 		$readable_content .= 'Total Posts: ' . number_format( $results['database_info']['posts_count'] ) . "\n";
-		$readable_content .= 'Total Postmeta: ' . number_format( $results['database_info']['postmeta_count'] ) . "\n\n";
+		$readable_content .= 'Total Postmeta: ' . number_format( $results['database_info']['postmeta_count'] ) . "\n";
+		
+		if ( isset( $results['detailed_timings'] ) ) {
+			$readable_content .= 'Memory Peak: ' . $results['detailed_timings']['memory_peak_mb'] . "MB\n";
+			$readable_content .= 'Total Queries: ' . $results['detailed_timings']['total_queries_executed'] . "\n";
+			$readable_content .= 'DB Info Time: ' . $results['detailed_timings']['database_info_ms'] . "ms\n";
+		}
+		$readable_content .= "\n";
 
 		$readable_content .= "=== Query Strategy Performance ===\n\n";
 
@@ -281,12 +343,83 @@ class TTVGPTAuditHelper {
 				$data['max_time_ms'],
 				$data['result_count']
 			);
+			
+			// Add detailed run information if available
+			if ( isset( $data['detailed_runs'] ) ) {
+				foreach ( $data['detailed_runs'] as $run_data ) {
+					$readable_content .= sprintf(
+						"  Run %d: %.2fms, %.2fMB memory, %d queries, %d results\n",
+						$run_data['run'],
+						$run_data['time_ms'],
+						$run_data['memory_mb'],
+						$run_data['query_count'],
+						$run_data['results']
+					);
+				}
+			}
+			$readable_content .= "\n";
 		}
 
-		$readable_content .= "\n=== Supporting Queries ===\n\n";
+		$readable_content .= "=== Supporting Queries - DETAILED BREAKDOWN ===\n\n";
 		$readable_content .= sprintf( "Get Recent Month: %.2fms\n", $results['supporting_queries']['get_most_recent_month_ms'] );
 		$readable_content .= sprintf( "Get All Months: %.2fms\n", $results['supporting_queries']['get_months_ms'] );
+		
+		if ( isset( $results['supporting_queries']['total_supporting_ms'] ) ) {
+			$readable_content .= sprintf( "Total Supporting: %.2fms\n", $results['supporting_queries']['total_supporting_ms'] );
+		}
+		
+		if ( isset( $results['supporting_queries']['detailed_breakdown'] ) ) {
+			$breakdown = $results['supporting_queries']['detailed_breakdown'];
+			$readable_content .= "\n--- Recent Month Query Details ---\n";
+			$readable_content .= sprintf( "Time: %.2fms\n", $breakdown['get_most_recent_month']['time_ms'] );
+			$readable_content .= sprintf( "Memory: %.2fMB\n", $breakdown['get_most_recent_month']['memory_mb'] );
+			$readable_content .= sprintf( "Queries: %d\n", $breakdown['get_most_recent_month']['query_count'] );
+			$readable_content .= sprintf( "Result: %s\n", $breakdown['get_most_recent_month']['result'] );
+			
+			$readable_content .= "\n--- Get Months Query Details ---\n";
+			$readable_content .= sprintf( "Time: %.2fms\n", $breakdown['get_months']['time_ms'] );
+			$readable_content .= sprintf( "Memory: %.2fMB\n", $breakdown['get_months']['memory_mb'] );
+			$readable_content .= sprintf( "Queries: %d\n", $breakdown['get_months']['query_count'] );
+			$readable_content .= sprintf( "Results: %d months\n", $breakdown['get_months']['results_count'] );
+		}
 
+		$readable_content .= "\n=== BOTTLENECK ANALYSIS ===\n\n";
+		
+		// Identify bottlenecks
+		$main_query_time = $results['analysis']['fastest_time_ms'];
+		$recent_month_time = $results['supporting_queries']['get_most_recent_month_ms'];
+		$months_time = $results['supporting_queries']['get_months_ms'];
+		$total_time = $results['analysis']['total_dashboard_time_ms'];
+		
+		$readable_content .= sprintf( "Main Query (fastest): %.2fms (%.1f%% of total)\n", $main_query_time, ($main_query_time / $total_time) * 100 );
+		$readable_content .= sprintf( "Recent Month Query: %.2fms (%.1f%% of total)\n", $recent_month_time, ($recent_month_time / $total_time) * 100 );
+		$readable_content .= sprintf( "Get Months Query: %.2fms (%.1f%% of total)\n", $months_time, ($months_time / $total_time) * 100 );
+		
+		// Identify primary bottleneck
+		$bottlenecks = array(
+			'main_query' => $main_query_time,
+			'recent_month' => $recent_month_time,
+			'get_months' => $months_time,
+		);
+		arsort( $bottlenecks );
+		$primary_bottleneck = array_key_first( $bottlenecks );
+		$bottleneck_time = $bottlenecks[ $primary_bottleneck ];
+		
+		$readable_content .= sprintf( "\n🎯 PRIMARY BOTTLENECK: %s (%.2fms - %.1f%% of total time)\n", 
+			strtoupper( str_replace( '_', ' ', $primary_bottleneck ) ), 
+			$bottleneck_time, 
+			($bottleneck_time / $total_time) * 100 
+		);
+		
+		// Optimization suggestions
+		if ( 'get_months' === $primary_bottleneck ) {
+			$readable_content .= "💡 OPTIMIZATION: get_months query needs further optimization\n";
+		} elseif ( 'recent_month' === $primary_bottleneck ) {
+			$readable_content .= "💡 OPTIMIZATION: recent_month query needs index optimization\n";
+		} else {
+			$readable_content .= "💡 STATUS: Main query is well optimized, supporting queries dominate\n";
+		}
+		
 		$readable_content .= "\n=== Analysis ===\n\n";
 		$readable_content .= sprintf( "🏆 FASTEST: %s (%.2fms)\n", strtoupper( str_replace( '_', ' ', $results['analysis']['fastest_strategy'] ) ), $results['analysis']['fastest_time_ms'] );
 		$readable_content .= sprintf( "📊 TOTAL DASHBOARD LOAD: %.2fms\n", $results['analysis']['total_dashboard_time_ms'] );
