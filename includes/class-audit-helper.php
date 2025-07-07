@@ -243,9 +243,9 @@ class TTVGPTAuditHelper {
 	 * @return string Cleaned content
 	 */
 	public static function strip_region_prefix( string $content ): string {
-		// Remove region prefixes like "LEIDEN - ", "DEN HAAG - ", "ROOSENDAAL/OUDENBOSCH - "
-		// Matches: uppercase letters, spaces, forward slashes, followed by " - "
-		$result = preg_replace( '/^[A-Z][A-Z\s\/]*\s-\s/', '', trim( $content ) );
+		// Remove region prefixes like "LEIDEN - ", "DEN HAAG - ", "ROOSENDAAL/OUDENBOSCH - ", "ETTEN-LEUR - "
+		// Matches: uppercase letters, spaces, forward slashes, hyphens, followed by " - "
+		$result = preg_replace( '/^[A-Z][A-Z\s\/\-]*\s-\s/', '', trim( $content ) );
 		return null !== $result ? $result : trim( $content );
 	}
 
