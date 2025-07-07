@@ -92,7 +92,13 @@ class TTVGPTAuditPage {
 			<hr class="wp-header-end">
 			
 			<?php $this->render_navigation( $year, $month, $available_months, $status_filter ); ?>
-			<?php $this->render_summary( $counts ); ?>
+			
+			<!-- Optie 3: Compacte één-regel summary -->
+			<?php $this->render_compact_summary( $counts ); ?>
+			
+			<!-- Optie 4: WordPress tablenav style -->
+			<?php $this->render_tablenav_summary( $counts ); ?>
+			
 			<?php $this->render_audit_list( $categorized_posts, $meta_cache ); ?>
 		</div>
 		<?php
@@ -101,7 +107,47 @@ class TTVGPTAuditPage {
 
 
 	/**
-	 * Render simple summary boxes
+	 * Optie 3: Compacte één-regel summary
+	 *
+	 * @param array $counts Statistics counts
+	 * @return void
+	 */
+	private function render_compact_summary( array $counts ): void {
+		$total = array_sum( $counts );
+		?>
+		<div style="background: #fff; border: 1px solid #ddd; border-radius: 3px; padding: 12px 16px; margin-bottom: 15px; font-size: 14px; color: #333;">
+			<strong><?php echo esc_html( $total ); ?> artikelen:</strong>
+			<span style="color: #0073aa;"><?php echo esc_html( $counts['fully_human_written'] ); ?> handmatig</span> • 
+			<span style="color: #8c8f94;"><?php echo esc_html( $counts['ai_written_not_edited'] ); ?> AI gegenereerd</span> • 
+			<span style="color: #00a0d2;"><?php echo esc_html( $counts['ai_written_edited'] ); ?> AI + bewerkt</span>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Optie 4: WordPress tablenav style summary
+	 *
+	 * @param array $counts Statistics counts
+	 * @return void
+	 */
+	private function render_tablenav_summary( array $counts ): void {
+		$total = array_sum( $counts );
+		?>
+		<div class="tablenav top" style="margin-bottom: 15px;">
+			<div class="tablenav-pages">
+				<span class="displaying-num"><?php echo esc_html( $total ); ?> items</span>
+			</div>
+			<div class="alignleft" style="font-size: 13px; color: #646970; margin-top: 8px;">
+				<span style="color: #0073aa; font-weight: 500;"><?php echo esc_html( $counts['fully_human_written'] ); ?> handmatig</span> | 
+				<span style="color: #8c8f94; font-weight: 500;"><?php echo esc_html( $counts['ai_written_not_edited'] ); ?> AI</span> | 
+				<span style="color: #00a0d2; font-weight: 500;"><?php echo esc_html( $counts['ai_written_edited'] ); ?> bewerkt</span>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render simple summary boxes (oude versie)
 	 *
 	 * @param array $counts Statistics counts
 	 * @return void
