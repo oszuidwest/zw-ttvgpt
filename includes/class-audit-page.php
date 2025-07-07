@@ -32,6 +32,8 @@ class TTVGPTAuditPage {
 		$month = isset( $_GET['month'] ) ? absint( $_GET['month'] ) : null;
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only audit page
 		$status_filter = isset( $_GET['status'] ) ? sanitize_text_field( $_GET['status'] ) : '';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only audit page
+		$change_filter = isset( $_GET['change'] ) ? sanitize_text_field( $_GET['change'] ) : '';
 
 		if ( ! $year || ! $month ) {
 			$most_recent = TTVGPTAuditHelper::get_most_recent_month();
@@ -75,7 +77,29 @@ class TTVGPTAuditPage {
 			++$counts[ $analysis['status'] ];
 
 			// Apply status filter if set
-			if ( empty( $status_filter ) || $analysis['status'] === $status_filter ) {
+			$status_match = empty( $status_filter ) || $analysis['status'] === $status_filter;
+			
+			// Apply change filter if set
+			$change_match = true;
+			if ( ! empty( $change_filter ) && 'ai_written_edited' === $analysis['status'] ) {
+				$change_percentage = $analysis['change_percentage'];
+				switch ( $change_filter ) {
+					case 'low':
+						$change_match = $change_percentage <= 20;
+						break;
+					case 'medium':
+						$change_match = $change_percentage > 20 && $change_percentage <= 50;
+						break;
+					case 'high':
+						$change_match = $change_percentage > 50;
+						break;
+				}
+			} elseif ( ! empty( $change_filter ) ) {
+				// If change filter is set but post is not AI+, exclude it
+				$change_match = false;
+			}
+
+			if ( $status_match && $change_match ) {
 				$categorized_posts[] = array_merge( array( 'post' => $post ), $analysis );
 			}
 		}
@@ -98,9 +122,9 @@ class TTVGPTAuditPage {
 			
 			<form id="posts-filter" method="get">
 				<input type="hidden" name="page" value="zw-ttvgpt-audit">
-				<?php $this->render_tablenav( $year, $month, $available_months, $status_filter, $counts, 'top' ); ?>
+				<?php $this->render_tablenav( $year, $month, $available_months, $status_filter, $change_filter, $counts, 'top' ); ?>
 				<?php $this->render_audit_table( $categorized_posts, $meta_cache ); ?>
-				<?php $this->render_tablenav( $year, $month, $available_months, $status_filter, $counts, 'bottom' ); ?>
+				<?php $this->render_tablenav( $year, $month, $available_months, $status_filter, $change_filter, $counts, 'bottom' ); ?>
 			</form>
 		</div>
 		<?php
@@ -159,11 +183,12 @@ class TTVGPTAuditPage {
 	 * @param int    $month Current month
 	 * @param array  $available_months All available months
 	 * @param string $status_filter Current status filter
+	 * @param string $change_filter Current change filter
 	 * @param array  $counts Statistics counts
 	 * @param string $which Top or bottom
 	 * @return void
 	 */
-	private function render_tablenav( int $year, int $month, array $available_months, string $status_filter, array $counts, string $which ): void {
+	private function render_tablenav( int $year, int $month, array $available_months, string $status_filter, string $change_filter, array $counts, string $which ): void {
 		$total = array_sum( $counts );
 		?>
 		<div class="tablenav <?php echo esc_attr( $which ); ?>">
@@ -195,6 +220,20 @@ class TTVGPTAuditPage {
 						</option>
 						<option value="ai_written_edited" <?php selected( $status_filter, 'ai_written_edited' ); ?>>
 							<?php esc_html_e( 'AI, bewerkt', 'zw-ttvgpt' ); ?>
+						</option>
+					</select>
+
+					<label for="filter-by-change" class="screen-reader-text"><?php esc_html_e( 'Op wijzigingspercentage filteren', 'zw-ttvgpt' ); ?></label>
+					<select name="change" id="filter-by-change">
+						<option value=""><?php esc_html_e( 'Alle wijzigingen', 'zw-ttvgpt' ); ?></option>
+						<option value="low" <?php selected( $change_filter, 'low' ); ?>>
+							<?php esc_html_e( 'Laag (≤20%)', 'zw-ttvgpt' ); ?>
+						</option>
+						<option value="medium" <?php selected( $change_filter, 'medium' ); ?>>
+							<?php esc_html_e( 'Middel (21-50%)', 'zw-ttvgpt' ); ?>
+						</option>
+						<option value="high" <?php selected( $change_filter, 'high' ); ?>>
+							<?php esc_html_e( 'Hoog (>50%)', 'zw-ttvgpt' ); ?>
 						</option>
 					</select>
 
@@ -378,6 +417,7 @@ class TTVGPTAuditPage {
 			function applyFilters() {
 				var dateValue = $('#filter-by-date').val();
 				var statusValue = $('#filter-by-status').val();
+				var changeValue = $('#filter-by-change').val();
 				var url = '<?php echo esc_js( admin_url( 'tools.php?page=zw-ttvgpt-audit' ) ); ?>';
 				var params = [];
 				
@@ -392,6 +432,10 @@ class TTVGPTAuditPage {
 					params.push('status=' + statusValue);
 				}
 				
+				if (changeValue) {
+					params.push('change=' + changeValue);
+				}
+				
 				if (params.length > 0) {
 					url += '&' + params.join('&');
 				}
@@ -399,7 +443,7 @@ class TTVGPTAuditPage {
 				window.location.href = url;
 			}
 			
-			$('#filter-by-date, #filter-by-status').on('change', applyFilters);
+			$('#filter-by-date, #filter-by-status, #filter-by-change').on('change', applyFilters);
 			
 			$('#post-query-submit').on('click', function(e) {
 				e.preventDefault();
