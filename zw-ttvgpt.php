@@ -24,10 +24,16 @@ define( 'ZW_TTVGPT_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ZW_TTVGPT_URL', plugin_dir_url( __FILE__ ) );
 require_once ZW_TTVGPT_DIR . 'includes/class-constants.php';
 require_once ZW_TTVGPT_DIR . 'includes/class-settings-manager.php';
+require_once ZW_TTVGPT_DIR . 'includes/class-api-error-handler.php';
+require_once ZW_TTVGPT_DIR . 'includes/class-rate-limiter.php';
+require_once ZW_TTVGPT_DIR . 'includes/class-audit-helper.php';
 require_once ZW_TTVGPT_DIR . 'includes/class-helper.php';
 require_once ZW_TTVGPT_DIR . 'includes/class-logger.php';
 require_once ZW_TTVGPT_DIR . 'includes/class-api-handler.php';
 require_once ZW_TTVGPT_DIR . 'includes/class-summary-generator.php';
+require_once ZW_TTVGPT_DIR . 'includes/class-admin-menu.php';
+require_once ZW_TTVGPT_DIR . 'includes/class-settings-page.php';
+require_once ZW_TTVGPT_DIR . 'includes/class-audit-page.php';
 require_once ZW_TTVGPT_DIR . 'includes/class-admin.php';
 
 /**
