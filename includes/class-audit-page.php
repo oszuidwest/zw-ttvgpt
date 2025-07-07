@@ -135,7 +135,7 @@ class TTVGPTAuditPage {
 			</li>
 			<li class="human">
 				<a href="<?php echo esc_url( add_query_arg( array_merge( $current_params, array( 'status' => 'fully_human_written' ) ), $base_url ) ); ?>" <?php echo 'fully_human_written' === $status_filter ? 'class="current" aria-current="page"' : ''; ?>>
-					<?php esc_html_e( 'Handmatig', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $counts['fully_human_written'] ); ?>)</span>
+					<?php esc_html_e( 'Hand', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $counts['fully_human_written'] ); ?>)</span>
 				</a>
 			</li>
 			<li class="ai-unedited">
@@ -188,7 +188,7 @@ class TTVGPTAuditPage {
 					<select name="status" id="filter-by-status">
 						<option value=""><?php esc_html_e( 'Alle types', 'zw-ttvgpt' ); ?></option>
 						<option value="fully_human_written" <?php selected( $status_filter, 'fully_human_written' ); ?>>
-							<?php esc_html_e( 'Volledig handmatig', 'zw-ttvgpt' ); ?>
+							<?php esc_html_e( 'Volledig handgeschreven', 'zw-ttvgpt' ); ?>
 						</option>
 						<option value="ai_written_not_edited" <?php selected( $status_filter, 'ai_written_not_edited' ); ?>>
 							<?php esc_html_e( 'AI, niet bewerkt', 'zw-ttvgpt' ); ?>
@@ -220,7 +220,7 @@ class TTVGPTAuditPage {
 	 */
 	private function render_audit_table( array $categorized_posts, array $meta_cache ): void {
 		$type_labels = array(
-			'fully_human_written'   => __( 'Handmatig', 'zw-ttvgpt' ),
+			'fully_human_written'   => __( 'Hand', 'zw-ttvgpt' ),
 			'ai_written_not_edited' => __( 'AI', 'zw-ttvgpt' ),
 			'ai_written_edited'     => __( 'AI+', 'zw-ttvgpt' ),
 		);
