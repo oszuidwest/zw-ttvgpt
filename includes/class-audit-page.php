@@ -91,14 +91,7 @@ class TTVGPTAuditPage {
 			<h1 class="wp-heading-inline"><?php esc_html_e( 'Tekst TV GPT Audit', 'zw-ttvgpt' ); ?></h1>
 			<hr class="wp-header-end">
 			
-			<?php $this->render_navigation( $year, $month, $available_months, $status_filter ); ?>
-			
-			<!-- Optie 3: Compacte één-regel summary -->
-			<?php $this->render_compact_summary( $counts ); ?>
-			
-			<!-- Optie 4: WordPress tablenav style -->
-			<?php $this->render_tablenav_summary( $counts ); ?>
-			
+			<?php $this->render_navigation( $year, $month, $available_months, $status_filter, $counts ); ?>
 			<?php $this->render_audit_list( $categorized_posts, $meta_cache ); ?>
 		</div>
 		<?php
@@ -106,80 +99,6 @@ class TTVGPTAuditPage {
 
 
 
-	/**
-	 * Optie 3: Compacte één-regel summary
-	 *
-	 * @param array $counts Statistics counts
-	 * @return void
-	 */
-	private function render_compact_summary( array $counts ): void {
-		$total = array_sum( $counts );
-		?>
-		<div style="background: #fff; border: 1px solid #ddd; border-radius: 3px; padding: 12px 16px; margin-bottom: 15px; font-size: 14px; color: #333;">
-			<strong><?php echo esc_html( $total ); ?> artikelen:</strong>
-			<span style="color: #0073aa;"><?php echo esc_html( $counts['fully_human_written'] ); ?> handmatig</span> • 
-			<span style="color: #8c8f94;"><?php echo esc_html( $counts['ai_written_not_edited'] ); ?> AI gegenereerd</span> • 
-			<span style="color: #00a0d2;"><?php echo esc_html( $counts['ai_written_edited'] ); ?> AI + bewerkt</span>
-		</div>
-		<?php
-	}
-
-	/**
-	 * Optie 4: WordPress tablenav style summary
-	 *
-	 * @param array $counts Statistics counts
-	 * @return void
-	 */
-	private function render_tablenav_summary( array $counts ): void {
-		$total = array_sum( $counts );
-		?>
-		<div class="tablenav top" style="margin-bottom: 15px;">
-			<div class="tablenav-pages">
-				<span class="displaying-num"><?php echo esc_html( $total ); ?> items</span>
-			</div>
-			<div class="alignleft" style="font-size: 13px; color: #646970; margin-top: 8px;">
-				<span style="color: #0073aa; font-weight: 500;"><?php echo esc_html( $counts['fully_human_written'] ); ?> handmatig</span> | 
-				<span style="color: #8c8f94; font-weight: 500;"><?php echo esc_html( $counts['ai_written_not_edited'] ); ?> AI</span> | 
-				<span style="color: #00a0d2; font-weight: 500;"><?php echo esc_html( $counts['ai_written_edited'] ); ?> bewerkt</span>
-			</div>
-		</div>
-		<?php
-	}
-
-	/**
-	 * Render simple summary boxes (oude versie)
-	 *
-	 * @param array $counts Statistics counts
-	 * @return void
-	 */
-	private function render_summary( array $counts ): void {
-		$labels = array(
-			'fully_human_written'   => __( 'Handmatig', 'zw-ttvgpt' ),
-			'ai_written_not_edited' => __( 'AI Gegenereerd', 'zw-ttvgpt' ),
-			'ai_written_edited'     => __( 'AI + Redigering', 'zw-ttvgpt' ),
-		);
-
-		$css_classes = array(
-			'fully_human_written'   => 'human',
-			'ai_written_not_edited' => 'ai-unedited',
-			'ai_written_edited'     => 'ai-edited',
-		);
-		?>
-		
-		<div class="zw-audit-summary">
-			<?php foreach ( $counts as $status => $count ) : ?>
-				<div class="zw-audit-summary-item <?php echo esc_attr( $css_classes[ $status ] ); ?>">
-					<div class="zw-audit-summary-number">
-						<?php echo esc_html( (string) $count ); ?>
-					</div>
-					<div class="zw-audit-summary-label">
-						<?php echo esc_html( $labels[ $status ] ); ?>
-					</div>
-				</div>
-			<?php endforeach; ?>
-		</div>
-		<?php
-	}
 
 	/**
 	 * Render native WordPress-style list
@@ -284,15 +203,22 @@ class TTVGPTAuditPage {
 	}
 
 	/**
-	 * Render audit navigation dropdown like WordPress Posts screen
+	 * Render audit navigation dropdown like WordPress Posts screen with integrated counts
 	 *
 	 * @param int    $year Current year
 	 * @param int    $month Current month
 	 * @param array  $available_months All available months
 	 * @param string $status_filter Current status filter
+	 * @param array  $counts Statistics counts
 	 * @return void
 	 */
-	private function render_navigation( int $year, int $month, array $available_months, string $status_filter ): void {
+	private function render_navigation( int $year, int $month, array $available_months, string $status_filter, array $counts ): void {
+		$total = array_sum( $counts );
+		$base_url = admin_url( 'tools.php?page=zw-ttvgpt-audit' );
+		$current_params = array(
+			'year' => $year,
+			'month' => $month,
+		);
 		?>
 		<div class="tablenav top">
 			<div class="alignleft actions">
@@ -327,7 +253,35 @@ class TTVGPTAuditPage {
 				
 				<input type="submit" name="filter_action" id="post-query-submit" class="button" value="<?php esc_attr_e( 'Filter', 'zw-ttvgpt' ); ?>">
 			</div>
+			
+			<div class="tablenav-pages">
+				<span class="displaying-num"><?php echo esc_html( $total ); ?> items</span>
+			</div>
 		</div>
+		
+		<!-- WordPress-style filter links -->
+		<ul class="subsubsub">
+			<li class="all">
+				<a href="<?php echo esc_url( add_query_arg( $current_params, $base_url ) ); ?>" <?php echo empty( $status_filter ) ? 'class="current"' : ''; ?>>
+					<?php esc_html_e( 'Alle', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $total ); ?>)</span>
+				</a> |
+			</li>
+			<li class="human">
+				<a href="<?php echo esc_url( add_query_arg( array_merge( $current_params, array( 'status' => 'fully_human_written' ) ), $base_url ) ); ?>" <?php echo 'fully_human_written' === $status_filter ? 'class="current"' : ''; ?>>
+					<?php esc_html_e( 'Handmatig', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $counts['fully_human_written'] ); ?>)</span>
+				</a> |
+			</li>
+			<li class="ai-unedited">
+				<a href="<?php echo esc_url( add_query_arg( array_merge( $current_params, array( 'status' => 'ai_written_not_edited' ) ), $base_url ) ); ?>" <?php echo 'ai_written_not_edited' === $status_filter ? 'class="current"' : ''; ?>>
+					<?php esc_html_e( 'AI Gegenereerd', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $counts['ai_written_not_edited'] ); ?>)</span>
+				</a> |
+			</li>
+			<li class="ai-edited">
+				<a href="<?php echo esc_url( add_query_arg( array_merge( $current_params, array( 'status' => 'ai_written_edited' ) ), $base_url ) ); ?>" <?php echo 'ai_written_edited' === $status_filter ? 'class="current"' : ''; ?>>
+					<?php esc_html_e( 'AI + Bewerkt', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $counts['ai_written_edited'] ); ?>)</span>
+				</a>
+			</li>
+		</ul>
 		
 		<script type="text/javascript">
 		jQuery(document).ready(function($) {
