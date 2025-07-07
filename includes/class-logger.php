@@ -42,31 +42,24 @@ class TTVGPTLogger {
 	 * Log debug message when debug mode is enabled
 	 *
 	 * @param string $message Debug message to log
-	 * @param array  $context Additional context data for debugging
+	 * @param array  $context Additional context data
 	 * @return void
 	 */
 	public function debug( string $message, array $context = array() ): void {
-		if ( ! $this->debug_mode ) {
-			return;
+		if ( $this->debug_mode ) {
+			$this->write_log( 'DEBUG', $message, $context );
 		}
-
-		$this->write_log( 'DEBUG', $message, $context );
 	}
 
-
 	/**
-	 * Log error message with conditional context inclusion
+	 * Log error message
 	 *
 	 * @param string $message Error message to log
-	 * @param array  $context Additional context data (only included in debug mode)
+	 * @param array  $context Additional context data
 	 * @return void
 	 */
 	public function error( string $message, array $context = array() ): void {
-		if ( ! $this->debug_mode ) {
-			$context = array();
-		}
-
-		$this->write_log( 'ERROR', $message, $context );
+		$this->write_log( 'ERROR', $message, $this->debug_mode ? $context : array() );
 	}
 
 	/**

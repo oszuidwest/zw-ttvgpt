@@ -33,16 +33,8 @@
 			$cachedAcfField = $(SELECTORS.acfSummaryField);
 			$cachedGptField = $(SELECTORS.acfGptField);
 
-			bindEvents();
 			injectGenerateButton();
 		});
-	}
-
-	/**
-	 * Bind event handlers (currently handled in injectGenerateButton)
-	 */
-	function bindEvents() {
-		// Event binding delegated to injectGenerateButton for now
 	}
 
 	/**
@@ -131,7 +123,7 @@
 								? response.data
 								: response.data.message || errorMessage;
 					}
-				} catch (parseError) {
+				} catch {
 					errorMessage = error
 						? `${zwTTVGPT.strings.error}: ${error}`
 						: zwTTVGPT.strings.error;
@@ -186,16 +178,18 @@
 		const regions = [];
 		$(SELECTORS.regionCheckboxes).each(function () {
 			const $label = $(this).parent();
-			// Get only the direct text content, not from child elements
-			// This excludes text from Yoast's screen-reader-text spans
+			/*
+			 * Get only the direct text content, not from child elements
+			 * This excludes text from Yoast's screen-reader-text spans
+			 */
 			const labelText = $label
 				.contents()
-				.filter(function() {
+				.filter(function () {
 					return this.nodeType === 3; // Text nodes only
 				})
 				.text()
 				.trim();
-			
+
 			if (labelText) {
 				regions.push(labelText);
 			}

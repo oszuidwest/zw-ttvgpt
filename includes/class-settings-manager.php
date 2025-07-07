@@ -97,9 +97,9 @@ class TTVGPTSettingsManager {
 	}
 
 	/**
-	 * Get OpenAI API key with type safety
+	 * Get typed setting values
 	 *
-	 * @return string API key or empty string if not set
+	 * @return string API key
 	 */
 	public static function get_api_key(): string {
 		$api_key = self::get_setting( 'api_key', '' );
@@ -107,9 +107,9 @@ class TTVGPTSettingsManager {
 	}
 
 	/**
-	 * Get OpenAI model name with fallback to default
+	 * Get model name
 	 *
-	 * @return string Model name or default model if not set
+	 * @return string Model name
 	 */
 	public static function get_model(): string {
 		$model = self::get_setting( 'model', TTVGPTConstants::DEFAULT_MODEL );
@@ -117,9 +117,9 @@ class TTVGPTSettingsManager {
 	}
 
 	/**
-	 * Get summary word limit with validation
+	 * Get word limit
 	 *
-	 * @return int Word limit or default if invalid
+	 * @return int Word limit
 	 */
 	public static function get_word_limit(): int {
 		$word_limit = self::get_setting( 'word_limit', TTVGPTConstants::DEFAULT_WORD_LIMIT );
@@ -127,9 +127,9 @@ class TTVGPTSettingsManager {
 	}
 
 	/**
-	 * Check if debug mode is enabled for verbose logging
+	 * Check if debug mode is enabled
 	 *
-	 * @return bool True if debug mode is active
+	 * @return bool Debug mode status
 	 */
 	public static function is_debug_mode(): bool {
 		return (bool) self::get_setting( 'debug_mode', false );

@@ -1,68 +1,51 @@
 {
   "name": "zw-ttvgpt",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "JavaScript assets for ZW TTVGPT WordPress plugin",
   "private": true,
   "scripts": {
     "lint:js": "eslint assets/*.js",
     "lint:js:fix": "eslint assets/*.js --fix",
-    "lint": "npm run lint:js"
+    "lint:css": "stylelint assets/*.css",
+    "lint:css:fix": "stylelint assets/*.css --fix",
+    "lint": "npm run lint:js && npm run lint:css",
+    "lint:fix": "npm run lint:js:fix && npm run lint:css:fix"
   },
   "devDependencies": {
-    "@wordpress/eslint-plugin": "^17.0.0",
-    "eslint": "^8.57.0"
+    "@eslint/eslintrc": "^3.3.1",
+    "@typescript-eslint/eslint-plugin": "^8.36.0",
+    "@typescript-eslint/parser": "^8.36.0",
+    "@wordpress/eslint-plugin": "^21.0.0",
+    "@wordpress/stylelint-config": "^23.18.0",
+    "eslint": "^9.17.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "stylelint": "^16.21.1",
+    "stylelint-config-recess-order": "^7.1.0",
+    "stylelint-config-standard": "^38.0.0",
+    "stylelint-order": "^7.0.0"
   },
-  "eslintConfig": {
-    "env": {
-      "browser": true,
-      "jquery": true,
-      "es6": true
-    },
-    "globals": {
-      "zwTTVGPT": "readonly",
-      "wp": "readonly",
-      "tinyMCE": "readonly"
-    },
-    "extends": [
-      "eslint:all",
-      "plugin:@wordpress/eslint-plugin/recommended"
-    ],
-    "parserOptions": {
-      "ecmaVersion": 2020,
-      "sourceType": "script"
-    },
+  "stylelint": {
+    "extends": ["@wordpress/stylelint-config", "stylelint-config-recess-order"],
+    "plugins": ["stylelint-order"],
+    "ignoreFiles": ["assets/css/vendor/**/*.css", "node_modules/**/*.css"],
     "rules": {
-      "no-magic-numbers": ["off"],
-      "func-style": ["error", "declaration"],
-      "no-plusplus": ["off"],
-      "max-lines-per-function": ["error", { "max": 100 }],
-      "max-statements": ["error", 30],
-      "sort-keys": ["off"],
-      "one-var": ["off"],
-      "id-length": ["error", { "min": 2, "exceptions": ["$", "i", "j", "e"] }],
-      "func-names": ["off"],
-      "no-inline-comments": ["off"],
-      "line-comment-position": ["off"],
-      "no-use-before-define": ["error", { "functions": false }],
-      "no-ternary": ["off"],
-      "sort-vars": ["off"],
-      "capitalized-comments": ["off"],
-      "strict": ["off"],
-      "prefer-arrow-callback": ["off"],
-      "object-shorthand": ["warn"],
-      "no-invalid-this": ["off"],
-      "camelcase": ["warn", { "allow": ["post_id"] }],
-      "jsdoc/require-param-type": ["off"],
-      "max-lines": ["error", { "max": 600 }],
-      "prefer-destructuring": ["warn"],
-      "array-element-newline": ["off"],
-      "multiline-ternary": ["off"],
-      "no-negated-condition": ["warn"],
-      "prefer-template": ["warn"],
-      "prefer-named-capture-group": ["off"],
-      "require-unicode-regexp": ["off"],
-      "no-console": ["error", { "allow": ["error", "warn"] }],
-      "@wordpress/no-unused-vars-before-return": ["off"]
+      "selector-max-universal": 1,
+      "selector-max-id": 0,
+      "max-nesting-depth": 4,
+      "declaration-block-no-redundant-longhand-properties": true,
+      "shorthand-property-no-redundant-values": true,
+      "declaration-block-no-duplicate-properties": [true, {"ignore": ["consecutive-duplicates-with-different-values"]}],
+      "no-duplicate-selectors": true,
+      "color-no-invalid-hex": true,
+      "function-calc-no-unspaced-operator": true,
+      "declaration-property-value-disallowed-list": {"/.*/": ["expression"]},
+      "function-disallowed-list": ["expression"],
+      "selector-class-pattern": null,
+      "no-descending-specificity": null,
+      "comment-empty-line-before": ["always", {"except": ["first-nested"], "ignore": ["stylelint-commands"]}],
+      "rule-empty-line-before": ["always-multi-line", {"except": ["first-nested"], "ignore": ["after-comment"]}]
     }
   }
 }
