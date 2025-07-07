@@ -5,6 +5,17 @@ on:
     branches: [ main ]
   push:
     branches: [ main ]
+    paths:
+      - '**.php'
+      - '**.js'
+      - '**.css'
+      - 'composer.json'
+      - 'composer.lock'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'phpcs.xml'
+      - 'phpstan.neon'
+      - '.github/workflows/**'
 
 jobs:
   test:
