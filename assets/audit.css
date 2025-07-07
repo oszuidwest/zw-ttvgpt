@@ -18,14 +18,14 @@
 .zw-audit-type-label {
 	display: inline-block;
 	padding: 2px 8px;
-	border-radius: 3px;
 	font-size: 11px;
 	font-weight: 600;
+	line-height: 1.4;
+	color: #fff;
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
-	color: #fff;
-	line-height: 1.4;
 	white-space: nowrap;
+	border-radius: 3px;
 }
 
 .zw-audit-type-label.human { background: #0073aa; }
@@ -45,31 +45,31 @@
 }
 
 .zw-audit-content-diff details {
+	padding: 0;
+	margin: 0;
 	background: #f6f7f7;
 	border: 1px solid #dcdcde;
 	border-radius: 4px;
-	padding: 0;
-	margin: 0;
 }
 
 .zw-audit-content-diff summary {
 	padding: 8px 12px;
-	cursor: pointer;
 	font-size: 12px;
 	font-weight: 600;
 	color: #50575e;
+	cursor: pointer;
+	user-select: none;
 	background: #f6f7f7;
 	border: none;
 	border-radius: 4px;
-	user-select: none;
 }
 
 .zw-audit-content-diff summary:hover { background: #f0f0f1; }
 
 .zw-audit-content-diff details[open] summary {
+	margin-bottom: 0;
 	border-bottom: 1px solid #dcdcde;
 	border-radius: 4px 4px 0 0;
-	margin-bottom: 0;
 }
 
 .zw-audit-diff {
@@ -81,107 +81,107 @@
 }
 
 .zw-audit-diff-block {
+	overflow: hidden;
 	background: #f9f9f9;
 	border: 1px solid #dcdcde;
 	border-radius: 4px;
-	overflow: hidden;
 }
 
 .zw-audit-diff-header {
+	padding: 8px 12px;
+	margin: 0;
 	font-size: 11px;
 	font-weight: 600;
 	color: #646970;
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
-	padding: 8px 12px;
-	margin: 0;
 	background: #f0f0f1;
 	border-bottom: 1px solid #dcdcde;
 }
 
 .zw-audit-diff-content {
+	max-height: 200px;
 	padding: 12px;
+	overflow-y: auto;
 	font-size: 13px;
 	line-height: 1.6;
-	max-height: 200px;
-	overflow-y: auto;
 	word-wrap: break-word;
 	overflow-wrap: break-word;
 }
 
 .zw-audit-diff-content del {
-	background: #f8d7da;
+	padding: 1px 3px;
 	color: #721c24;
 	text-decoration: line-through;
-	padding: 1px 3px;
+	background: #f8d7da;
 	border-radius: 2px;
 }
 
 .zw-audit-diff-content ins {
-	background: #d1ecf1;
+	padding: 1px 3px;
 	color: #0c5460;
 	text-decoration: none;
-	padding: 1px 3px;
+	background: #d1ecf1;
 	border-radius: 2px;
 }
 
 .zw-diff-added {
-	background: #d4edda;
-	color: #155724;
 	padding: 2px 4px;
-	border-radius: 3px;
 	font-weight: 500;
+	color: #155724;
+	background: #d4edda;
+	border-radius: 3px;
 }
 
 .zw-diff-removed {
-	background: #f8d7da;
-	color: #721c24;
 	padding: 2px 4px;
-	border-radius: 3px;
-	text-decoration: line-through;
 	font-weight: 500;
+	color: #721c24;
+	text-decoration: line-through;
+	background: #f8d7da;
+	border-radius: 3px;
 }
 
 .subsubsub {
 	float: left;
-	font-size: 13px;
-	margin: 6px 0 0;
-	padding-left: 0;
-	white-space: nowrap;
 	width: 100%;
+	padding-left: 0;
+	margin: 6px 0 0;
+	font-size: 13px;
+	white-space: nowrap;
 }
 
 .subsubsub li {
 	display: inline;
-	margin: 0;
 	padding: 0;
+	margin: 0;
 	white-space: nowrap;
 }
 
 .subsubsub a {
-	line-height: 2;
 	padding: 0.2em;
-	text-decoration: none;
+	line-height: 2;
 	white-space: nowrap;
+	text-decoration: none;
 }
 
 .subsubsub a .count {
-	color: #646970;
 	font-weight: 400;
+	color: #646970;
 }
 
 .subsubsub a.current {
 	font-weight: 600;
-	border: none;
-	background: none;
 	color: #000;
+	background: none;
+	border: none;
 }
 
 .subsubsub a.current .count { color: #646970; }
 
 .subsubsub li:not(:last-child)::after {
-	content: " | ";
 	color: #646970;
+	content: " | ";
 }
 
 .subsubsub li:last-child::after { content: ""; }
@@ -194,46 +194,46 @@
 	}
 	
 	.zw-audit-diff-content {
-		font-size: 12px;
-		padding: 10px;
 		max-height: 150px;
+		padding: 10px;
+		font-size: 12px;
 	}
 	
 	.zw-audit-content-diff summary {
-		font-size: 11px;
 		padding: 6px 10px;
+		font-size: 11px;
 	}
 	
 	.toggle-row { display: block; }
 }
 
 .toggle-row {
-	background: none;
-	border: none;
-	cursor: pointer;
-	display: none;
 	float: right;
+	display: none;
+	width: 20px;
+	padding: 0;
+	margin: 0;
 	font-size: 12px;
 	line-height: 2;
-	margin: 0;
-	outline: none;
-	padding: 0;
-	text-decoration: none;
-	width: 20px;
 	color: #646970;
+	text-decoration: none;
+	cursor: pointer;
+	outline: none;
+	background: none;
+	border: none;
 }
 
 .wrap .zw-audit-table { clear: both; }
 
 .change-percentage {
 	display: inline-block;
+	min-width: 35px;
 	padding: 2px 6px;
-	border-radius: 3px;
 	font-size: 11px;
 	font-weight: 600;
 	color: #fff;
 	text-align: center;
-	min-width: 35px;
+	border-radius: 3px;
 }
 
 .change-percentage.low-change { background: #46b450; }

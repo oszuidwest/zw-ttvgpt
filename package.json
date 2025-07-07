@@ -13,9 +13,13 @@
   },
   "devDependencies": {
     "@wordpress/eslint-plugin": "^17.0.0",
+    "@wordpress/stylelint-config": "^23.18.0",
     "eslint": "^8.57.0",
     "stylelint": "^16.21.1",
-    "stylelint-config-standard": "^38.0.0"
+    "stylelint-config-recess-order": "^7.1.0",
+    "stylelint-config-standard": "^38.0.0",
+    "stylelint-order": "^7.0.0",
+    "stylelint-plugin-defensive-css": "^1.0.4"
   },
   "eslintConfig": {
     "env": {
@@ -37,145 +41,77 @@
       "sourceType": "script"
     },
     "rules": {
-      "no-magic-numbers": [
-        "off"
-      ],
-      "func-style": [
-        "error",
-        "declaration"
-      ],
-      "no-plusplus": [
-        "off"
-      ],
-      "max-lines-per-function": [
-        "error",
-        {
-          "max": 100
-        }
-      ],
-      "max-statements": [
-        "error",
-        30
-      ],
-      "sort-keys": [
-        "off"
-      ],
-      "one-var": [
-        "off"
-      ],
-      "id-length": [
-        "error",
-        {
-          "min": 2,
-          "exceptions": [
-            "$",
-            "i",
-            "j",
-            "e"
-          ]
-        }
-      ],
-      "func-names": [
-        "off"
-      ],
-      "no-inline-comments": [
-        "off"
-      ],
-      "line-comment-position": [
-        "off"
-      ],
-      "no-use-before-define": [
-        "error",
-        {
-          "functions": false
-        }
-      ],
-      "no-ternary": [
-        "off"
-      ],
-      "sort-vars": [
-        "off"
-      ],
-      "capitalized-comments": [
-        "off"
-      ],
-      "strict": [
-        "off"
-      ],
-      "prefer-arrow-callback": [
-        "off"
-      ],
-      "object-shorthand": [
-        "warn"
-      ],
-      "no-invalid-this": [
-        "off"
-      ],
-      "camelcase": [
-        "warn",
-        {
-          "allow": [
-            "post_id"
-          ]
-        }
-      ],
-      "jsdoc/require-param-type": [
-        "off"
-      ],
-      "max-lines": [
-        "error",
-        {
-          "max": 600
-        }
-      ],
-      "prefer-destructuring": [
-        "warn"
-      ],
-      "array-element-newline": [
-        "off"
-      ],
-      "multiline-ternary": [
-        "off"
-      ],
-      "no-negated-condition": [
-        "warn"
-      ],
-      "prefer-template": [
-        "warn"
-      ],
-      "prefer-named-capture-group": [
-        "off"
-      ],
-      "require-unicode-regexp": [
-        "off"
-      ],
-      "no-console": [
-        "error",
-        {
-          "allow": [
-            "error",
-            "warn"
-          ]
-        }
-      ],
-      "@wordpress/no-unused-vars-before-return": [
-        "off"
-      ]
+      "no-magic-numbers": ["off"],
+      "func-style": ["error", "declaration"],
+      "no-plusplus": ["off"],
+      "max-lines-per-function": ["error", {"max": 100}],
+      "max-statements": ["error", 30],
+      "sort-keys": ["off"],
+      "one-var": ["off"],
+      "id-length": ["error", {"min": 2, "exceptions": ["$", "i", "j", "e"]}],
+      "func-names": ["off"],
+      "no-inline-comments": ["off"],
+      "line-comment-position": ["off"],
+      "no-use-before-define": ["error", {"functions": false}],
+      "no-ternary": ["off"],
+      "sort-vars": ["off"],
+      "capitalized-comments": ["off"],
+      "strict": ["off"],
+      "prefer-arrow-callback": ["off"],
+      "object-shorthand": ["warn"],
+      "no-invalid-this": ["off"],
+      "camelcase": ["warn", {"allow": ["post_id"]}],
+      "jsdoc/require-param-type": ["off"],
+      "max-lines": ["error", {"max": 600}],
+      "prefer-destructuring": ["warn"],
+      "array-element-newline": ["off"],
+      "multiline-ternary": ["off"],
+      "no-negated-condition": ["warn"],
+      "prefer-template": ["warn"],
+      "prefer-named-capture-group": ["off"],
+      "require-unicode-regexp": ["off"],
+      "no-console": ["error", {"allow": ["error", "warn"]}],
+      "@wordpress/no-unused-vars-before-return": ["off"]
     }
   },
   "stylelint": {
-    "extends": "stylelint-config-standard",
+    "extends": [
+      "@wordpress/stylelint-config",
+      "stylelint-config-recess-order"
+    ],
+    "plugins": [
+      "stylelint-order"
+    ],
+    "ignoreFiles": [
+      "assets/css/vendor/**/*.css",
+      "node_modules/**/*.css"
+    ],
     "rules": {
-      "declaration-empty-line-before": null,
-      "rule-empty-line-before": ["always", {
-        "except": ["first-nested"],
-        "ignore": ["after-comment"]
+      "selector-max-universal": 1,
+      "selector-max-id": 0,
+      "max-nesting-depth": 4,
+      "declaration-block-no-redundant-longhand-properties": true,
+      "shorthand-property-no-redundant-values": true,
+      "declaration-block-no-duplicate-properties": [true, {
+        "ignore": ["consecutive-duplicates-with-different-values"]
       }],
+      "no-duplicate-selectors": true,
+      "color-no-invalid-hex": true,
+      "function-calc-no-unspaced-operator": true,
+      "declaration-property-value-disallowed-list": {
+        "/.*/": ["expression"]
+      },
+      "function-disallowed-list": ["expression"],
       "selector-class-pattern": null,
       "no-descending-specificity": null,
-      "font-family-no-missing-generic-family-keyword": null,
-      "declaration-block-single-line-max-declarations": 2,
-      "no-duplicate-selectors": true
+      "comment-empty-line-before": ["always", {
+        "except": ["first-nested"],
+        "ignore": ["stylelint-commands"]
+      }],
+      "rule-empty-line-before": ["always-multi-line", {
+        "except": ["first-nested"],
+        "ignore": ["after-comment"]
+      }]
     }
   }
 }

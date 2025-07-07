@@ -4,25 +4,25 @@
 
 /* Status messages */
 .zw-ttvgpt-status {
-    margin: 10px 0;
     padding: 10px;
+    margin: 10px 0;
     border-left: 4px solid;
 }
 
 .zw-ttvgpt-status.notice-error {
-    border-left-color: #dc3232;
     background: #fbeaea;
+    border-left-color: #dc3232;
 }
 
 .zw-ttvgpt-status.notice-success {
-    border-left-color: #46b450;
     background: #ecf7ed;
+    border-left-color: #46b450;
 }
 
 /* Inline generate button for ACF field */
 .zw-ttvgpt-inline-generate {
-    margin-top: 8px !important;
     display: block;
+    margin-top: 8px !important;
 }
 
 /* Loading state animations */
@@ -52,14 +52,14 @@
 
 /* Generate button during generation */
 .button.zw-ttvgpt-generating {
+    position: relative;
+    overflow: hidden;
+    color: #fff;
+    text-shadow: 0 1px 2px rgb(0 0 0 / 20%);
     background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #667eea 100%);
     background-size: 400% 400%;
     border-color: #667eea;
-    color: #fff;
     animation: zw-ttvgpt-gradient 3s ease infinite;
-    position: relative;
-    overflow: hidden;
-    text-shadow: 0 1px 2px rgb(0 0 0 / 20%);
 }
 
 .button.zw-ttvgpt-generating:hover {
@@ -68,12 +68,12 @@
 
 /* Add shimmer effect to button while generating */
 .button.zw-ttvgpt-generating::after {
-    content: '';
     position: absolute;
     top: -50%;
     left: -50%;
     width: 200%;
     height: 200%;
+    content: '';
     background: linear-gradient(
         45deg,
         transparent 30%,
