@@ -83,11 +83,11 @@ class TTVGPTAuditHelper {
 
 		global $wpdb;
 
-		// Revolutionary ultra-fast approach: Get raw dates, process in PHP
-		// Eliminates DATE_FORMAT overhead and leverages post_date index
-		$results = $wpdb->get_col(
+		// REVOLUTIONARY: Direct GROUP BY month buckets in SQL - eliminates PHP processing!
+		// Let database handle month grouping efficiently using post_date index
+		$results = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT DISTINCT p.post_date
+				"SELECT YEAR(p.post_date) as year, MONTH(p.post_date) as month
 				FROM {$wpdb->posts} p
 				WHERE p.post_status = %s
 				  AND p.post_type = %s
@@ -105,7 +105,8 @@ class TTVGPTAuditHelper {
 					    AND pm2.meta_value != %s
 					  LIMIT 1
 				  )
-				ORDER BY p.post_date DESC",
+				GROUP BY YEAR(p.post_date), MONTH(p.post_date)
+				ORDER BY year DESC, month DESC",
 				'publish',
 				'post',
 				'post_in_kabelkrant',
@@ -115,24 +116,13 @@ class TTVGPTAuditHelper {
 			)
 		);
 
-		// Ultra-fast PHP processing: Extract unique year-month combinations
+		// Ultra-fast: Direct database results, no PHP processing needed!
 		$unique_months = array();
-		$seen_months   = array();
-
-		foreach ( $results as $date_string ) {
-			// Extract YYYY-MM efficiently using substr (faster than date functions)
-			$month_key = substr( $date_string, 0, 7 ); // Gets 'YYYY-MM' from 'YYYY-MM-DD HH:MM:SS'
-
-			if ( ! isset( $seen_months[ $month_key ] ) ) {
-				$seen_months[ $month_key ] = true;
-				$parts                     = explode( '-', $month_key );
-				if ( 2 === count( $parts ) && is_numeric( $parts[0] ) && is_numeric( $parts[1] ) ) {
-					$unique_months[] = array(
-						'year'  => (int) $parts[0],
-						'month' => (int) $parts[1],
-					);
-				}
-			}
+		foreach ( $results as $row ) {
+			$unique_months[] = array(
+				'year'  => (int) $row->year,
+				'month' => (int) $row->month,
+			);
 		}
 
 		$execution_time = ( microtime( true ) - $start_time ) * 1000;
@@ -543,6 +533,10 @@ class TTVGPTAuditHelper {
 
 	/**
 	 * Strategy 1: Triple INNER JOIN with date range (current optimized approach)
+	 *
+	 * @param int $year Target year
+	 * @param int $month Target month
+	 * @return array Array of WP_Post objects
 	 */
 	private static function get_posts_strategy_1( int $year, int $month ): array {
 		global $wpdb;
@@ -582,6 +576,10 @@ class TTVGPTAuditHelper {
 
 	/**
 	 * Strategy 2: EXISTS subqueries with covering index optimization
+	 *
+	 * @param int $year Target year
+	 * @param int $month Target month
+	 * @return array Array of WP_Post objects
 	 */
 	private static function get_posts_strategy_2( int $year, int $month ): array {
 		global $wpdb;
