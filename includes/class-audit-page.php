@@ -110,16 +110,16 @@ class TTVGPTAuditPage {
 	 * Render WordPress-style status filter links
 	 *
 	 * @param int    $year Current year
-	 * @param int    $month Current month 
+	 * @param int    $month Current month
 	 * @param string $status_filter Current status filter
 	 * @param array  $counts Statistics counts
 	 * @return void
 	 */
 	private function render_status_links( int $year, int $month, string $status_filter, array $counts ): void {
-		$total = array_sum( $counts );
-		$base_url = admin_url( 'tools.php?page=zw-ttvgpt-audit' );
+		$total          = array_sum( $counts );
+		$base_url       = admin_url( 'tools.php?page=zw-ttvgpt-audit' );
 		$current_params = array(
-			'year' => $year,
+			'year'  => $year,
 			'month' => $month,
 		);
 		?>
@@ -235,13 +235,15 @@ class TTVGPTAuditPage {
 					<th scope="col" id="type" class="manage-column column-type" style="width: 80px;"><?php esc_html_e( 'Type', 'zw-ttvgpt' ); ?></th>
 					<th scope="col" id="title" class="manage-column column-title column-primary"><?php esc_html_e( 'Titel', 'zw-ttvgpt' ); ?></th>
 					<th scope="col" id="author" class="manage-column column-author"><?php esc_html_e( 'Auteur', 'zw-ttvgpt' ); ?></th>
+					<th scope="col" id="editor" class="manage-column column-editor"><?php esc_html_e( 'Eindredactie', 'zw-ttvgpt' ); ?></th>
+					<th scope="col" id="change" class="manage-column column-change"><?php esc_html_e( '% Gewijzigd', 'zw-ttvgpt' ); ?></th>
 					<th scope="col" id="date" class="manage-column column-date"><?php esc_html_e( 'Datum', 'zw-ttvgpt' ); ?></th>
 				</tr>
 			</thead>
 			<tbody id="the-list">
 				<?php if ( empty( $categorized_posts ) ) : ?>
 					<tr class="no-items">
-						<td class="colspanchange" colspan="4">
+						<td class="colspanchange" colspan="6">
 							<?php esc_html_e( 'Geen artikelen gevonden voor de geselecteerde filters.', 'zw-ttvgpt' ); ?>
 						</td>
 					</tr>
@@ -267,7 +269,11 @@ class TTVGPTAuditPage {
 							<td class="title column-title has-row-actions column-primary page-title" data-colname="<?php esc_attr_e( 'Titel', 'zw-ttvgpt' ); ?>">
 								<strong>
 									<?php if ( $post_url ) : ?>
-										<a class="row-title" href="<?php echo esc_url( $post_url ); ?>" aria-label="<?php echo esc_attr( sprintf( __( '"%s" (bewerken)', 'zw-ttvgpt' ), get_the_title( $post->ID ) ) ); ?>">
+										<?php
+										/* translators: %s is the post title. */
+										$edit_label = sprintf( __( '"%s" (bewerken)', 'zw-ttvgpt' ), get_the_title( $post->ID ) );
+										?>
+									<a class="row-title" href="<?php echo esc_url( $post_url ); ?>" aria-label="<?php echo esc_attr( $edit_label ); ?>">
 											<?php echo esc_html( get_the_title( $post->ID ) ); ?>
 										</a>
 									<?php else : ?>
@@ -276,11 +282,17 @@ class TTVGPTAuditPage {
 								</strong>
 								<div class="row-actions">
 									<span class="edit">
+										<?php
+										// translators: %s is the post title.
+										?>
 										<a href="<?php echo esc_url( $post_url ); ?>" aria-label="<?php echo esc_attr( sprintf( __( 'Bewerk "%s"', 'zw-ttvgpt' ), get_the_title( $post->ID ) ) ); ?>">
 											<?php esc_html_e( 'Bewerken', 'zw-ttvgpt' ); ?>
 										</a> |
 									</span>
 									<span class="view">
+										<?php
+										// translators: %s is the post title.
+										?>
 										<a href="<?php echo esc_url( get_permalink( $post->ID ) ); ?>" rel="bookmark" aria-label="<?php echo esc_attr( sprintf( __( '"%s" bekijken', 'zw-ttvgpt' ), get_the_title( $post->ID ) ) ); ?>" target="_blank">
 											<?php esc_html_e( 'Bekijken', 'zw-ttvgpt' ); ?>
 										</a>
@@ -308,15 +320,31 @@ class TTVGPTAuditPage {
 							</td>
 							<td class="author column-author" data-colname="<?php esc_attr_e( 'Auteur', 'zw-ttvgpt' ); ?>">
 								<?php echo esc_html( $author ? $author->display_name : __( 'Onbekend', 'zw-ttvgpt' ) ); ?>
+							</td>
+							<td class="editor column-editor" data-colname="<?php esc_attr_e( 'Eindredactie', 'zw-ttvgpt' ); ?>">
 								<?php if ( $last_editor && $last_editor->ID !== $post->post_author ) : ?>
-									<br><small><?php echo esc_html( sprintf( __( 'Bewerkt door %s', 'zw-ttvgpt' ), $last_editor->display_name ) ); ?></small>
+									<?php echo esc_html( $last_editor->display_name ); ?>
+								<?php else : ?>
+									<span aria-hidden="true">—</span>
+									<span class="screen-reader-text"><?php esc_html_e( 'Geen eindredactie', 'zw-ttvgpt' ); ?></span>
+								<?php endif; ?>
+							</td>
+							<td class="change column-change" data-colname="<?php esc_attr_e( '% Gewijzigd', 'zw-ttvgpt' ); ?>">
+								<?php if ( 'ai_written_edited' === $status && isset( $item['change_percentage'] ) ) : ?>
+									<span class="change-percentage <?php echo esc_attr( $item['change_percentage'] > 50 ? 'high-change' : ( $item['change_percentage'] > 20 ? 'medium-change' : 'low-change' ) ); ?>">
+										<?php echo esc_html( $item['change_percentage'] . '%' ); ?>
+									</span>
+								<?php else : ?>
+									<span aria-hidden="true">—</span>
+									<span class="screen-reader-text"><?php esc_html_e( 'Niet van toepassing', 'zw-ttvgpt' ); ?></span>
 								<?php endif; ?>
 							</td>
 							<td class="date column-date" data-colname="<?php esc_attr_e( 'Datum', 'zw-ttvgpt' ); ?>">
 								<?php
 								$post_status_label = 'publish' === $post->post_status ? __( 'Gepubliceerd', 'zw-ttvgpt' ) : ucfirst( $post->post_status );
 								echo esc_html( $post_status_label );
-								?><br>
+								?>
+								<br>
 								<?php echo esc_html( get_the_date( 'j F Y \o\m H:i', $post->ID ) ); ?>
 							</td>
 						</tr>
@@ -328,6 +356,8 @@ class TTVGPTAuditPage {
 					<th scope="col" class="manage-column column-type"><?php esc_html_e( 'Type', 'zw-ttvgpt' ); ?></th>
 					<th scope="col" class="manage-column column-title column-primary"><?php esc_html_e( 'Titel', 'zw-ttvgpt' ); ?></th>
 					<th scope="col" class="manage-column column-author"><?php esc_html_e( 'Auteur', 'zw-ttvgpt' ); ?></th>
+					<th scope="col" class="manage-column column-editor"><?php esc_html_e( 'Eindredactie', 'zw-ttvgpt' ); ?></th>
+					<th scope="col" class="manage-column column-change"><?php esc_html_e( '% Gewijzigd', 'zw-ttvgpt' ); ?></th>
 					<th scope="col" class="manage-column column-date"><?php esc_html_e( 'Datum', 'zw-ttvgpt' ); ?></th>
 				</tr>
 			</tfoot>
@@ -371,5 +401,4 @@ class TTVGPTAuditPage {
 		</script>
 		<?php
 	}
-
 }

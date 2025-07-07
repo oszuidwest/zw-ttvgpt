@@ -273,10 +273,17 @@ class TTVGPTAuditHelper {
 			$status = 'ai_written_edited';
 		}
 
+			// Calculate percentage change for AI+ articles
+		$change_percentage = 0;
+		if ( 'ai_written_edited' === $status ) {
+			$change_percentage = self::calculate_change_percentage( $ai_clean, $human_clean );
+		}
+
 		return array(
-			'status'        => $status,
-			'ai_content'    => $ai_content,
-			'human_content' => $human_content,
+			'status'            => $status,
+			'ai_content'        => $ai_content,
+			'human_content'     => $human_content,
+			'change_percentage' => $change_percentage,
 		);
 	}
 
@@ -334,5 +341,50 @@ class TTVGPTAuditHelper {
 			'before' => implode( ' ', $old_html ),
 			'after'  => implode( ' ', $modified_html ),
 		);
+	}
+
+	/**
+	 * Calculate percentage of change between AI and human content
+	 *
+	 * @param string $ai_content Original AI content
+	 * @param string $human_content Edited human content
+	 * @return float Percentage of change (0-100)
+	 */
+	public static function calculate_change_percentage( string $ai_content, string $human_content ): float {
+		if ( empty( $ai_content ) && empty( $human_content ) ) {
+			return 0.0;
+		}
+
+		if ( empty( $ai_content ) ) {
+			return 100.0;
+		}
+
+		// Split into words for comparison
+		$ai_words_result    = preg_split( '/\s+/', trim( $ai_content ) );
+		$human_words_result = preg_split( '/\s+/', trim( $human_content ) );
+
+		$ai_words    = false !== $ai_words_result ? $ai_words_result : array();
+		$human_words = false !== $human_words_result ? $human_words_result : array();
+
+		$ai_word_count    = count( $ai_words );
+		$human_word_count = count( $human_words );
+
+		if ( 0 === $ai_word_count ) {
+			return 100.0;
+		}
+
+		// Calculate similarity using simple word matching
+		$matching_words = 0;
+		$max_words      = max( $ai_word_count, $human_word_count );
+
+		// Use array_intersect to find common words
+		$common_words   = array_intersect( $ai_words, $human_words );
+		$matching_words = count( $common_words );
+
+		// Calculate change percentage
+		$similarity_ratio    = $matching_words / $max_words;
+		$change_percentage   = ( 1 - $similarity_ratio ) * 100;
+
+		return round( $change_percentage, 1 );
 	}
 }

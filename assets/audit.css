@@ -13,7 +13,16 @@
 }
 
 .zw-audit-table .column-author {
-	width: 150px;
+	width: 120px;
+}
+
+.zw-audit-table .column-editor {
+	width: 120px;
+}
+
+.zw-audit-table .column-change {
+	width: 100px;
+	text-align: center;
 }
 
 .zw-audit-table .column-date {
@@ -249,6 +258,39 @@
 /* Ensure proper spacing in WordPress admin */
 .wrap .zw-audit-table {
 	clear: both;
+}
+
+/* Change percentage styling */
+.change-percentage {
+	display: inline-block;
+	padding: 2px 6px;
+	border-radius: 3px;
+	font-size: 11px;
+	font-weight: 600;
+	color: #fff;
+	text-align: center;
+	min-width: 35px;
+}
+
+.change-percentage.low-change {
+	background: #46b450;
+}
+
+.change-percentage.medium-change {
+	background: #ffb900;
+}
+
+.change-percentage.high-change {
+	background: #dc3232;
+}
+
+/* Column alignment */
+.zw-audit-table .column-change {
+	text-align: center;
+}
+
+.zw-audit-table .column-change .change-percentage {
+	display: inline-block;
 }
 
 /* Remove old styles that conflict with WordPress table styling */
