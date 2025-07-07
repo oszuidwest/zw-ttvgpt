@@ -177,12 +177,10 @@
 }
 
 .zw-audit-content-block.diff-before {
-	border-left: 3px solid #8c8f94;
 	background: #f6f7f7;
 }
 
 .zw-audit-content-block.diff-after {
-	border-left: 3px solid #f56e28;
 	background: #fef9f5;
 }
 
