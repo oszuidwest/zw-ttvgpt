@@ -21,24 +21,20 @@ class TTVGPTAuditHelper {
 	public static function get_most_recent_month(): ?array {
 		global $wpdb;
 
-		// Use a more efficient single query with EXISTS
+		// Ultra-fast query - get latest post directly
 		$result = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT DISTINCT YEAR(p.post_date) AS year, MONTH(p.post_date) AS month
+				"SELECT YEAR(p.post_date) AS year, MONTH(p.post_date) AS month
 				FROM {$wpdb->posts} p
 				WHERE p.post_status = %s
 				  AND p.post_type = %s
-				  AND EXISTS (
-					  SELECT 1 FROM {$wpdb->postmeta} pm1
-					  WHERE pm1.post_id = p.ID
-					    AND pm1.meta_key = %s
-					    AND pm1.meta_value = %s
-				  )
-				  AND EXISTS (
-					  SELECT 1 FROM {$wpdb->postmeta} pm2
-					  WHERE pm2.post_id = p.ID
-					    AND pm2.meta_key = %s
-					    AND pm2.meta_value != %s
+				  AND p.ID IN (
+					  SELECT post_id
+					  FROM {$wpdb->postmeta}
+					  WHERE (meta_key = %s AND meta_value = %s)
+					     OR (meta_key = %s AND meta_value != %s)
+					  GROUP BY post_id
+					  HAVING COUNT(DISTINCT meta_key) = 2
 				  )
 				ORDER BY p.post_date DESC
 				LIMIT 1",
@@ -65,24 +61,20 @@ class TTVGPTAuditHelper {
 	public static function get_months(): array {
 		global $wpdb;
 
-		// Fast single query with EXISTS instead of JOINs
+		// Ultra-fast single query with grouped postmeta check
 		$results = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT DISTINCT YEAR(p.post_date) AS year, MONTH(p.post_date) AS month
 				FROM {$wpdb->posts} p
 				WHERE p.post_status = %s
 				  AND p.post_type = %s
-				  AND EXISTS (
-					  SELECT 1 FROM {$wpdb->postmeta} pm1
-					  WHERE pm1.post_id = p.ID
-					    AND pm1.meta_key = %s
-					    AND pm1.meta_value = %s
-				  )
-				  AND EXISTS (
-					  SELECT 1 FROM {$wpdb->postmeta} pm2
-					  WHERE pm2.post_id = p.ID
-					    AND pm2.meta_key = %s
-					    AND pm2.meta_value != %s
+				  AND p.ID IN (
+					  SELECT post_id
+					  FROM {$wpdb->postmeta}
+					  WHERE (meta_key = %s AND meta_value = %s)
+					     OR (meta_key = %s AND meta_value != %s)
+					  GROUP BY post_id
+					  HAVING COUNT(DISTINCT meta_key) = 2
 				  )
 				ORDER BY year DESC, month DESC",
 				'publish',
@@ -113,31 +105,25 @@ class TTVGPTAuditHelper {
 	 * @return array Array of WP_Post objects
 	 */
 	public static function get_posts( int $year, int $month ): array {
-		// Fast direct database query - no caching, always fresh
+		// Ultra-fast single query with grouped postmeta check
 		global $wpdb;
 		$post_ids = $wpdb->get_col(
 			$wpdb->prepare(
-				"SELECT DISTINCT p.ID
+				"SELECT p.ID
 				FROM {$wpdb->posts} p
 				WHERE p.post_status = %s
 				  AND p.post_type = %s
 				  AND YEAR(p.post_date) = %d
 				  AND MONTH(p.post_date) = %d
-				  AND EXISTS (
-					  SELECT 1 FROM {$wpdb->postmeta} pm1
-					  WHERE pm1.post_id = p.ID
-					    AND pm1.meta_key = %s
-					    AND pm1.meta_value = %s
-				  )
-				  AND EXISTS (
-					  SELECT 1 FROM {$wpdb->postmeta} pm2
-					  WHERE pm2.post_id = p.ID
-					    AND pm2.meta_key = %s
-				  )
-				  AND EXISTS (
-					  SELECT 1 FROM {$wpdb->postmeta} pm3
-					  WHERE pm3.post_id = p.ID
-					    AND pm3.meta_key = %s
+				  AND p.ID IN (
+					  SELECT post_id
+					  FROM {$wpdb->postmeta}
+					  WHERE (meta_key = %s AND meta_value = %s)
+					     OR (meta_key = %s)
+					     OR (meta_key = %s)
+					  GROUP BY post_id
+					  HAVING COUNT(DISTINCT meta_key) = 3
+				     AND SUM(CASE WHEN meta_key = %s AND meta_value = %s THEN 1 ELSE 0 END) = 1
 				  )
 				ORDER BY p.post_date DESC",
 				'publish',
@@ -147,7 +133,9 @@ class TTVGPTAuditHelper {
 				'post_in_kabelkrant',
 				'1',
 				'post_kabelkrant_content_gpt',
-				'post_kabelkrant_content'
+				'post_kabelkrant_content',
+				'post_in_kabelkrant',
+				'1'
 			)
 		);
 
