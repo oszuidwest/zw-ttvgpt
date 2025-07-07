@@ -3,19 +3,19 @@
  * Clean, simple, functional like WordPress core
  */
 
-/* Clean WordPress-style summary boxes */
+/* ZW CacheMan inspired summary boxes */
 .zw-audit-summary {
 	display: flex;
-	gap: 12px;
+	gap: 10px;
 	margin-bottom: 20px;
 	flex-wrap: wrap;
 }
 
 .zw-audit-summary-item {
-	background: #fff;
-	border: 1px solid #c3c4c7;
-	padding: 16px 20px;
-	min-width: 140px;
+	background: #f1f1f1;
+	border: 1px solid #ddd;
+	padding: 15px 18px;
+	min-width: 130px;
 	text-align: center;
 	border-radius: 3px;
 	position: relative;
@@ -31,16 +31,18 @@
 }
 
 .zw-audit-summary-number {
-	font-size: 28px;
+	font-size: 24px;
 	font-weight: 600;
 	line-height: 1;
-	margin-bottom: 6px;
+	margin-bottom: 5px;
 }
 
 .zw-audit-summary-label {
-	font-size: 12px;
-	color: #646970;
+	font-size: 11px;
+	color: #666;
 	font-weight: 500;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
 }
 
 /* Cool Blues - Clean WordPress kleurenschema */
@@ -65,18 +67,18 @@
 	color: #00a0d2; 
 }
 
-/* Clean standalone cards met ruimte */
+/* ZW CacheMan inspired clean cards */
 .zw-audit-list {
 	display: flex;
 	flex-direction: column;
-	gap: 16px;
+	gap: 12px;
 }
 
 .zw-audit-item {
-	background: #fff;
-	border: 1px solid #c3c4c7;
+	background: #f8f8f8;
+	border: 1px solid #ddd;
 	border-radius: 3px;
-	padding: 20px;
+	padding: 15px;
 	position: relative;
 }
 
