@@ -182,18 +182,22 @@
 	font-size: 13px;
 	margin: 6px 0 0;
 	padding-left: 0;
+	white-space: nowrap;
+	width: 100%;
 }
 
 .subsubsub li {
 	display: inline;
 	margin: 0;
 	padding: 0;
+	white-space: nowrap;
 }
 
 .subsubsub a {
 	line-height: 2;
 	padding: 0.2em;
 	text-decoration: none;
+	white-space: nowrap;
 }
 
 .subsubsub a .count {
@@ -210,6 +214,16 @@
 
 .subsubsub a.current .count {
 	color: #646970;
+}
+
+/* Ensure sufficient space between status items */
+.subsubsub li:not(:last-child):after {
+	content: " | ";
+	color: #646970;
+}
+
+.subsubsub li:last-child:after {
+	content: "";
 }
 
 /* Mobile responsiveness for diff view */

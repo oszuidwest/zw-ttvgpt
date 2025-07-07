@@ -131,17 +131,17 @@ class TTVGPTAuditPage {
 			<li class="all">
 				<a href="<?php echo esc_url( add_query_arg( $current_params, $base_url ) ); ?>" <?php echo empty( $status_filter ) ? 'class="current" aria-current="page"' : ''; ?>>
 					<?php esc_html_e( 'Alle', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $total ); ?>)</span>
-				</a> |
+				</a>
 			</li>
 			<li class="human">
 				<a href="<?php echo esc_url( add_query_arg( array_merge( $current_params, array( 'status' => 'fully_human_written' ) ), $base_url ) ); ?>" <?php echo 'fully_human_written' === $status_filter ? 'class="current" aria-current="page"' : ''; ?>>
 					<?php esc_html_e( 'Handmatig', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $counts['fully_human_written'] ); ?>)</span>
-				</a> |
+				</a>
 			</li>
 			<li class="ai-unedited">
 				<a href="<?php echo esc_url( add_query_arg( array_merge( $current_params, array( 'status' => 'ai_written_not_edited' ) ), $base_url ) ); ?>" <?php echo 'ai_written_not_edited' === $status_filter ? 'class="current" aria-current="page"' : ''; ?>>
 					<?php esc_html_e( 'AI Gegenereerd', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $counts['ai_written_not_edited'] ); ?>)</span>
-				</a> |
+				</a>
 			</li>
 			<li class="ai-edited">
 				<a href="<?php echo esc_url( add_query_arg( array_merge( $current_params, array( 'status' => 'ai_written_edited' ) ), $base_url ) ); ?>" <?php echo 'ai_written_edited' === $status_filter ? 'class="current" aria-current="page"' : ''; ?>>
