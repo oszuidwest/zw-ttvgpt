@@ -46,6 +46,14 @@ class TTVGPTAdmin {
 			TTVGPTConstants::SETTINGS_PAGE_SLUG,
 			array( $this, 'render_settings_page' )
 		);
+
+		add_management_page(
+			__( 'Tekst TV GPT Audit', 'zw-ttvgpt' ),
+			__( 'Tekst TV GPT Audit', 'zw-ttvgpt' ),
+			TTVGPTConstants::REQUIRED_CAPABILITY,
+			'zw-ttvgpt-audit',
+			array( $this, 'render_audit_page' )
+		);
 	}
 
 	/**
@@ -511,5 +519,182 @@ class TTVGPTAdmin {
 		$this->logger->debug( 'Settings updated', $sanitized );
 
 		return $sanitized;
+	}
+
+	/**
+	 * Render audit analysis page
+	 *
+	 * @return void
+	 */
+	public function render_audit_page(): void {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only audit page
+		$year = isset( $_GET['year'] ) ? absint( $_GET['year'] ) : null;
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only audit page
+		$month = isset( $_GET['month'] ) ? absint( $_GET['month'] ) : null;
+
+		if ( ! $year || ! $month ) {
+			$most_recent = TTVGPTHelper::get_most_recent_audit_month();
+			if ( $most_recent ) {
+				$year  = $most_recent['year'];
+				$month = $most_recent['month'];
+			} else {
+				?>
+				<div class="wrap">
+					<h1><?php esc_html_e( 'Tekst TV GPT Audit', 'zw-ttvgpt' ); ?></h1>
+					<div class="notice notice-info">
+						<p><?php esc_html_e( 'Geen posts gevonden voor audit analyse.', 'zw-ttvgpt' ); ?></p>
+					</div>
+				</div>
+				<?php
+				return;
+			}
+		}
+
+		$posts  = TTVGPTHelper::get_audit_posts( $year, $month );
+		$counts = array(
+			'fully_human_written'   => 0,
+			'ai_written_not_edited' => 0,
+			'ai_written_edited'     => 0,
+		);
+
+		$categorized_posts = array();
+		foreach ( $posts as $post ) {
+			$analysis = TTVGPTHelper::categorize_audit_post( $post );
+			++$counts[ $analysis['status'] ];
+			$categorized_posts[] = array_merge( array( 'post' => $post ), $analysis );
+		}
+
+		$available_months = TTVGPTHelper::get_audit_months();
+		$current_index    = null;
+		foreach ( $available_months as $index => $month_data ) {
+			if ( $month_data['year'] === $year && $month_data['month'] === $month ) {
+				$current_index = (int) $index;
+				break;
+			}
+		}
+
+		$prev_month = null;
+		$next_month = null;
+		if ( null !== $current_index ) {
+			$prev_month = isset( $available_months[ $current_index + 1 ] ) ? $available_months[ $current_index + 1 ] : null;
+			$next_month = isset( $available_months[ $current_index - 1 ] ) ? $available_months[ $current_index - 1 ] : null;
+		}
+
+		?>
+		<div class="wrap">
+			<h1><?php esc_html_e( 'Tekst TV GPT Audit', 'zw-ttvgpt' ); ?></h1>
+			
+			<?php $this->render_audit_navigation( $year, $month, $prev_month, $next_month ); ?>
+			
+			<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0;">
+				<?php
+				$labels = array(
+					'fully_human_written'   => __( 'Volledig handmatig', 'zw-ttvgpt' ),
+					'ai_written_not_edited' => __( 'AI, niet bewerkt', 'zw-ttvgpt' ),
+					'ai_written_edited'     => __( 'AI, bewerkt', 'zw-ttvgpt' ),
+				);
+				$colors = array(
+					'fully_human_written'   => '#0073aa',
+					'ai_written_not_edited' => '#d63638',
+					'ai_written_edited'     => '#dba617',
+				);
+				foreach ( $counts as $status => $count ) :
+					?>
+					<div style="background: white; padding: 20px; border: 1px solid #ddd; border-radius: 4px; text-align: center;">
+						<div style="font-size: 2em; font-weight: bold; color: <?php echo esc_attr( $colors[ $status ] ); ?>;">
+							<?php echo esc_html( (string) $count ); ?>
+						</div>
+						<div style="margin-top: 8px; color: #666;">
+							<?php echo esc_html( $labels[ $status ] ); ?>
+						</div>
+					</div>
+				<?php endforeach; ?>
+			</div>
+
+			<?php
+			foreach ( $categorized_posts as $item ) :
+				$post          = $item['post'];
+				$status        = $item['status'];
+				$ai_content    = $item['ai_content'];
+				$human_content = $item['human_content'];
+
+				$author      = get_userdata( $post->post_author );
+				$edit_last   = get_post_meta( $post->ID, '_edit_last', true );
+				$last_editor = is_numeric( $edit_last ) ? get_userdata( (int) $edit_last ) : false;
+				?>
+				<div style="background: white; margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 4px;">
+					<h3 style="margin: 0 0 10px 0;"><?php echo esc_html( (string) get_the_title( $post->ID ) ); ?></h3>
+					<div style="color: #666; font-size: 0.9em; margin-bottom: 15px;">
+						<?php
+						printf(
+							/* translators: 1: Date, 2: Author, 3: Last editor */
+							esc_html__( 'Gepubliceerd: %1$s | Auteur: %2$s | Laatste bewerking: %3$s', 'zw-ttvgpt' ),
+							esc_html( (string) get_the_date( 'Y-m-d', $post->ID ) ),
+							esc_html( $author ? $author->display_name : 'Onbekend' ),
+							esc_html( $last_editor ? $last_editor->display_name : 'Onbekend' )
+						);
+						?>
+					</div>
+					<div style="display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 0.8em; font-weight: bold; color: white; background: <?php echo esc_attr( $colors[ $status ] ); ?>;">
+						<?php echo esc_html( $labels[ $status ] ); ?>
+					</div>
+
+					<?php if ( 'ai_written_edited' === $status ) : ?>
+						<div style="margin-top: 20px;">
+							<?php $diff = TTVGPTHelper::generate_word_diff( $ai_content, $human_content ); ?>
+							<h4><?php esc_html_e( 'Voor bewerking:', 'zw-ttvgpt' ); ?></h4>
+							<div style="padding: 10px; background: #f9f9f9; border-left: 4px solid #ddd; margin-bottom: 15px;">
+								<?php echo wp_kses_post( $diff['before'] ); ?>
+							</div>
+							<h4><?php esc_html_e( 'Na bewerking:', 'zw-ttvgpt' ); ?></h4>
+							<div style="padding: 10px; background: #f9f9f9; border-left: 4px solid #ddd;">
+								<?php echo wp_kses_post( $diff['after'] ); ?>
+							</div>
+						</div>
+					<?php else : ?>
+						<div style="margin-top: 20px;">
+							<h4><?php esc_html_e( 'Content:', 'zw-ttvgpt' ); ?></h4>
+							<div style="padding: 10px; background: #f9f9f9; border-left: 4px solid #ddd;">
+								<?php echo esc_html( $human_content ); ?>
+							</div>
+						</div>
+					<?php endif; ?>
+				</div>
+			<?php endforeach; ?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render audit navigation between months
+	 *
+	 * @param int        $year Current year
+	 * @param int        $month Current month
+	 * @param array|null $prev_month Previous month data
+	 * @param array|null $next_month Next month data
+	 * @return void
+	 */
+	private function render_audit_navigation( int $year, int $month, ?array $prev_month, ?array $next_month ): void {
+		?>
+		<div style="background: #f1f1f1; padding: 10px 20px; margin: 20px 0; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
+			<?php if ( $prev_month ) : ?>
+				<a href="<?php echo esc_url( admin_url( 'tools.php?page=zw-ttvgpt-audit&year=' . $prev_month['year'] . '&month=' . $prev_month['month'] ) ); ?>" class="button">
+					← <?php esc_html_e( 'Vorige maand', 'zw-ttvgpt' ); ?>
+				</a>
+			<?php else : ?>
+				<span></span>
+			<?php endif; ?>
+
+			<strong><?php echo esc_html( date_i18n( 'F Y', mktime( 0, 0, 0, $month, 1, $year ) ) ); ?></strong>
+
+			<?php if ( $next_month ) : ?>
+				<a href="<?php echo esc_url( admin_url( 'tools.php?page=zw-ttvgpt-audit&year=' . $next_month['year'] . '&month=' . $next_month['month'] ) ); ?>" class="button">
+					<?php esc_html_e( 'Volgende maand', 'zw-ttvgpt' ); ?> →
+				</a>
+			<?php else : ?>
+				<span></span>
+			<?php endif; ?>
+		</div>
+		<?php
 	}
 }
