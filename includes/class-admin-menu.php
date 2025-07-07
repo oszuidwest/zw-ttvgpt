@@ -51,7 +51,7 @@ class TTVGPTAdminMenu {
 			__( 'Tekst TV GPT Audit', 'zw-ttvgpt' ),
 			TTVGPTConstants::REQUIRED_CAPABILITY,
 			'zw-ttvgpt-audit',
-			array( new TTVGPTAuditPage( $this->logger ), 'render' )
+			array( new TTVGPTAuditPage(), 'render' )
 		);
 	}
 

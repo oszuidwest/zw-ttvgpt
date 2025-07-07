@@ -14,19 +14,10 @@ namespace ZW_TTVGPT_Core;
  */
 class TTVGPTAuditPage {
 	/**
-	 * Logger instance
-	 *
-	 * @var TTVGPTLogger
-	 */
-	private TTVGPTLogger $logger;
-
-	/**
 	 * Initialize audit page
-	 *
-	 * @param TTVGPTLogger $logger Logger instance for debugging
 	 */
-	public function __construct( TTVGPTLogger $logger ) {
-		$this->logger = $logger;
+	public function __construct() {
+		// Constructor logic if needed
 	}
 
 	/**
@@ -154,7 +145,7 @@ class TTVGPTAuditPage {
 						<?php echo esc_html( $labels[ $status ] ); ?>
 						<?php if ( $total_posts > 0 ) : ?>
 							<div style="margin-top: 4px; font-size: 12px; opacity: 0.8;">
-								<?php echo esc_html( round( ( $count / $total_posts ) * 100 ) ); ?>%
+								<?php echo esc_html( (string) round( ( $count / $total_posts ) * 100 ) ); ?>%
 							</div>
 						<?php endif; ?>
 					</div>
@@ -223,7 +214,10 @@ class TTVGPTAuditPage {
 							<div class="zw-audit-article-meta">
 								<span>
 									<span class="dashicons dashicons-calendar-alt"></span>
-									<?php echo esc_html( get_the_date( 'j F Y', $post->ID ) ); ?>
+									<?php
+									$post_date = get_the_date( 'j F Y', $post->ID );
+									echo esc_html( is_string( $post_date ) ? $post_date : '' );
+									?>
 								</span>
 								
 								<span>
@@ -240,7 +234,7 @@ class TTVGPTAuditPage {
 								
 								<span>
 									<span class="dashicons dashicons-visibility"></span>
-									<a href="<?php echo esc_url( get_permalink( $post->ID ) ); ?>" target="_blank">
+									<a href="<?php echo esc_url( get_permalink( $post->ID ) ? get_permalink( $post->ID ) : '' ); ?>" target="_blank">
 										<?php esc_html_e( 'Bekijk live', 'zw-ttvgpt' ); ?>
 									</a>
 								</span>

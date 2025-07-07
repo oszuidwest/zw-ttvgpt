@@ -86,7 +86,36 @@ class TTVGPTApiHandler {
 
 		if ( empty( $this->api_key ) ) {
 			$this->logger->error( 'API key is missing' );
-			return TTVGPTHelper::error_response( __( 'API key niet geconfigureerd', 'zw-ttvgpt' ) );
+			return array(
+				'success' => false,
+				'error'   => __( 'API key niet geconfigureerd', 'zw-ttvgpt' ),
+			);
+		}
+
+		$request_body = wp_json_encode(
+			array(
+				'model'       => $this->model,
+				'messages'    => array(
+					array(
+						'role'    => 'system',
+						'content' => sprintf( 'Summarize in Dutch, max %d words, short sentences, ignore non-Dutch content.', $word_limit ),
+					),
+					array(
+						'role'    => 'user',
+						'content' => $content,
+					),
+				),
+				'max_tokens'  => self::MAX_TOKENS,
+				'temperature' => self::TEMPERATURE,
+			)
+		);
+
+		if ( false === $request_body ) {
+			$this->logger->error( 'Failed to encode JSON request body' );
+			return array(
+				'success' => false,
+				'error'   => __( 'Fout bij het voorbereiden van API aanvraag', 'zw-ttvgpt' ),
+			);
 		}
 
 		$response = wp_remote_post(
@@ -97,50 +126,41 @@ class TTVGPTApiHandler {
 					'Authorization' => 'Bearer ' . $this->api_key,
 					'Content-Type'  => 'application/json',
 				),
-				'body'    => wp_json_encode(
-					array(
-						'model'       => $this->model,
-						'messages'    => array(
-							array(
-								'role'    => 'system',
-								'content' => sprintf( 'Summarize in Dutch, max %d words, short sentences, ignore non-Dutch content.', $word_limit ),
-							),
-							array(
-								'role'    => 'user',
-								'content' => $content,
-							),
-						),
-						'max_tokens'  => self::MAX_TOKENS,
-						'temperature' => self::TEMPERATURE,
-					)
-				),
+				'body'    => $request_body,
 			)
 		);
 
 		if ( is_wp_error( $response ) ) {
 			$this->logger->error( 'API request failed: ' . $response->get_error_message() );
-			return TTVGPTHelper::error_response(
-				sprintf(
+			return array(
+				'success' => false,
+				'error'   => sprintf(
 					/* translators: %s: Error message */
 					__( 'Netwerkfout: %s', 'zw-ttvgpt' ),
 					$response->get_error_message()
-				)
+				),
 			);
 		}
 
 		$status_code = wp_remote_retrieve_response_code( $response );
 		if ( 200 !== (int) $status_code ) {
 			$this->logger->error( 'API error: HTTP ' . $status_code );
-			return TTVGPTHelper::error_response( TTVGPTApiErrorHandler::get_error_message( (int) $status_code ) );
+			return array(
+				'success' => false,
+				'error'   => TTVGPTApiErrorHandler::get_error_message( (int) $status_code ),
+			);
 		}
 
 		$data = json_decode( wp_remote_retrieve_body( $response ), true );
-		if ( json_last_error() !== JSON_ERROR_NONE || ! isset( $data['choices'][0]['message']['content'] ) ) {
+		if ( json_last_error() !== JSON_ERROR_NONE || ! is_array( $data ) || ! isset( $data['choices'][0]['message']['content'] ) ) {
 			$this->logger->error( 'Invalid API response' );
-			return TTVGPTHelper::error_response( __( 'Ongeldig antwoord van API', 'zw-ttvgpt' ) );
+			return array(
+				'success' => false,
+				'error'   => __( 'Ongeldig antwoord van API', 'zw-ttvgpt' ),
+			);
 		}
 
-		$summary = trim( $data['choices'][0]['message']['content'] );
+		$summary = trim( (string) $data['choices'][0]['message']['content'] );
 		$this->logger->debug( 'Summary generated', array( 'word_count' => str_word_count( $summary ) ) );
 
 		return array(
