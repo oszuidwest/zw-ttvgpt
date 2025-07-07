@@ -226,6 +226,24 @@
 	content: "";
 }
 
+/* ThickBox modal diff styling */
+.zw-diff-added {
+	background: #d4edda;
+	color: #155724;
+	padding: 2px 4px;
+	border-radius: 3px;
+	font-weight: 500;
+}
+
+.zw-diff-removed {
+	background: #f8d7da;
+	color: #721c24;
+	padding: 2px 4px;
+	border-radius: 3px;
+	text-decoration: line-through;
+	font-weight: 500;
+}
+
 /* Mobile responsiveness for diff view */
 @media (max-width: 782px) {
 	.zw-audit-diff {

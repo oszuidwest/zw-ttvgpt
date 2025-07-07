@@ -78,7 +78,7 @@ class TTVGPTAuditPage {
 
 			// Apply status filter if set
 			$status_match = empty( $status_filter ) || $analysis['status'] === $status_filter;
-			
+
 			// Apply change filter if set
 			$change_match = true;
 			if ( ! empty( $change_filter ) && 'ai_written_edited' === $analysis['status'] ) {
@@ -110,9 +110,9 @@ class TTVGPTAuditPage {
 		$version = ZW_TTVGPT_VERSION . ( TTVGPTSettingsManager::is_debug_mode() ? '.' . time() : '' );
 		wp_enqueue_style( 'zw-ttvgpt-audit', ZW_TTVGPT_URL . 'assets/audit.css', array(), $version );
 		wp_print_styles( array( 'zw-ttvgpt-audit' ) );
-		
-		// Enqueue WordPress modal scripts
-		wp_enqueue_script( 'jquery' );
+
+		// Enqueue WordPress ThickBox for modal functionality
+		add_thickbox();
 		?>
 		<div class="wrap">
 			<h1 class="wp-heading-inline"><?php esc_html_e( 'Tekst TV GPT Audit', 'zw-ttvgpt' ); ?></h1>
@@ -342,13 +342,8 @@ class TTVGPTAuditPage {
 										</a>
 									</span>
 									<?php if ( 'ai_written_edited' === $status ) : ?>
-										<?php $diff = TTVGPTAuditHelper::generate_word_diff( $ai_content, $human_content ); ?>
 										| <span class="view-diff">
-											<a href="#" class="zw-audit-show-diff" 
-												data-post-id="<?php echo esc_attr( $post->ID ); ?>"
-												data-post-title="<?php echo esc_attr( get_the_title( $post->ID ) ); ?>"
-												data-diff-before="<?php echo esc_attr( htmlspecialchars( $diff['before'], ENT_QUOTES, 'UTF-8' ) ); ?>"
-												data-diff-after="<?php echo esc_attr( htmlspecialchars( $diff['after'], ENT_QUOTES, 'UTF-8' ) ); ?>"
+											<a href="#TB_inline?width=800&height=600&inlineId=zw-diff-modal-<?php echo esc_attr( $post->ID ); ?>" class="thickbox"
 												aria-label="<?php esc_attr_e( 'Toon verschillen tussen AI en bewerkte versie', 'zw-ttvgpt' ); ?>">
 												<?php esc_html_e( 'Verschillen', 'zw-ttvgpt' ); ?>
 											</a>
@@ -402,34 +397,47 @@ class TTVGPTAuditPage {
 			</tfoot>
 		</table>
 		
-		<!-- Simple Modal for Diff Display -->
-		<div id="zw-audit-diff-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 999999;">
-			<div style="position: relative; background: #fff; margin: 5% auto; width: 90%; max-width: 1000px; border-radius: 4px; box-shadow: 0 3px 6px rgba(0,0,0,0.3); max-height: 80vh; overflow: hidden;">
-				<div style="padding: 16px 20px; border-bottom: 1px solid #dcdcde; background: #f9f9f9; position: relative;">
-					<h3 id="zw-modal-title" style="margin: 0; font-size: 18px; font-weight: 600; color: #23282d; padding-right: 40px;"></h3>
-					<button type="button" id="zw-modal-close" style="position: absolute; top: 50%; right: 16px; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 20px; color: #646970; width: 24px; height: 24px;">&times;</button>
-				</div>
-				<div style="padding: 20px; max-height: 60vh; overflow-y: auto;">
-					<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-						<div style="background: #f9f9f9; border: 1px solid #dcdcde; border-radius: 4px; overflow: hidden;">
-							<div style="font-size: 11px; font-weight: 600; color: #646970; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 12px; margin: 0; background: #f0f0f1; border-bottom: 1px solid #dcdcde;">
-								<?php esc_html_e( 'AI Versie', 'zw-ttvgpt' ); ?>
+		<!-- ThickBox Inline Modals for Diff Display -->
+		<?php foreach ( $categorized_posts as $item ) : ?>
+			<?php if ( 'ai_written_edited' === $item['status'] ) : ?>
+				<?php
+				$post = $item['post'];
+				$diff = TTVGPTAuditHelper::generate_word_diff( $item['ai_content'], $item['human_content'] );
+				?>
+				<div id="zw-diff-modal-<?php echo esc_attr( $post->ID ); ?>" style="display: none;">
+					<div class="wrap">
+						<h2><?php echo esc_html( sprintf( __( 'Verschillen voor: %s', 'zw-ttvgpt' ), get_the_title( $post->ID ) ) ); ?></h2>
+						
+						<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+							<div class="postbox">
+								<div class="postbox-header">
+									<h3 class="hndle"><?php esc_html_e( 'AI Versie', 'zw-ttvgpt' ); ?></h3>
+								</div>
+								<div class="inside">
+									<div style="max-height: 400px; overflow-y: auto; padding: 10px; font-size: 13px; line-height: 1.6;">
+										<?php echo wp_kses_post( $diff['before'] ); ?>
+									</div>
+								</div>
 							</div>
-							<div id="zw-diff-before" style="padding: 12px; font-size: 13px; line-height: 1.6; max-height: 300px; overflow-y: auto; word-wrap: break-word;"></div>
-						</div>
-						<div style="background: #f9f9f9; border: 1px solid #dcdcde; border-radius: 4px; overflow: hidden;">
-							<div style="font-size: 11px; font-weight: 600; color: #646970; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 12px; margin: 0; background: #f0f0f1; border-bottom: 1px solid #dcdcde;">
-								<?php esc_html_e( 'Geredigeerde Versie', 'zw-ttvgpt' ); ?>
+							
+							<div class="postbox">
+								<div class="postbox-header">
+									<h3 class="hndle"><?php esc_html_e( 'Geredigeerde Versie', 'zw-ttvgpt' ); ?></h3>
+								</div>
+								<div class="inside">
+									<div style="max-height: 400px; overflow-y: auto; padding: 10px; font-size: 13px; line-height: 1.6;">
+										<?php echo wp_kses_post( $diff['after'] ); ?>
+									</div>
+								</div>
 							</div>
-							<div id="zw-diff-after" style="padding: 12px; font-size: 13px; line-height: 1.6; max-height: 300px; overflow-y: auto; word-wrap: break-word;"></div>
 						</div>
 					</div>
 				</div>
-			</div>
-		</div>
+			<?php endif; ?>
+		<?php endforeach; ?>
 		
 		<?php
-		// Add JavaScript for dropdown functionality and modal
+		// Add JavaScript for dropdown functionality
 		?>
 		<script type="text/javascript">
 		jQuery(document).ready(function($) {
@@ -468,43 +476,8 @@ class TTVGPTAuditPage {
 				e.preventDefault();
 				applyFilters();
 			});
-			
-			// Modal functionality
-			$('.zw-audit-show-diff').on('click', function(e) {
-				e.preventDefault();
-				
-				var postTitle = $(this).data('post-title');
-				var diffBefore = $(this).data('diff-before');
-				var diffAfter = $(this).data('diff-after');
-				
-				// Set modal content
-				$('#zw-modal-title').text('Verschillen voor: ' + postTitle);
-				$('#zw-diff-before').html(diffBefore);
-				$('#zw-diff-after').html(diffAfter);
-				
-				// Show modal
-				$('#zw-audit-diff-modal').show();
-				$('body').css('overflow', 'hidden');
-			});
-			
-			// Close modal functionality
-			$('#zw-modal-close, #zw-audit-diff-modal').on('click', function(e) {
-				if (e.target === this) {
-					$('#zw-audit-diff-modal').hide();
-					$('body').css('overflow', '');
-				}
-			});
-			
-			// Close modal on escape key
-			$(document).on('keydown', function(e) {
-				if (e.keyCode === 27 && $('#zw-audit-diff-modal').is(':visible')) {
-					$('#zw-audit-diff-modal').hide();
-					$('body').css('overflow', '');
-				}
-			});
 		});
 		</script>
 		<?php
 	}
-
 }
