@@ -65,25 +65,25 @@
 	color: #00a0d2; 
 }
 
-/* Losstaande cards layout */
+/* Clean WordPress table-style layout */
 .zw-audit-list {
-	display: flex;
-	flex-direction: column;
-	gap: 16px;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	box-shadow: 0 1px 1px rgba(0,0,0,.04);
 }
 
 .zw-audit-item {
-	background: #fff;
-	border: 1px solid #c3c4c7;
-	border-radius: 6px;
-	padding: 24px;
+	border-bottom: 1px solid #f0f0f1;
+	padding: 16px 20px;
 	position: relative;
-	box-shadow: 0 1px 3px rgba(0,0,0,.08);
-	transition: box-shadow 0.2s ease;
+}
+
+.zw-audit-item:last-child {
+	border-bottom: none;
 }
 
 .zw-audit-item:hover {
-	box-shadow: 0 2px 6px rgba(0,0,0,.12);
+	background: #f6f7f7;
 }
 
 /* Type indicator strip */
@@ -280,12 +280,7 @@
 	}
 	
 	.zw-audit-item {
-		padding: 16px;
-		border-radius: 4px;
-	}
-	
-	.zw-audit-list {
-		gap: 12px;
+		padding: 12px 16px;
 	}
 	
 	.zw-audit-row {
