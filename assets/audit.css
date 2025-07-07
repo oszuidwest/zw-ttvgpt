@@ -37,26 +37,25 @@
 .zw-audit-summary-item.ai-unedited .zw-audit-summary-number { color: #8c8f94; }
 .zw-audit-summary-item.ai-edited .zw-audit-summary-number { color: #f56e28; }
 
-/* Native table-like list */
+/* Losstaande cards layout */
 .zw-audit-list {
-	background: #fff;
-	border: 1px solid #c3c4c7;
-	box-shadow: 0 1px 1px rgba(0,0,0,.04);
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
 }
 
 .zw-audit-item {
-	border-bottom: 1px solid #f0f0f1;
-	padding: 24px 20px;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 6px;
+	padding: 24px;
 	position: relative;
-	margin-bottom: 12px;
-}
-
-.zw-audit-item:last-child {
-	border-bottom: none;
+	box-shadow: 0 1px 3px rgba(0,0,0,.08);
+	transition: box-shadow 0.2s ease;
 }
 
 .zw-audit-item:hover {
-	background: #f6f7f7;
+	box-shadow: 0 2px 6px rgba(0,0,0,.12);
 }
 
 /* Type indicator strip */
@@ -215,6 +214,24 @@
 	border-radius: 2px;
 }
 
+/* Diff highlighting classes voor word-level changes */
+.zw-diff-added {
+	background: #e8f5e8;
+	color: #0a5c2e;
+	padding: 2px 4px;
+	border-radius: 3px;
+	font-weight: 500;
+}
+
+.zw-diff-removed {
+	background: #f8d7da;
+	color: #721c24;
+	padding: 2px 4px;
+	border-radius: 3px;
+	text-decoration: line-through;
+	font-weight: 500;
+}
+
 /* Empty state */
 .zw-audit-empty {
 	text-align: center;
@@ -240,8 +257,12 @@
 	}
 	
 	.zw-audit-item {
-		padding: 16px 12px;
-		margin-bottom: 8px;
+		padding: 16px;
+		border-radius: 4px;
+	}
+	
+	.zw-audit-list {
+		gap: 12px;
 	}
 	
 	.zw-audit-row {
