@@ -51,6 +51,19 @@ class TTVGPTAuditPage {
 			}
 		}
 
+		// Run comprehensive benchmark by default (can be disabled with constant)
+		$benchmark_results = null;
+		$run_benchmark = ! ( defined( 'ZW_TTVGPT_DISABLE_BENCHMARK' ) && ZW_TTVGPT_DISABLE_BENCHMARK );
+		
+		if ( $run_benchmark ) {
+			$benchmark_results = TTVGPTAuditHelper::run_comprehensive_benchmark( $year, $month );
+			// Use fastest strategy for actual data
+			$fastest_strategy = $benchmark_results['analysis']['fastest_strategy'];
+			if ( ! defined( 'ZW_TTVGPT_BENCHMARK_METHOD' ) ) {
+				define( 'ZW_TTVGPT_BENCHMARK_METHOD', $fastest_strategy );
+			}
+		}
+
 		$posts  = TTVGPTAuditHelper::get_posts( $year, $month );
 		$counts = array(
 			'fully_human_written'   => 0,
@@ -90,12 +103,76 @@ class TTVGPTAuditPage {
 			<hr class="wp-header-end">
 			
 			<?php $this->render_navigation( $year, $month, $available_months, $status_filter ); ?>
+			<?php
+			if ( $benchmark_results ) {
+				$this->render_benchmark_results( $benchmark_results );}
+			?>
 			<?php $this->render_summary( $counts ); ?>
 			<?php $this->render_audit_list( $categorized_posts, $meta_cache ); ?>
 		</div>
 		<?php
 	}
 
+
+	/**
+	 * Render benchmark results section
+	 *
+	 * @param array $benchmark_results Benchmark data
+	 * @return void
+	 */
+	private function render_benchmark_results( array $benchmark_results ): void {
+		?>
+		<div class="zw-benchmark-results" style="background: #f0f6fc; border: 1px solid #0073aa; border-radius: 4px; padding: 16px; margin: 20px 0;">
+			<h3 style="margin: 0 0 12px 0; color: #0073aa;">🚀 Database Performance Benchmark</h3>
+			
+			<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px;">
+				<?php foreach ( $benchmark_results['strategies'] as $strategy => $data ) : ?>
+					<div style="background: white; padding: 8px 12px; border-radius: 3px; <?php echo $strategy === $benchmark_results['analysis']['fastest_strategy'] ? 'border: 2px solid #00a32a;' : 'border: 1px solid #ddd;'; ?>">
+						<div style="font-weight: 600; font-size: 12px; color: #646970; margin-bottom: 4px;">
+							<?php echo esc_html( strtoupper( str_replace( '_', ' ', $strategy ) ) ); ?>
+							<?php if ( $strategy === $benchmark_results['analysis']['fastest_strategy'] ) : ?>
+								<span style="color: #00a32a;">🏆</span>
+							<?php endif; ?>
+						</div>
+						<div style="font-size: 18px; font-weight: 600; color: <?php echo $strategy === $benchmark_results['analysis']['fastest_strategy'] ? '#00a32a' : '#1d2327'; ?>;">
+							<?php echo esc_html( $data['avg_time_ms'] ); ?>ms
+						</div>
+						<div style="font-size: 11px; color: #646970;">
+							<?php echo esc_html( $data['result_count'] ); ?> results
+						</div>
+					</div>
+				<?php endforeach; ?>
+			</div>
+			
+			<div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+				<div>
+					<strong>🏆 Fastest:</strong> <?php echo esc_html( strtoupper( str_replace( '_', ' ', $benchmark_results['analysis']['fastest_strategy'] ) ) ); ?>
+					(<?php echo esc_html( $benchmark_results['analysis']['fastest_time_ms'] ); ?>ms)
+				</div>
+				<div>
+					<strong>📊 Total Dashboard:</strong> <?php echo esc_html( $benchmark_results['analysis']['total_dashboard_time_ms'] ); ?>ms
+					<?php if ( $benchmark_results['analysis']['total_dashboard_time_ms'] < 100 ) : ?>
+						<span style="color: #00a32a;">🚀 Excellent!</span>
+					<?php elseif ( $benchmark_results['analysis']['total_dashboard_time_ms'] < 200 ) : ?>
+						<span style="color: #dba617;">✅ Good!</span>
+					<?php elseif ( $benchmark_results['analysis']['total_dashboard_time_ms'] < 500 ) : ?>
+						<span style="color: #d63638;">⚠️ Acceptable</span>
+					<?php else : ?>
+						<span style="color: #d63638;">❌ Slow</span>
+					<?php endif; ?>
+				</div>
+				<div>
+					<strong>Database:</strong> <?php echo esc_html( number_format( $benchmark_results['database_info']['posts_count'] ) ); ?> posts, 
+					<?php echo esc_html( number_format( $benchmark_results['database_info']['postmeta_count'] ) ); ?> meta
+				</div>
+			</div>
+			
+			<div style="margin-top: 12px; font-size: 12px; color: #646970;">
+				Results saved to: <code>/wp-content/uploads/zw-ttvgpt-benchmark.txt</code> and <code>.json</code>
+			</div>
+		</div>
+		<?php
+	}
 
 	/**
 	 * Render simple summary boxes
