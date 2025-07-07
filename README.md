@@ -44,9 +44,8 @@ WordPress plugin die OpenAI's GPT-modellen gebruikt om automatisch korte versies
 | `gpt-4.1-nano` | Hoog | Zeer hoog | Zeer laag | 1M tokens | Snelste optie |
 | `gpt-4o` | Uitstekend | Hoog | Gemiddeld | 128K tokens | Stabiel |
 | `gpt-4o-mini` | Hoog | Zeer hoog | Laag | 128K tokens | Budget |
-| `gpt-3.5-turbo` | Goed | Zeer hoog | Zeer laag | 16K tokens | Legacy |
 
-**Nieuw in 2025:** GPT-4.1 serie modellen bieden tot 1 miljoen tokens context, 26-83% lagere kosten en significante kwaliteitsverbeteringen, vooral voor code en complexe instructies.
+**2025 modellen** bieden tot 1 miljoen tokens context, 26-83% lagere kosten en significante kwaliteitsverbeteringen voor tekst samenvattingen.
 
 ## Gebruik
 
