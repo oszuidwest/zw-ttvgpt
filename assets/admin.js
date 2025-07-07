@@ -33,16 +33,8 @@
 			$cachedAcfField = $(SELECTORS.acfSummaryField);
 			$cachedGptField = $(SELECTORS.acfGptField);
 
-			bindEvents();
 			injectGenerateButton();
 		});
-	}
-
-	/**
-	 * Bind event handlers (currently handled in injectGenerateButton)
-	 */
-	function bindEvents() {
-		// Event binding delegated to injectGenerateButton for now
 	}
 
 	/**

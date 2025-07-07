@@ -243,19 +243,3 @@
 .change-percentage.high-change { background: #dc3232; }
 
 .zw-audit-table .column-change .change-percentage { display: inline-block; }
-
-.zw-audit-list,
-.zw-audit-item,
-.zw-audit-row,
-.zw-audit-type,
-.zw-audit-content,
-.zw-audit-title,
-.zw-audit-meta,
-.zw-audit-preview,
-.zw-audit-empty,
-.zw-audit-summary,
-.zw-audit-summary-item,
-.zw-audit-summary-number,
-.zw-audit-summary-label {
-	display: none !important;
-}

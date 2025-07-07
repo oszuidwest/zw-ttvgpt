@@ -40,7 +40,8 @@ class TTVGPTConstants {
 	/**
 	 * OpenAI models
 	 */
-	const DEFAULT_MODEL = 'gpt-4o';
+	const DEFAULT_MODEL = 'gpt-4.1-mini';
+
 
 	/**
 	 * Rate limiting

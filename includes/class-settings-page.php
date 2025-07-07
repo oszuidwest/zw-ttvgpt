@@ -178,9 +178,9 @@ class TTVGPTSettingsPage {
 				name="<?php echo esc_attr( TTVGPTConstants::SETTINGS_OPTION_NAME ); ?>[model]" 
 				value="<?php echo esc_attr( $current_model ); ?>"
 				class="regular-text"
-				placeholder="gpt-4o" />
+				placeholder="gpt-4.1-mini" />
 		<p class="description">
-			<?php esc_html_e( 'Voer de naam van het OpenAI model in (bijv. gpt-4o, gpt-4o-mini, gpt-3.5-turbo).', 'zw-ttvgpt' ); ?>
+			<?php esc_html_e( 'Voer de naam van het OpenAI model in (bijv. gpt-4.1-mini, gpt-4.1-nano, gpt-4o, gpt-4o-mini).', 'zw-ttvgpt' ); ?>
 		</p>
 		<?php
 	}
