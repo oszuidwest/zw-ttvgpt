@@ -75,7 +75,7 @@ function zw_ttvgpt_activate() {
 		wp_die( 'This plugin requires PHP 8.2 or higher.' );
 	}
 
-	if ( ! function_exists( 'get_field' ) ) {
+	if ( ! function_exists( 'get_field' ) && ! defined( 'WP_CLI' ) && ! getenv( 'CI' ) ) {
 		deactivate_plugins( plugin_basename( __FILE__ ) );
 		wp_die( 'This plugin requires Advanced Custom Fields to be installed and activated.' );
 	}
