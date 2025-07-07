@@ -80,10 +80,6 @@
 	position: relative;
 }
 
-.zw-audit-item:hover {
-	background: #f6f7f7;
-}
-
 /* Type indicator strip */
 .zw-audit-item::before {
 	content: '';
