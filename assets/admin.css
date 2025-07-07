@@ -30,9 +30,11 @@
     0% {
         background-position: 0% 50%;
     }
+
     50% {
         background-position: 100% 50%;
     }
+
     100% {
         background-position: 0% 50%;
     }
@@ -42,6 +44,7 @@
     0% {
         transform: translateX(-100%) translateY(-100%) rotate(45deg);
     }
+
     100% {
         transform: translateX(100%) translateY(100%) rotate(45deg);
     }
@@ -56,7 +59,7 @@
     animation: zw-ttvgpt-gradient 3s ease infinite;
     position: relative;
     overflow: hidden;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    text-shadow: 0 1px 2px rgb(0 0 0 / 20%);
 }
 
 .button.zw-ttvgpt-generating:hover {
@@ -64,7 +67,7 @@
 }
 
 /* Add shimmer effect to button while generating */
-.button.zw-ttvgpt-generating:after {
+.button.zw-ttvgpt-generating::after {
     content: '';
     position: absolute;
     top: -50%;
@@ -74,7 +77,7 @@
     background: linear-gradient(
         45deg,
         transparent 30%,
-        rgba(255, 255, 255, 0.3) 50%,
+        rgb(255 255 255 / 30%) 50%,
         transparent 70%
     );
     animation: zw-ttvgpt-shimmer 1.5s infinite;

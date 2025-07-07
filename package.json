@@ -1,16 +1,21 @@
 {
   "name": "zw-ttvgpt",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "JavaScript assets for ZW TTVGPT WordPress plugin",
   "private": true,
   "scripts": {
     "lint:js": "eslint assets/*.js",
     "lint:js:fix": "eslint assets/*.js --fix",
-    "lint": "npm run lint:js"
+    "lint:css": "stylelint assets/*.css",
+    "lint:css:fix": "stylelint assets/*.css --fix",
+    "lint": "npm run lint:js && npm run lint:css",
+    "lint:fix": "npm run lint:js:fix && npm run lint:css:fix"
   },
   "devDependencies": {
     "@wordpress/eslint-plugin": "^17.0.0",
-    "eslint": "^8.57.0"
+    "eslint": "^8.57.0",
+    "stylelint": "^16.21.1",
+    "stylelint-config-standard": "^38.0.0"
   },
   "eslintConfig": {
     "env": {
@@ -32,37 +37,145 @@
       "sourceType": "script"
     },
     "rules": {
-      "no-magic-numbers": ["off"],
-      "func-style": ["error", "declaration"],
-      "no-plusplus": ["off"],
-      "max-lines-per-function": ["error", { "max": 100 }],
-      "max-statements": ["error", 30],
-      "sort-keys": ["off"],
-      "one-var": ["off"],
-      "id-length": ["error", { "min": 2, "exceptions": ["$", "i", "j", "e"] }],
-      "func-names": ["off"],
-      "no-inline-comments": ["off"],
-      "line-comment-position": ["off"],
-      "no-use-before-define": ["error", { "functions": false }],
-      "no-ternary": ["off"],
-      "sort-vars": ["off"],
-      "capitalized-comments": ["off"],
-      "strict": ["off"],
-      "prefer-arrow-callback": ["off"],
-      "object-shorthand": ["warn"],
-      "no-invalid-this": ["off"],
-      "camelcase": ["warn", { "allow": ["post_id"] }],
-      "jsdoc/require-param-type": ["off"],
-      "max-lines": ["error", { "max": 600 }],
-      "prefer-destructuring": ["warn"],
-      "array-element-newline": ["off"],
-      "multiline-ternary": ["off"],
-      "no-negated-condition": ["warn"],
-      "prefer-template": ["warn"],
-      "prefer-named-capture-group": ["off"],
-      "require-unicode-regexp": ["off"],
-      "no-console": ["error", { "allow": ["error", "warn"] }],
-      "@wordpress/no-unused-vars-before-return": ["off"]
+      "no-magic-numbers": [
+        "off"
+      ],
+      "func-style": [
+        "error",
+        "declaration"
+      ],
+      "no-plusplus": [
+        "off"
+      ],
+      "max-lines-per-function": [
+        "error",
+        {
+          "max": 100
+        }
+      ],
+      "max-statements": [
+        "error",
+        30
+      ],
+      "sort-keys": [
+        "off"
+      ],
+      "one-var": [
+        "off"
+      ],
+      "id-length": [
+        "error",
+        {
+          "min": 2,
+          "exceptions": [
+            "$",
+            "i",
+            "j",
+            "e"
+          ]
+        }
+      ],
+      "func-names": [
+        "off"
+      ],
+      "no-inline-comments": [
+        "off"
+      ],
+      "line-comment-position": [
+        "off"
+      ],
+      "no-use-before-define": [
+        "error",
+        {
+          "functions": false
+        }
+      ],
+      "no-ternary": [
+        "off"
+      ],
+      "sort-vars": [
+        "off"
+      ],
+      "capitalized-comments": [
+        "off"
+      ],
+      "strict": [
+        "off"
+      ],
+      "prefer-arrow-callback": [
+        "off"
+      ],
+      "object-shorthand": [
+        "warn"
+      ],
+      "no-invalid-this": [
+        "off"
+      ],
+      "camelcase": [
+        "warn",
+        {
+          "allow": [
+            "post_id"
+          ]
+        }
+      ],
+      "jsdoc/require-param-type": [
+        "off"
+      ],
+      "max-lines": [
+        "error",
+        {
+          "max": 600
+        }
+      ],
+      "prefer-destructuring": [
+        "warn"
+      ],
+      "array-element-newline": [
+        "off"
+      ],
+      "multiline-ternary": [
+        "off"
+      ],
+      "no-negated-condition": [
+        "warn"
+      ],
+      "prefer-template": [
+        "warn"
+      ],
+      "prefer-named-capture-group": [
+        "off"
+      ],
+      "require-unicode-regexp": [
+        "off"
+      ],
+      "no-console": [
+        "error",
+        {
+          "allow": [
+            "error",
+            "warn"
+          ]
+        }
+      ],
+      "@wordpress/no-unused-vars-before-return": [
+        "off"
+      ]
+    }
+  },
+  "stylelint": {
+    "extends": "stylelint-config-standard",
+    "rules": {
+      "declaration-empty-line-before": null,
+      "rule-empty-line-before": ["always", {
+        "except": ["first-nested"],
+        "ignore": ["after-comment"]
+      }],
+      "selector-class-pattern": null,
+      "no-descending-specificity": null,
+      "font-family-no-missing-generic-family-keyword": null,
+      "declaration-block-single-line-max-declarations": 2,
+      "no-duplicate-selectors": true
     }
   }
 }
