@@ -565,26 +565,12 @@ class TTVGPTAdmin {
 		}
 
 		$available_months = TTVGPTHelper::get_audit_months();
-		$current_index    = null;
-		foreach ( $available_months as $index => $month_data ) {
-			if ( $month_data['year'] === $year && $month_data['month'] === $month ) {
-				$current_index = (int) $index;
-				break;
-			}
-		}
-
-		$prev_month = null;
-		$next_month = null;
-		if ( null !== $current_index ) {
-			$prev_month = isset( $available_months[ $current_index + 1 ] ) ? $available_months[ $current_index + 1 ] : null;
-			$next_month = isset( $available_months[ $current_index - 1 ] ) ? $available_months[ $current_index - 1 ] : null;
-		}
 
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Tekst TV GPT Audit', 'zw-ttvgpt' ); ?></h1>
 			
-			<?php $this->render_audit_navigation( $year, $month, $prev_month, $next_month ); ?>
+			<?php $this->render_audit_navigation( $year, $month, $available_months ); ?>
 			
 			<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0;">
 				<?php
@@ -666,35 +652,53 @@ class TTVGPTAdmin {
 	}
 
 	/**
-	 * Render audit navigation between months
+	 * Render audit navigation dropdown like WordPress Posts screen
 	 *
-	 * @param int        $year Current year
-	 * @param int        $month Current month
-	 * @param array|null $prev_month Previous month data
-	 * @param array|null $next_month Next month data
+	 * @param int   $year Current year
+	 * @param int   $month Current month
+	 * @param array $available_months All available months
 	 * @return void
 	 */
-	private function render_audit_navigation( int $year, int $month, ?array $prev_month, ?array $next_month ): void {
+	private function render_audit_navigation( int $year, int $month, array $available_months ): void {
 		?>
-		<div style="background: #f1f1f1; padding: 10px 20px; margin: 20px 0; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
-			<?php if ( $prev_month ) : ?>
-				<a href="<?php echo esc_url( admin_url( 'tools.php?page=zw-ttvgpt-audit&year=' . $prev_month['year'] . '&month=' . $prev_month['month'] ) ); ?>" class="button">
-					← <?php esc_html_e( 'Vorige maand', 'zw-ttvgpt' ); ?>
-				</a>
-			<?php else : ?>
-				<span></span>
-			<?php endif; ?>
-
-			<strong><?php echo esc_html( date_i18n( 'F Y', mktime( 0, 0, 0, $month, 1, $year ) ) ); ?></strong>
-
-			<?php if ( $next_month ) : ?>
-				<a href="<?php echo esc_url( admin_url( 'tools.php?page=zw-ttvgpt-audit&year=' . $next_month['year'] . '&month=' . $next_month['month'] ) ); ?>" class="button">
-					<?php esc_html_e( 'Volgende maand', 'zw-ttvgpt' ); ?> →
-				</a>
-			<?php else : ?>
-				<span></span>
-			<?php endif; ?>
+		<div class="tablenav top">
+			<div class="alignleft actions">
+				<label for="filter-by-date" class="screen-reader-text"><?php esc_html_e( 'Filter op datum', 'zw-ttvgpt' ); ?></label>
+				<select name="m" id="filter-by-date">
+					<option value=""><?php esc_html_e( 'Alle datums', 'zw-ttvgpt' ); ?></option>
+					<?php foreach ( $available_months as $month_data ) : ?>
+						<?php
+						$option_value  = $month_data['year'] . sprintf( '%02d', $month_data['month'] );
+						$current_value = $year . sprintf( '%02d', $month );
+						$is_selected   = $option_value === $current_value;
+						?>
+						<option value="<?php echo esc_attr( $option_value ); ?>" <?php selected( $is_selected ); ?>>
+							<?php echo esc_html( date_i18n( 'F Y', mktime( 0, 0, 0, $month_data['month'], 1, $month_data['year'] ) ) ); ?>
+						</option>
+					<?php endforeach; ?>
+				</select>
+				<input type="submit" name="filter_action" id="post-query-submit" class="button" value="<?php esc_attr_e( 'Filter', 'zw-ttvgpt' ); ?>">
+			</div>
 		</div>
+		
+		<script type="text/javascript">
+		jQuery(document).ready(function($) {
+			$('#filter-by-date').on('change', function() {
+				var selectedValue = $(this).val();
+				if (selectedValue) {
+					var year = selectedValue.substring(0, 4);
+					var month = parseInt(selectedValue.substring(4, 6), 10);
+					var url = '<?php echo esc_js( admin_url( 'tools.php?page=zw-ttvgpt-audit' ) ); ?>&year=' + year + '&month=' + month;
+					window.location.href = url;
+				}
+			});
+			
+			$('#post-query-submit').on('click', function(e) {
+				e.preventDefault();
+				$('#filter-by-date').trigger('change');
+			});
+		});
+		</script>
 		<?php
 	}
 }
