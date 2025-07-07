@@ -159,10 +159,10 @@
 	background: linear-gradient(transparent, #f9f9f9);
 }
 
-/* Diff content */
+/* Diff content - stacked layout voor betere leesbaarheid */
 .zw-audit-diff {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
+	display: flex;
+	flex-direction: column;
 	gap: 16px;
 	margin-top: 12px;
 }
@@ -171,22 +171,40 @@
 	background: #f9f9f9;
 	border: 1px solid #e8eaed;
 	border-radius: 3px;
-	padding: 8px 12px;
-	font-size: 12px;
-	line-height: 1.4;
-	max-height: 120px;
+	padding: 12px 16px;
+	font-size: 13px;
+	line-height: 1.5;
+	max-height: 200px;
 	overflow-y: auto;
+	word-wrap: break-word;
+	overflow-wrap: break-word;
 }
 
 .zw-audit-diff-header {
-	font-size: 10px;
+	font-size: 11px;
 	font-weight: 600;
 	color: #646970;
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
-	margin-bottom: 6px;
-	padding-bottom: 4px;
+	margin-bottom: 8px;
+	padding-bottom: 6px;
 	border-bottom: 1px solid #e8eaed;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.zw-audit-diff-expand {
+	font-size: 10px;
+	color: #2271b1;
+	cursor: pointer;
+	text-transform: none;
+	letter-spacing: normal;
+	font-weight: 400;
+}
+
+.zw-audit-diff-expand:hover {
+	text-decoration: underline;
 }
 
 .zw-audit-diff-block.before {
@@ -271,7 +289,12 @@
 	}
 	
 	.zw-audit-diff {
-		grid-template-columns: 1fr;
-		gap: 8px;
+		gap: 12px;
+	}
+	
+	.zw-audit-diff-block {
+		padding: 10px 12px;
+		font-size: 12px;
+		max-height: 150px;
 	}
 }
