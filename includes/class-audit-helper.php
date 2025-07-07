@@ -21,18 +21,34 @@ class TTVGPTAuditHelper {
 	public static function get_most_recent_month(): ?array {
 		global $wpdb;
 
+		// Use a more efficient single query with EXISTS
 		$result = $wpdb->get_row(
-			"SELECT DISTINCT YEAR(p.post_date) AS year, MONTH(p.post_date) AS month
-			FROM {$wpdb->posts} p
-			INNER JOIN {$wpdb->postmeta} pm1 ON p.ID = pm1.post_id
-			INNER JOIN {$wpdb->postmeta} pm2 ON p.ID = pm2.post_id
-			WHERE pm1.meta_key = 'post_in_kabelkrant'
-			  AND pm1.meta_value = '1'
-			  AND pm2.meta_key = 'post_kabelkrant_content_gpt'
-			  AND pm2.meta_value != ''
-			  AND p.post_status = 'publish'
-			ORDER BY p.post_date DESC
-			LIMIT 1"
+			$wpdb->prepare(
+				"SELECT DISTINCT YEAR(p.post_date) AS year, MONTH(p.post_date) AS month
+				FROM {$wpdb->posts} p
+				WHERE p.post_status = %s
+				  AND p.post_type = %s
+				  AND EXISTS (
+					  SELECT 1 FROM {$wpdb->postmeta} pm1
+					  WHERE pm1.post_id = p.ID
+					    AND pm1.meta_key = %s
+					    AND pm1.meta_value = %s
+				  )
+				  AND EXISTS (
+					  SELECT 1 FROM {$wpdb->postmeta} pm2
+					  WHERE pm2.post_id = p.ID
+					    AND pm2.meta_key = %s
+					    AND pm2.meta_value != %s
+				  )
+				ORDER BY p.post_date DESC
+				LIMIT 1",
+				'publish',
+				'post',
+				'post_in_kabelkrant',
+				'1',
+				'post_kabelkrant_content_gpt',
+				''
+			)
 		);
 
 		return $result ? array(
@@ -49,17 +65,33 @@ class TTVGPTAuditHelper {
 	public static function get_months(): array {
 		global $wpdb;
 
+		// Fast single query with EXISTS instead of JOINs
 		$results = $wpdb->get_results(
-			"SELECT DISTINCT YEAR(p.post_date) AS year, MONTH(p.post_date) AS month
-			FROM {$wpdb->posts} p
-			INNER JOIN {$wpdb->postmeta} pm1 ON p.ID = pm1.post_id
-			INNER JOIN {$wpdb->postmeta} pm2 ON p.ID = pm2.post_id
-			WHERE pm1.meta_key = 'post_in_kabelkrant'
-			  AND pm1.meta_value = '1'
-			  AND pm2.meta_key = 'post_kabelkrant_content_gpt'
-			  AND pm2.meta_value != ''
-			  AND p.post_status = 'publish'
-			ORDER BY year DESC, month DESC"
+			$wpdb->prepare(
+				"SELECT DISTINCT YEAR(p.post_date) AS year, MONTH(p.post_date) AS month
+				FROM {$wpdb->posts} p
+				WHERE p.post_status = %s
+				  AND p.post_type = %s
+				  AND EXISTS (
+					  SELECT 1 FROM {$wpdb->postmeta} pm1
+					  WHERE pm1.post_id = p.ID
+					    AND pm1.meta_key = %s
+					    AND pm1.meta_value = %s
+				  )
+				  AND EXISTS (
+					  SELECT 1 FROM {$wpdb->postmeta} pm2
+					  WHERE pm2.post_id = p.ID
+					    AND pm2.meta_key = %s
+					    AND pm2.meta_value != %s
+				  )
+				ORDER BY year DESC, month DESC",
+				'publish',
+				'post',
+				'post_in_kabelkrant',
+				'1',
+				'post_kabelkrant_content_gpt',
+				''
+			)
 		);
 
 		$months = array();
@@ -81,38 +113,60 @@ class TTVGPTAuditHelper {
 	 * @return array Array of WP_Post objects
 	 */
 	public static function get_posts( int $year, int $month ): array {
-		$args = array(
-			'date_query'     => array(
-				array(
-					'year'  => $year,
-					'month' => $month,
-				),
-			),
-			'meta_query'     => array(
-				'relation' => 'AND',
-				array(
-					'key'     => 'post_in_kabelkrant',
-					'value'   => '1',
-					'compare' => '=',
-				),
-				array(
-					'key'     => 'post_kabelkrant_content_gpt',
-					'compare' => 'EXISTS',
-				),
-				array(
-					'key'     => 'post_kabelkrant_content',
-					'compare' => 'EXISTS',
-				),
-			),
-			'post_status'    => 'publish',
-			'posts_per_page' => -1,
-			'orderby'        => 'post_date',
-			'order'          => 'DESC',
+		// Fast direct database query - no caching, always fresh
+		global $wpdb;
+		$post_ids = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT DISTINCT p.ID
+				FROM {$wpdb->posts} p
+				WHERE p.post_status = %s
+				  AND p.post_type = %s
+				  AND YEAR(p.post_date) = %d
+				  AND MONTH(p.post_date) = %d
+				  AND EXISTS (
+					  SELECT 1 FROM {$wpdb->postmeta} pm1
+					  WHERE pm1.post_id = p.ID
+					    AND pm1.meta_key = %s
+					    AND pm1.meta_value = %s
+				  )
+				  AND EXISTS (
+					  SELECT 1 FROM {$wpdb->postmeta} pm2
+					  WHERE pm2.post_id = p.ID
+					    AND pm2.meta_key = %s
+				  )
+				  AND EXISTS (
+					  SELECT 1 FROM {$wpdb->postmeta} pm3
+					  WHERE pm3.post_id = p.ID
+					    AND pm3.meta_key = %s
+				  )
+				ORDER BY p.post_date DESC",
+				'publish',
+				'post',
+				$year,
+				$month,
+				'post_in_kabelkrant',
+				'1',
+				'post_kabelkrant_content_gpt',
+				'post_kabelkrant_content'
+			)
 		);
 
-		$query = new \WP_Query( $args );
-		return $query->posts;
+		if ( empty( $post_ids ) ) {
+			return array();
+		}
+
+		// Get actual post objects efficiently
+		return get_posts(
+			array(
+				'include'        => $post_ids,
+				'post_status'    => 'publish',
+				'posts_per_page' => -1,
+				'orderby'        => 'post_date',
+				'order'          => 'DESC',
+			)
+		);
 	}
+
 
 	/**
 	 * Remove region prefix from content (everything before and including ' - ')
