@@ -267,22 +267,16 @@
 /* Responsive */
 @media (max-width: 782px) {
 	.zw-audit-summary {
-		grid-template-columns: 1fr;
-		gap: 16px;
-		margin-bottom: 24px;
+		gap: 8px;
 	}
 	
 	.zw-audit-summary-item {
-		padding: 20px 16px;
-		border-radius: 8px;
+		min-width: 120px;
+		padding: 12px 16px;
 	}
 	
 	.zw-audit-summary-number {
-		font-size: 28px;
-	}
-	
-	.zw-audit-summary-label {
-		font-size: 12px;
+		font-size: 24px;
 	}
 	
 	.zw-audit-item {
