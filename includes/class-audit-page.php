@@ -87,12 +87,18 @@ class TTVGPTAuditPage {
 		wp_enqueue_style( 'zw-ttvgpt-audit', ZW_TTVGPT_URL . 'assets/audit.css', array(), $version );
 		wp_print_styles( array( 'zw-ttvgpt-audit' ) );
 		?>
-		<div class="wrap" style="background: #f1f1f1; margin-left: -20px; margin-right: -20px; padding: 20px; min-height: 100vh;">
+		<div class="wrap">
 			<h1 class="wp-heading-inline"><?php esc_html_e( 'Tekst TV GPT Audit', 'zw-ttvgpt' ); ?></h1>
 			<hr class="wp-header-end">
 			
-			<?php $this->render_navigation( $year, $month, $available_months, $status_filter, $counts ); ?>
-			<?php $this->render_audit_list( $categorized_posts, $meta_cache ); ?>
+			<?php $this->render_status_links( $year, $month, $status_filter, $counts ); ?>
+			
+			<form id="posts-filter" method="get">
+				<input type="hidden" name="page" value="zw-ttvgpt-audit">
+				<?php $this->render_tablenav( $year, $month, $available_months, $status_filter, $counts, 'top' ); ?>
+				<?php $this->render_audit_table( $categorized_posts, $meta_cache ); ?>
+				<?php $this->render_tablenav( $year, $month, $available_months, $status_filter, $counts, 'bottom' ); ?>
+			</form>
 		</div>
 		<?php
 	}
@@ -101,24 +107,117 @@ class TTVGPTAuditPage {
 
 
 	/**
-	 * Render native WordPress-style list
+	 * Render WordPress-style status filter links
+	 *
+	 * @param int    $year Current year
+	 * @param int    $month Current month 
+	 * @param string $status_filter Current status filter
+	 * @param array  $counts Statistics counts
+	 * @return void
+	 */
+	private function render_status_links( int $year, int $month, string $status_filter, array $counts ): void {
+		$total = array_sum( $counts );
+		$base_url = admin_url( 'tools.php?page=zw-ttvgpt-audit' );
+		$current_params = array(
+			'year' => $year,
+			'month' => $month,
+		);
+		?>
+		<h2 class="screen-reader-text"><?php esc_html_e( 'Auditlijst filteren', 'zw-ttvgpt' ); ?></h2>
+		<ul class="subsubsub">
+			<li class="all">
+				<a href="<?php echo esc_url( add_query_arg( $current_params, $base_url ) ); ?>" <?php echo empty( $status_filter ) ? 'class="current" aria-current="page"' : ''; ?>>
+					<?php esc_html_e( 'Alle', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $total ); ?>)</span>
+				</a> |
+			</li>
+			<li class="human">
+				<a href="<?php echo esc_url( add_query_arg( array_merge( $current_params, array( 'status' => 'fully_human_written' ) ), $base_url ) ); ?>" <?php echo 'fully_human_written' === $status_filter ? 'class="current" aria-current="page"' : ''; ?>>
+					<?php esc_html_e( 'Handmatig', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $counts['fully_human_written'] ); ?>)</span>
+				</a> |
+			</li>
+			<li class="ai-unedited">
+				<a href="<?php echo esc_url( add_query_arg( array_merge( $current_params, array( 'status' => 'ai_written_not_edited' ) ), $base_url ) ); ?>" <?php echo 'ai_written_not_edited' === $status_filter ? 'class="current" aria-current="page"' : ''; ?>>
+					<?php esc_html_e( 'AI Gegenereerd', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $counts['ai_written_not_edited'] ); ?>)</span>
+				</a> |
+			</li>
+			<li class="ai-edited">
+				<a href="<?php echo esc_url( add_query_arg( array_merge( $current_params, array( 'status' => 'ai_written_edited' ) ), $base_url ) ); ?>" <?php echo 'ai_written_edited' === $status_filter ? 'class="current" aria-current="page"' : ''; ?>>
+					<?php esc_html_e( 'AI + Bewerkt', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $counts['ai_written_edited'] ); ?>)</span>
+				</a>
+			</li>
+		</ul>
+		<?php
+	}
+
+	/**
+	 * Render WordPress-style table navigation
+	 *
+	 * @param int    $year Current year
+	 * @param int    $month Current month
+	 * @param array  $available_months All available months
+	 * @param string $status_filter Current status filter
+	 * @param array  $counts Statistics counts
+	 * @param string $which Top or bottom
+	 * @return void
+	 */
+	private function render_tablenav( int $year, int $month, array $available_months, string $status_filter, array $counts, string $which ): void {
+		$total = array_sum( $counts );
+		?>
+		<div class="tablenav <?php echo esc_attr( $which ); ?>">
+			<?php if ( 'top' === $which ) : ?>
+				<div class="alignleft actions">
+					<label for="filter-by-date" class="screen-reader-text"><?php esc_html_e( 'Op datum filteren', 'zw-ttvgpt' ); ?></label>
+					<select name="m" id="filter-by-date">
+						<option value="0"><?php esc_html_e( 'Alle datums', 'zw-ttvgpt' ); ?></option>
+						<?php foreach ( $available_months as $month_data ) : ?>
+							<?php
+							$option_value  = $month_data['year'] . sprintf( '%02d', $month_data['month'] );
+							$current_value = $year . sprintf( '%02d', $month );
+							$is_selected   = $option_value === $current_value;
+							?>
+							<option value="<?php echo esc_attr( $option_value ); ?>" <?php selected( $is_selected ); ?>>
+								<?php echo esc_html( date_i18n( 'F Y', mktime( 0, 0, 0, $month_data['month'], 1, $month_data['year'] ) ) ); ?>
+							</option>
+						<?php endforeach; ?>
+					</select>
+
+					<label for="filter-by-status" class="screen-reader-text"><?php esc_html_e( 'Op type filteren', 'zw-ttvgpt' ); ?></label>
+					<select name="status" id="filter-by-status">
+						<option value=""><?php esc_html_e( 'Alle types', 'zw-ttvgpt' ); ?></option>
+						<option value="fully_human_written" <?php selected( $status_filter, 'fully_human_written' ); ?>>
+							<?php esc_html_e( 'Volledig handmatig', 'zw-ttvgpt' ); ?>
+						</option>
+						<option value="ai_written_not_edited" <?php selected( $status_filter, 'ai_written_not_edited' ); ?>>
+							<?php esc_html_e( 'AI, niet bewerkt', 'zw-ttvgpt' ); ?>
+						</option>
+						<option value="ai_written_edited" <?php selected( $status_filter, 'ai_written_edited' ); ?>>
+							<?php esc_html_e( 'AI, bewerkt', 'zw-ttvgpt' ); ?>
+						</option>
+					</select>
+
+					<input type="submit" name="filter_action" id="post-query-submit" class="button" value="<?php esc_attr_e( 'Filter', 'zw-ttvgpt' ); ?>">
+				</div>
+			<?php endif; ?>
+
+			<h2 class="screen-reader-text"><?php esc_html_e( 'Auditlijst navigatie', 'zw-ttvgpt' ); ?></h2>
+			<div class="tablenav-pages">
+				<span class="displaying-num"><?php echo esc_html( $total ); ?> items</span>
+			</div>
+			<br class="clear">
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render WordPress-style table
 	 *
 	 * @param array $categorized_posts Array of categorized posts
 	 * @param array $meta_cache Meta data cache to avoid N+1 queries
 	 * @return void
 	 */
-	private function render_audit_list( array $categorized_posts, array $meta_cache ): void {
-		if ( empty( $categorized_posts ) ) {
-			?>
-			<div class="zw-audit-empty">
-				<p><?php esc_html_e( 'Geen artikelen gevonden voor de geselecteerde filters.', 'zw-ttvgpt' ); ?></p>
-			</div>
-			<?php
-			return;
-		}
-
+	private function render_audit_table( array $categorized_posts, array $meta_cache ): void {
 		$type_labels = array(
-			'fully_human_written'   => __( 'H', 'zw-ttvgpt' ),
+			'fully_human_written'   => __( 'Handmatig', 'zw-ttvgpt' ),
 			'ai_written_not_edited' => __( 'AI', 'zw-ttvgpt' ),
 			'ai_written_edited'     => __( 'AI+', 'zw-ttvgpt' ),
 		);
@@ -129,160 +228,113 @@ class TTVGPTAuditPage {
 			'ai_written_edited'     => 'ai-edited',
 		);
 		?>
-		
-		<div class="zw-audit-list">
-			<?php foreach ( $categorized_posts as $item ) : ?>
-				<?php
-				$post          = $item['post'];
-				$status        = $item['status'];
-				$ai_content    = $item['ai_content'];
-				$human_content = $item['human_content'];
-
-				$author      = get_userdata( $post->post_author );
-				$edit_last   = $meta_cache[ $post->ID ]['_edit_last'] ?? '';
-				$last_editor = is_numeric( $edit_last ) ? get_userdata( (int) $edit_last ) : false;
-				$post_url    = get_edit_post_link( $post->ID );
-				?>
-				
-				<div class="zw-audit-item <?php echo esc_attr( $css_classes[ $status ] ); ?>">
-					<div class="zw-audit-row">
-						<div class="zw-audit-type">
-							<?php echo esc_html( $type_labels[ $status ] ); ?>
-						</div>
-						
-						<div class="zw-audit-content">
-							<div class="zw-audit-title">
-								<?php if ( $post_url ) : ?>
-									<a href="<?php echo esc_url( $post_url ); ?>">
-										<?php echo esc_html( get_the_title( $post->ID ) ); ?>
-									</a>
-								<?php else : ?>
-									<?php echo esc_html( get_the_title( $post->ID ) ); ?>
-								<?php endif; ?>
-							</div>
-							
-							<div class="zw-audit-meta">
-								<span>
-									<?php
-									$post_date = get_the_date( 'j M Y', $post->ID );
-									echo esc_html( is_string( $post_date ) ? $post_date : '' );
-									?>
-								</span>
-								<span><?php echo esc_html( $author ? $author->display_name : 'Onbekend' ); ?></span>
-								<?php if ( $last_editor && $last_editor->ID !== $post->post_author ) : ?>
-									<span><?php esc_html_e( 'Bewerkt door', 'zw-ttvgpt' ); ?> <?php echo esc_html( $last_editor->display_name ); ?></span>
-								<?php endif; ?>
-								<a href="<?php echo esc_url( get_permalink( $post->ID ) ? get_permalink( $post->ID ) : '' ); ?>" target="_blank">
-									<?php esc_html_e( 'Bekijk', 'zw-ttvgpt' ); ?>
-								</a>
-							</div>
-							
-							<?php if ( 'ai_written_edited' === $status ) : ?>
-								<?php $diff = TTVGPTAuditHelper::generate_word_diff( $ai_content, $human_content ); ?>
-								<div class="zw-audit-diff">
-									<div class="zw-audit-diff-block before">
-										<div class="zw-audit-diff-header"><?php esc_html_e( 'AI Versie', 'zw-ttvgpt' ); ?></div>
-										<?php echo wp_kses_post( $diff['before'] ); ?>
-									</div>
-									<div class="zw-audit-diff-block after">
-										<div class="zw-audit-diff-header"><?php esc_html_e( 'Geredigeerde Versie', 'zw-ttvgpt' ); ?></div>
-										<?php echo wp_kses_post( $diff['after'] ); ?>
-									</div>
-								</div>
-							<?php else : ?>
-								<div class="zw-audit-preview">
-									<?php echo esc_html( $human_content ); ?>
-								</div>
-							<?php endif; ?>
-						</div>
-					</div>
-				</div>
-			<?php endforeach; ?>
-		</div>
-		<?php
-	}
-
-	/**
-	 * Render audit navigation dropdown like WordPress Posts screen with integrated counts
-	 *
-	 * @param int    $year Current year
-	 * @param int    $month Current month
-	 * @param array  $available_months All available months
-	 * @param string $status_filter Current status filter
-	 * @param array  $counts Statistics counts
-	 * @return void
-	 */
-	private function render_navigation( int $year, int $month, array $available_months, string $status_filter, array $counts ): void {
-		$total = array_sum( $counts );
-		$base_url = admin_url( 'tools.php?page=zw-ttvgpt-audit' );
-		$current_params = array(
-			'year' => $year,
-			'month' => $month,
-		);
-		?>
-		<div class="tablenav top">
-			<div class="alignleft actions">
-				<label for="filter-by-date" class="screen-reader-text"><?php esc_html_e( 'Filter op datum', 'zw-ttvgpt' ); ?></label>
-				<select name="m" id="filter-by-date">
-					<option value=""><?php esc_html_e( 'Alle datums', 'zw-ttvgpt' ); ?></option>
-					<?php foreach ( $available_months as $month_data ) : ?>
+		<h2 class="screen-reader-text"><?php esc_html_e( 'Auditlijst', 'zw-ttvgpt' ); ?></h2>
+		<table class="wp-list-table widefat fixed striped table-view-list posts zw-audit-table">
+			<thead>
+				<tr>
+					<th scope="col" id="type" class="manage-column column-type" style="width: 80px;"><?php esc_html_e( 'Type', 'zw-ttvgpt' ); ?></th>
+					<th scope="col" id="title" class="manage-column column-title column-primary"><?php esc_html_e( 'Titel', 'zw-ttvgpt' ); ?></th>
+					<th scope="col" id="author" class="manage-column column-author"><?php esc_html_e( 'Auteur', 'zw-ttvgpt' ); ?></th>
+					<th scope="col" id="date" class="manage-column column-date"><?php esc_html_e( 'Datum', 'zw-ttvgpt' ); ?></th>
+				</tr>
+			</thead>
+			<tbody id="the-list">
+				<?php if ( empty( $categorized_posts ) ) : ?>
+					<tr class="no-items">
+						<td class="colspanchange" colspan="4">
+							<?php esc_html_e( 'Geen artikelen gevonden voor de geselecteerde filters.', 'zw-ttvgpt' ); ?>
+						</td>
+					</tr>
+				<?php else : ?>
+					<?php foreach ( $categorized_posts as $item ) : ?>
 						<?php
-						$option_value  = $month_data['year'] . sprintf( '%02d', $month_data['month'] );
-						$current_value = $year . sprintf( '%02d', $month );
-						$is_selected   = $option_value === $current_value;
+						$post          = $item['post'];
+						$status        = $item['status'];
+						$ai_content    = $item['ai_content'];
+						$human_content = $item['human_content'];
+
+						$author      = get_userdata( $post->post_author );
+						$edit_last   = $meta_cache[ $post->ID ]['_edit_last'] ?? '';
+						$last_editor = is_numeric( $edit_last ) ? get_userdata( (int) $edit_last ) : false;
+						$post_url    = get_edit_post_link( $post->ID );
 						?>
-						<option value="<?php echo esc_attr( $option_value ); ?>" <?php selected( $is_selected ); ?>>
-							<?php echo esc_html( date_i18n( 'F Y', mktime( 0, 0, 0, $month_data['month'], 1, $month_data['year'] ) ) ); ?>
-						</option>
+						<tr id="post-<?php echo esc_attr( $post->ID ); ?>" class="iedit author-self level-0 post-<?php echo esc_attr( $post->ID ); ?> type-post status-<?php echo esc_attr( $post->post_status ); ?> <?php echo esc_attr( $css_classes[ $status ] ); ?>">
+							<td class="type column-type" data-colname="<?php esc_attr_e( 'Type', 'zw-ttvgpt' ); ?>">
+								<span class="zw-audit-type-label <?php echo esc_attr( $css_classes[ $status ] ); ?>">
+									<?php echo esc_html( $type_labels[ $status ] ); ?>
+								</span>
+							</td>
+							<td class="title column-title has-row-actions column-primary page-title" data-colname="<?php esc_attr_e( 'Titel', 'zw-ttvgpt' ); ?>">
+								<strong>
+									<?php if ( $post_url ) : ?>
+										<a class="row-title" href="<?php echo esc_url( $post_url ); ?>" aria-label="<?php echo esc_attr( sprintf( __( '"%s" (bewerken)', 'zw-ttvgpt' ), get_the_title( $post->ID ) ) ); ?>">
+											<?php echo esc_html( get_the_title( $post->ID ) ); ?>
+										</a>
+									<?php else : ?>
+										<?php echo esc_html( get_the_title( $post->ID ) ); ?>
+									<?php endif; ?>
+								</strong>
+								<div class="row-actions">
+									<span class="edit">
+										<a href="<?php echo esc_url( $post_url ); ?>" aria-label="<?php echo esc_attr( sprintf( __( 'Bewerk "%s"', 'zw-ttvgpt' ), get_the_title( $post->ID ) ) ); ?>">
+											<?php esc_html_e( 'Bewerken', 'zw-ttvgpt' ); ?>
+										</a> |
+									</span>
+									<span class="view">
+										<a href="<?php echo esc_url( get_permalink( $post->ID ) ); ?>" rel="bookmark" aria-label="<?php echo esc_attr( sprintf( __( '"%s" bekijken', 'zw-ttvgpt' ), get_the_title( $post->ID ) ) ); ?>" target="_blank">
+											<?php esc_html_e( 'Bekijken', 'zw-ttvgpt' ); ?>
+										</a>
+									</span>
+								</div>
+								<?php if ( 'ai_written_edited' === $status ) : ?>
+									<?php $diff = TTVGPTAuditHelper::generate_word_diff( $ai_content, $human_content ); ?>
+									<div class="zw-audit-content-diff">
+										<details>
+											<summary><?php esc_html_e( 'Toon verschillen', 'zw-ttvgpt' ); ?></summary>
+											<div class="zw-audit-diff">
+												<div class="zw-audit-diff-block before">
+													<div class="zw-audit-diff-header"><?php esc_html_e( 'AI Versie', 'zw-ttvgpt' ); ?></div>
+													<div class="zw-audit-diff-content"><?php echo wp_kses_post( $diff['before'] ); ?></div>
+												</div>
+												<div class="zw-audit-diff-block after">
+													<div class="zw-audit-diff-header"><?php esc_html_e( 'Geredigeerde Versie', 'zw-ttvgpt' ); ?></div>
+													<div class="zw-audit-diff-content"><?php echo wp_kses_post( $diff['after'] ); ?></div>
+												</div>
+											</div>
+										</details>
+									</div>
+								<?php endif; ?>
+								<button type="button" class="toggle-row"><span class="screen-reader-text"><?php esc_html_e( 'Meer details weergeven', 'zw-ttvgpt' ); ?></span></button>
+							</td>
+							<td class="author column-author" data-colname="<?php esc_attr_e( 'Auteur', 'zw-ttvgpt' ); ?>">
+								<?php echo esc_html( $author ? $author->display_name : __( 'Onbekend', 'zw-ttvgpt' ) ); ?>
+								<?php if ( $last_editor && $last_editor->ID !== $post->post_author ) : ?>
+									<br><small><?php echo esc_html( sprintf( __( 'Bewerkt door %s', 'zw-ttvgpt' ), $last_editor->display_name ) ); ?></small>
+								<?php endif; ?>
+							</td>
+							<td class="date column-date" data-colname="<?php esc_attr_e( 'Datum', 'zw-ttvgpt' ); ?>">
+								<?php
+								$post_status_label = 'publish' === $post->post_status ? __( 'Gepubliceerd', 'zw-ttvgpt' ) : ucfirst( $post->post_status );
+								echo esc_html( $post_status_label );
+								?><br>
+								<?php echo esc_html( get_the_date( 'j F Y \o\m H:i', $post->ID ) ); ?>
+							</td>
+						</tr>
 					<?php endforeach; ?>
-				</select>
-				
-				<label for="filter-by-status" class="screen-reader-text"><?php esc_html_e( 'Filter op type', 'zw-ttvgpt' ); ?></label>
-				<select name="status" id="filter-by-status">
-					<option value=""><?php esc_html_e( 'Alle types', 'zw-ttvgpt' ); ?></option>
-					<option value="fully_human_written" <?php selected( $status_filter, 'fully_human_written' ); ?>>
-						<?php esc_html_e( 'Volledig handmatig', 'zw-ttvgpt' ); ?>
-					</option>
-					<option value="ai_written_not_edited" <?php selected( $status_filter, 'ai_written_not_edited' ); ?>>
-						<?php esc_html_e( 'AI, niet bewerkt', 'zw-ttvgpt' ); ?>
-					</option>
-					<option value="ai_written_edited" <?php selected( $status_filter, 'ai_written_edited' ); ?>>
-						<?php esc_html_e( 'AI, bewerkt', 'zw-ttvgpt' ); ?>
-					</option>
-				</select>
-				
-				<input type="submit" name="filter_action" id="post-query-submit" class="button" value="<?php esc_attr_e( 'Filter', 'zw-ttvgpt' ); ?>">
-			</div>
-			
-			<div class="tablenav-pages">
-				<span class="displaying-num"><?php echo esc_html( $total ); ?> items</span>
-			</div>
-		</div>
-		
-		<!-- WordPress-style filter links -->
-		<ul class="subsubsub">
-			<li class="all">
-				<a href="<?php echo esc_url( add_query_arg( $current_params, $base_url ) ); ?>" <?php echo empty( $status_filter ) ? 'class="current"' : ''; ?>>
-					<?php esc_html_e( 'Alle', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $total ); ?>)</span>
-				</a> |
-			</li>
-			<li class="human">
-				<a href="<?php echo esc_url( add_query_arg( array_merge( $current_params, array( 'status' => 'fully_human_written' ) ), $base_url ) ); ?>" <?php echo 'fully_human_written' === $status_filter ? 'class="current"' : ''; ?>>
-					<?php esc_html_e( 'Handmatig', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $counts['fully_human_written'] ); ?>)</span>
-				</a> |
-			</li>
-			<li class="ai-unedited">
-				<a href="<?php echo esc_url( add_query_arg( array_merge( $current_params, array( 'status' => 'ai_written_not_edited' ) ), $base_url ) ); ?>" <?php echo 'ai_written_not_edited' === $status_filter ? 'class="current"' : ''; ?>>
-					<?php esc_html_e( 'AI Gegenereerd', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $counts['ai_written_not_edited'] ); ?>)</span>
-				</a> |
-			</li>
-			<li class="ai-edited">
-				<a href="<?php echo esc_url( add_query_arg( array_merge( $current_params, array( 'status' => 'ai_written_edited' ) ), $base_url ) ); ?>" <?php echo 'ai_written_edited' === $status_filter ? 'class="current"' : ''; ?>>
-					<?php esc_html_e( 'AI + Bewerkt', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $counts['ai_written_edited'] ); ?>)</span>
-				</a>
-			</li>
-		</ul>
-		
+				<?php endif; ?>
+			</tbody>
+			<tfoot>
+				<tr>
+					<th scope="col" class="manage-column column-type"><?php esc_html_e( 'Type', 'zw-ttvgpt' ); ?></th>
+					<th scope="col" class="manage-column column-title column-primary"><?php esc_html_e( 'Titel', 'zw-ttvgpt' ); ?></th>
+					<th scope="col" class="manage-column column-author"><?php esc_html_e( 'Auteur', 'zw-ttvgpt' ); ?></th>
+					<th scope="col" class="manage-column column-date"><?php esc_html_e( 'Datum', 'zw-ttvgpt' ); ?></th>
+				</tr>
+			</tfoot>
+		</table>
+		<?php
+		// Add JavaScript for dropdown functionality
+		?>
 		<script type="text/javascript">
 		jQuery(document).ready(function($) {
 			function applyFilters() {
@@ -291,7 +343,7 @@ class TTVGPTAuditPage {
 				var url = '<?php echo esc_js( admin_url( 'tools.php?page=zw-ttvgpt-audit' ) ); ?>';
 				var params = [];
 				
-				if (dateValue) {
+				if (dateValue && dateValue !== '0') {
 					var year = dateValue.substring(0, 4);
 					var month = parseInt(dateValue.substring(4, 6), 10);
 					params.push('year=' + year);
@@ -319,4 +371,5 @@ class TTVGPTAuditPage {
 		</script>
 		<?php
 	}
+
 }
