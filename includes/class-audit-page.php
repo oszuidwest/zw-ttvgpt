@@ -71,8 +71,10 @@ class TTVGPTAuditPage {
 
 		$available_months = TTVGPTAuditHelper::get_months();
 
-		// Enqueue audit-specific CSS
-		add_action( 'admin_head', array( $this, 'enqueue_audit_styles' ) );
+		// Ensure CSS is loaded
+		$version = ZW_TTVGPT_VERSION . ( TTVGPTSettingsManager::is_debug_mode() ? '.' . time() : '' );
+		wp_enqueue_style( 'zw-ttvgpt-audit', ZW_TTVGPT_URL . 'assets/audit.css', array(), $version );
+		wp_print_styles( array( 'zw-ttvgpt-audit' ) );
 		?>
 		<div class="wrap">
 			<h1 class="wp-heading-inline"><?php esc_html_e( 'Tekst TV GPT Audit', 'zw-ttvgpt' ); ?></h1>
@@ -87,24 +89,6 @@ class TTVGPTAuditPage {
 		<?php
 	}
 
-	/**
-	 * Enqueue audit-specific styles
-	 *
-	 * @return void
-	 */
-	public function enqueue_audit_styles(): void {
-		$version = ZW_TTVGPT_VERSION;
-		if ( TTVGPTSettingsManager::is_debug_mode() ) {
-			$version .= '.' . time();
-		}
-
-		wp_enqueue_style(
-			'zw-ttvgpt-audit',
-			ZW_TTVGPT_URL . 'assets/audit.css',
-			array(),
-			$version
-		);
-	}
 
 	/**
 	 * Render modern statistics dashboard

@@ -56,12 +56,21 @@ class TTVGPTAdminMenu {
 	}
 
 	/**
-	 * Load CSS and JavaScript assets on post edit screens
+	 * Load CSS and JavaScript assets on post edit screens and audit page
 	 *
 	 * @param string $hook Current admin page hook
 	 * @return void
 	 */
 	public function enqueue_admin_assets( string $hook ): void {
+		$version = ZW_TTVGPT_VERSION . ( TTVGPTSettingsManager::is_debug_mode() ? '.' . time() : '' );
+
+		// Enqueue audit CSS on audit page
+		if ( 'tools_page_zw-ttvgpt-audit' === $hook ) {
+			wp_enqueue_style( 'zw-ttvgpt-audit', ZW_TTVGPT_URL . 'assets/audit.css', array(), $version );
+			return;
+		}
+
+		// Enqueue admin assets on post edit screens
 		if ( ! in_array( $hook, array( 'post.php', 'post-new.php' ), true ) ) {
 			return;
 		}
@@ -70,8 +79,6 @@ class TTVGPTAdminMenu {
 		if ( ! $screen || TTVGPTConstants::SUPPORTED_POST_TYPE !== $screen->post_type ) {
 			return;
 		}
-
-		$version = ZW_TTVGPT_VERSION . ( TTVGPTSettingsManager::is_debug_mode() ? '.' . time() : '' );
 
 		wp_enqueue_style( 'zw-ttvgpt-admin', ZW_TTVGPT_URL . 'assets/admin.css', array(), $version );
 		wp_enqueue_script( 'zw-ttvgpt-admin', ZW_TTVGPT_URL . 'assets/admin.js', array( 'jquery' ), $version, true );
