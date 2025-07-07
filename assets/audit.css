@@ -39,7 +39,7 @@
 
 .zw-audit-article {
 	border-bottom: 1px solid #f0f0f1;
-	padding: 12px 16px;
+	padding: 16px;
 }
 
 .zw-audit-article:last-child {
@@ -54,8 +54,10 @@
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	margin-bottom: 8px;
+	margin-bottom: 12px;
 	gap: 15px;
+	padding-bottom: 8px;
+	border-bottom: 1px solid #f6f7f7;
 }
 
 .zw-audit-article-title {
@@ -64,6 +66,9 @@
 	color: #1d2327;
 	margin: 0;
 	line-height: 1.4;
+	display: flex;
+	align-items: center;
+	gap: 8px;
 }
 
 .zw-audit-article-title a {
@@ -143,23 +148,26 @@
 	margin-top: 12px;
 	padding-top: 12px;
 	border-top: 1px solid #f0f0f1;
+	background: #fafafa;
+	padding: 12px;
+	border-radius: 3px;
 }
 
 .zw-audit-content-section h4 {
 	font-size: 13px;
 	font-weight: 600;
 	color: #1d2327;
-	margin: 0 0 6px 0;
+	margin: 0 0 8px 0;
 	display: flex;
 	align-items: center;
-	gap: 4px;
+	gap: 6px;
 }
 
 .zw-audit-content-section h4 .dashicons {
 	font-size: 16px;
 	width: 16px;
 	height: 16px;
-	opacity: 0.7;
+	color: #72aee6;
 }
 
 .zw-audit-content-box {
