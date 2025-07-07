@@ -68,11 +68,13 @@
 	color: #00a0d2; 
 }
 
-/* ZW CacheMan inspired clean cards */
+/* Ensure audit list appears below tablenav */
 .zw-audit-list {
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
+	clear: both;
+	margin-top: 20px;
 }
 
 .zw-audit-item {
