@@ -23,33 +23,51 @@ class TTVGPTAuditHelper {
 
 		global $wpdb;
 
-		// Ultra-fast single query with INNERJOINs for maximum speed
-		$result = $wpdb->get_row(
+		// Ultra-optimized with EXISTS (Strategy 2 for maximum performance)
+		$result = $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT YEAR(p.post_date) AS year, MONTH(p.post_date) AS month
+				"SELECT p.post_date
 				FROM {$wpdb->posts} p
-				INNER JOIN {$wpdb->postmeta} pm_kb ON (p.ID = pm_kb.post_id AND pm_kb.meta_key = %s AND pm_kb.meta_value = %s)
-				INNER JOIN {$wpdb->postmeta} pm_gpt ON (p.ID = pm_gpt.post_id AND pm_gpt.meta_key = %s AND pm_gpt.meta_value != %s)
 				WHERE p.post_status = %s
 				  AND p.post_type = %s
+				  AND EXISTS (
+					  SELECT 1 FROM {$wpdb->postmeta} pm1
+					  WHERE pm1.post_id = p.ID
+					    AND pm1.meta_key = %s
+					    AND pm1.meta_value = %s
+					  LIMIT 1
+				  )
+				  AND EXISTS (
+					  SELECT 1 FROM {$wpdb->postmeta} pm2
+					  WHERE pm2.post_id = p.ID
+					    AND pm2.meta_key = %s
+					    AND pm2.meta_value != %s
+					  LIMIT 1
+				  )
 				ORDER BY p.post_date DESC
 				LIMIT 1",
+				'publish',
+				'post',
 				'post_in_kabelkrant',
 				'1',
 				'post_kabelkrant_content_gpt',
-				'',
-				'publish',
-				'post'
+				''
 			)
 		);
 
 		$execution_time = ( microtime( true ) - $start_time ) * 1000;
 		self::log_performance( 'get_most_recent_month', $execution_time, $result ? 1 : 0 );
 
-		return $result ? array(
-			'year'  => (int) $result->year,
-			'month' => (int) $result->month,
-		) : null;
+		if ( ! $result ) {
+			return null;
+		}
+
+		// Extract year/month in PHP instead of MySQL for index efficiency
+		$date_parts = date_parse( $result );
+		return array(
+			'year'  => (int) $date_parts['year'],
+			'month' => (int) $date_parts['month'],
+		);
 	}
 
 	/**
@@ -62,31 +80,47 @@ class TTVGPTAuditHelper {
 
 		global $wpdb;
 
-		// Ultra-fast INNER JOIN with DISTINCT for optimal performance
-		$results = $wpdb->get_results(
+		// Ultra-optimized with EXISTS (Strategy 2 approach for supporting queries)
+		$results = $wpdb->get_col(
 			$wpdb->prepare(
-				"SELECT DISTINCT YEAR(p.post_date) AS year, MONTH(p.post_date) AS month
+				"SELECT DISTINCT DATE_FORMAT(p.post_date, '%%Y-%%m') as month_key
 				FROM {$wpdb->posts} p
-				INNER JOIN {$wpdb->postmeta} pm_kb ON (p.ID = pm_kb.post_id AND pm_kb.meta_key = %s AND pm_kb.meta_value = %s)
-				INNER JOIN {$wpdb->postmeta} pm_gpt ON (p.ID = pm_gpt.post_id AND pm_gpt.meta_key = %s AND pm_gpt.meta_value != %s)
 				WHERE p.post_status = %s
 				  AND p.post_type = %s
-				ORDER BY year DESC, month DESC",
+				  AND EXISTS (
+					  SELECT 1 FROM {$wpdb->postmeta} pm1
+					  WHERE pm1.post_id = p.ID
+					    AND pm1.meta_key = %s
+					    AND pm1.meta_value = %s
+					  LIMIT 1
+				  )
+				  AND EXISTS (
+					  SELECT 1 FROM {$wpdb->postmeta} pm2
+					  WHERE pm2.post_id = p.ID
+					    AND pm2.meta_key = %s
+					    AND pm2.meta_value != %s
+					  LIMIT 1
+				  )
+				ORDER BY month_key DESC",
+				'publish',
+				'post',
 				'post_in_kabelkrant',
 				'1',
 				'post_kabelkrant_content_gpt',
-				'',
-				'publish',
-				'post'
+				''
 			)
 		);
 
 		$months = array();
-		foreach ( $results as $result ) {
-			$months[] = array(
-				'year'  => (int) $result->year,
-				'month' => (int) $result->month,
-			);
+		foreach ( $results as $month_key ) {
+			// Split YYYY-MM format efficiently
+			$parts = explode( '-', $month_key );
+			if ( 2 === count( $parts ) ) {
+				$months[] = array(
+					'year'  => (int) $parts[0],
+					'month' => (int) $parts[1],
+				);
+			}
 		}
 
 		$execution_time = ( microtime( true ) - $start_time ) * 1000;
@@ -285,7 +319,7 @@ class TTVGPTAuditHelper {
 	private static function log_performance( string $method_name, float $execution_time, int $result_count ): void {
 		// Always log performance unless explicitly disabled
 		$should_log = ! ( defined( 'ZW_TTVGPT_DISABLE_BENCHMARK' ) && ZW_TTVGPT_DISABLE_BENCHMARK );
-		
+
 		if ( $should_log ) {
 			error_log(
 				sprintf(

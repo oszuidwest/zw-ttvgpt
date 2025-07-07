@@ -53,8 +53,8 @@ class TTVGPTAuditPage {
 
 		// Run comprehensive benchmark by default (can be disabled with constant)
 		$benchmark_results = null;
-		$run_benchmark = ! ( defined( 'ZW_TTVGPT_DISABLE_BENCHMARK' ) && ZW_TTVGPT_DISABLE_BENCHMARK );
-		
+		$run_benchmark     = ! ( defined( 'ZW_TTVGPT_DISABLE_BENCHMARK' ) && ZW_TTVGPT_DISABLE_BENCHMARK );
+
 		if ( $run_benchmark ) {
 			$benchmark_results = TTVGPTAuditHelper::run_comprehensive_benchmark( $year, $month );
 			// Use fastest strategy for actual data
