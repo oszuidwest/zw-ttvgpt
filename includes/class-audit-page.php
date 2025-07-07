@@ -154,7 +154,7 @@ class TTVGPTAuditPage {
 		<ul class="subsubsub">
 			<li class="all">
 				<a href="<?php echo esc_url( add_query_arg( $current_params, $base_url ) ); ?>" <?php echo empty( $status_filter ) ? 'class="current" aria-current="page"' : ''; ?>>
-					<?php esc_html_e( 'Alle', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $total ); ?>)</span>
+					<?php esc_html_e( 'Alle', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( (string) $total ); ?>)</span>
 				</a>
 			</li>
 			<li class="human">
@@ -243,7 +243,7 @@ class TTVGPTAuditPage {
 
 			<h2 class="screen-reader-text"><?php esc_html_e( 'Auditlijst navigatie', 'zw-ttvgpt' ); ?></h2>
 			<div class="tablenav-pages">
-				<span class="displaying-num"><?php echo esc_html( $total ); ?> items</span>
+				<span class="displaying-num"><?php echo esc_html( (string) $total ); ?> items</span>
 			</div>
 			<br class="clear">
 		</div>
@@ -328,7 +328,7 @@ class TTVGPTAuditPage {
 										/* translators: %s is the post title. */
 										$edit_aria_label = sprintf( __( 'Bewerk "%s"', 'zw-ttvgpt' ), get_the_title( $post->ID ) );
 										?>
-										<a href="<?php echo esc_url( $post_url ); ?>" aria-label="<?php echo esc_attr( $edit_aria_label ); ?>">
+										<a href="<?php echo esc_url( (string) $post_url ); ?>" aria-label="<?php echo esc_attr( $edit_aria_label ); ?>">
 											<?php esc_html_e( 'Bewerken', 'zw-ttvgpt' ); ?>
 										</a> |
 									</span>
@@ -337,7 +337,7 @@ class TTVGPTAuditPage {
 										/* translators: %s is the post title. */
 										$view_aria_label = sprintf( __( '"%s" bekijken', 'zw-ttvgpt' ), get_the_title( $post->ID ) );
 										?>
-										<a href="<?php echo esc_url( get_permalink( $post->ID ) ); ?>" rel="bookmark" aria-label="<?php echo esc_attr( $view_aria_label ); ?>" target="_blank">
+										<a href="<?php echo esc_url( (string) get_permalink( $post->ID ) ); ?>" rel="bookmark" aria-label="<?php echo esc_attr( $view_aria_label ); ?>" target="_blank">
 											<?php esc_html_e( 'Bekijken', 'zw-ttvgpt' ); ?>
 										</a>
 									</span>
@@ -379,7 +379,7 @@ class TTVGPTAuditPage {
 								echo esc_html( $post_status_label );
 								?>
 								<br>
-								<?php echo esc_html( get_the_date( 'j F Y \o\m H:i', $post->ID ) ); ?>
+								<?php echo esc_html( (string) get_the_date( 'j F Y \o\m H:i', $post->ID ) ); ?>
 							</td>
 						</tr>
 					<?php endforeach; ?>
@@ -406,7 +406,11 @@ class TTVGPTAuditPage {
 				?>
 				<div id="zw-diff-modal-<?php echo esc_attr( $post->ID ); ?>" style="display: none;">
 					<div class="wrap">
-						<h2><?php echo esc_html( sprintf( __( 'Verschillen voor: %s', 'zw-ttvgpt' ), get_the_title( $post->ID ) ) ); ?></h2>
+						<?php
+						/* translators: %s is the post title. */
+						$modal_title = sprintf( __( 'Verschillen voor: %s', 'zw-ttvgpt' ), get_the_title( $post->ID ) );
+						?>
+						<h2><?php echo esc_html( $modal_title ); ?></h2>
 						
 						<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
 							<div class="postbox">
@@ -436,42 +440,28 @@ class TTVGPTAuditPage {
 			<?php endif; ?>
 		<?php endforeach; ?>
 		
-		<?php
-		// Add JavaScript for dropdown functionality
-		?>
-		<script type="text/javascript">
-		jQuery(document).ready(function($) {
+		<script>
+		jQuery(function($) {
 			function applyFilters() {
-				var dateValue = $('#filter-by-date').val();
-				var statusValue = $('#filter-by-status').val();
-				var changeValue = $('#filter-by-change').val();
+				var date = $('#filter-by-date').val();
+				var status = $('#filter-by-status').val();
+				var change = $('#filter-by-change').val();
 				var url = '<?php echo esc_js( admin_url( 'tools.php?page=zw-ttvgpt-audit' ) ); ?>';
 				var params = [];
 				
-				if (dateValue && dateValue !== '0') {
-					var year = dateValue.substring(0, 4);
-					var month = parseInt(dateValue.substring(4, 6), 10);
-					params.push('year=' + year);
-					params.push('month=' + month);
+				if (date && date !== '0') {
+					params.push('year=' + date.substring(0, 4));
+					params.push('month=' + parseInt(date.substring(4, 6), 10));
 				}
 				
-				if (statusValue) {
-					params.push('status=' + statusValue);
-				}
+				if (status) params.push('status=' + status);
+				if (change) params.push('change=' + change);
 				
-				if (changeValue) {
-					params.push('change=' + changeValue);
-				}
-				
-				if (params.length > 0) {
-					url += '&' + params.join('&');
-				}
-				
+				if (params.length) url += '&' + params.join('&');
 				window.location.href = url;
 			}
 			
 			$('#filter-by-date, #filter-by-status, #filter-by-change').on('change', applyFilters);
-			
 			$('#post-query-submit').on('click', function(e) {
 				e.preventDefault();
 				applyFilters();
