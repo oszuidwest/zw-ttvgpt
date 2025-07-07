@@ -120,8 +120,8 @@ class TTVGPTAuditPage {
 	private function render_audit_header( array $counts ): void {
 		$labels = array(
 			'fully_human_written'   => __( 'Handmatig', 'zw-ttvgpt' ),
-			'ai_written_not_edited' => __( 'AI Origineel', 'zw-ttvgpt' ),
-			'ai_written_edited'     => __( 'AI Bewerkt', 'zw-ttvgpt' ),
+			'ai_written_not_edited' => __( 'AI Gegenereerd', 'zw-ttvgpt' ),
+			'ai_written_edited'     => __( 'AI + Redigering', 'zw-ttvgpt' ),
 		);
 
 		$css_classes = array(
@@ -255,12 +255,12 @@ class TTVGPTAuditPage {
 								<?php $diff = TTVGPTAuditHelper::generate_word_diff( $ai_content, $human_content ); ?>
 								
 								<div class="zw-audit-content-block diff-before">
-									<div class="zw-audit-content-header"><?php esc_html_e( 'AI Origineel', 'zw-ttvgpt' ); ?></div>
+									<div class="zw-audit-content-header"><?php esc_html_e( 'AI Versie', 'zw-ttvgpt' ); ?></div>
 									<?php echo wp_kses_post( $diff['before'] ); ?>
 								</div>
 								
 								<div class="zw-audit-content-block diff-after">
-									<div class="zw-audit-content-header"><?php esc_html_e( 'Na bewerking', 'zw-ttvgpt' ); ?></div>
+									<div class="zw-audit-content-header"><?php esc_html_e( 'Geredigeerde Versie', 'zw-ttvgpt' ); ?></div>
 									<?php echo wp_kses_post( $diff['after'] ); ?>
 								</div>
 							<?php else : ?>
