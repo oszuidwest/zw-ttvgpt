@@ -17,7 +17,7 @@ class TTVGPTAuditPage {
 	 * Initialize audit page
 	 */
 	public function __construct() {
-		// Constructor logic if needed
+		add_action( 'wp_ajax_zw_ttvgpt_audit_diff', array( $this, 'handle_diff_modal' ) );
 	}
 
 	/**
@@ -86,6 +86,9 @@ class TTVGPTAuditPage {
 		$version = ZW_TTVGPT_VERSION . ( TTVGPTSettingsManager::is_debug_mode() ? '.' . time() : '' );
 		wp_enqueue_style( 'zw-ttvgpt-audit', ZW_TTVGPT_URL . 'assets/audit.css', array(), $version );
 		wp_print_styles( array( 'zw-ttvgpt-audit' ) );
+		
+		// Enqueue WordPress Thickbox for modal functionality
+		add_thickbox();
 		?>
 		<div class="wrap">
 			<h1 class="wp-heading-inline"><?php esc_html_e( 'Tekst TV GPT Audit', 'zw-ttvgpt' ); ?></h1>
@@ -300,11 +303,20 @@ class TTVGPTAuditPage {
 										</a>
 									</span>
 									<?php if ( 'ai_written_edited' === $status ) : ?>
-										<?php $diff = TTVGPTAuditHelper::generate_word_diff( $ai_content, $human_content ); ?>
+										<?php
+										$diff_url = add_query_arg(
+											array(
+												'action'   => 'zw_ttvgpt_audit_diff',
+												'post_id'  => $post->ID,
+												'TB_iframe' => 'true',
+												'width'    => '800',
+												'height'   => '600',
+											),
+											admin_url( 'admin-ajax.php' )
+										);
+										?>
 										| <span class="view-diff">
-											<a href="#" class="zw-audit-show-diff" data-post-id="<?php echo esc_attr( $post->ID ); ?>" 
-												data-diff-before="<?php echo esc_attr( wp_json_encode( $diff['before'] ) ); ?>"
-												data-diff-after="<?php echo esc_attr( wp_json_encode( $diff['after'] ) ); ?>"
+											<a href="<?php echo esc_url( $diff_url ); ?>" class="thickbox" 
 												aria-label="<?php esc_attr_e( 'Toon verschillen tussen AI en bewerkte versie', 'zw-ttvgpt' ); ?>">
 												<?php esc_html_e( 'Verschillen', 'zw-ttvgpt' ); ?>
 											</a>
@@ -358,33 +370,8 @@ class TTVGPTAuditPage {
 			</tfoot>
 		</table>
 		
-		<!-- WordPress Native Modal for Diff Display -->
-		<div id="zw-audit-diff-modal" style="display: none;">
-			<div class="zw-audit-diff-modal-content">
-				<div class="zw-audit-diff-modal-header">
-					<h3><?php esc_html_e( 'Verschillen tussen AI en Bewerkte Versie', 'zw-ttvgpt' ); ?></h3>
-					<button type="button" class="notice-dismiss zw-audit-diff-close">
-						<span class="screen-reader-text"><?php esc_html_e( 'Sluiten', 'zw-ttvgpt' ); ?></span>
-					</button>
-				</div>
-				<div class="zw-audit-diff-modal-body">
-					<div class="zw-audit-diff">
-						<div class="zw-audit-diff-block before">
-							<div class="zw-audit-diff-header"><?php esc_html_e( 'AI Versie', 'zw-ttvgpt' ); ?></div>
-							<div class="zw-audit-diff-content" id="zw-audit-diff-before"></div>
-						</div>
-						<div class="zw-audit-diff-block after">
-							<div class="zw-audit-diff-header"><?php esc_html_e( 'Geredigeerde Versie', 'zw-ttvgpt' ); ?></div>
-							<div class="zw-audit-diff-content" id="zw-audit-diff-after"></div>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div class="zw-audit-diff-modal-backdrop"></div>
-		</div>
-		
 		<?php
-		// Add JavaScript for dropdown functionality and modal
+		// Add JavaScript for dropdown functionality
 		?>
 		<script type="text/javascript">
 		jQuery(document).ready(function($) {
@@ -418,46 +405,96 @@ class TTVGPTAuditPage {
 				e.preventDefault();
 				applyFilters();
 			});
-			
-			// Modal functionality
-			$('.zw-audit-show-diff').on('click', function(e) {
-				e.preventDefault();
-				
-				var diffBefore = $(this).data('diff-before');
-				var diffAfter = $(this).data('diff-after');
-				
-				try {
-					// Parse JSON data
-					var beforeContent = typeof diffBefore === 'string' ? JSON.parse(diffBefore) : diffBefore;
-					var afterContent = typeof diffAfter === 'string' ? JSON.parse(diffAfter) : diffAfter;
-					
-					// Set modal content
-					$('#zw-audit-diff-before').html(beforeContent);
-					$('#zw-audit-diff-after').html(afterContent);
-					
-					// Show modal
-					$('#zw-audit-diff-modal').show();
-					$('body').addClass('modal-open');
-				} catch (error) {
-					console.error('Error parsing diff data:', error);
-				}
-			});
-			
-			// Close modal functionality
-			$('.zw-audit-diff-close, .zw-audit-diff-modal-backdrop').on('click', function() {
-				$('#zw-audit-diff-modal').hide();
-				$('body').removeClass('modal-open');
-			});
-			
-			// Close modal on escape key
-			$(document).on('keydown', function(e) {
-				if (e.keyCode === 27 && $('#zw-audit-diff-modal').is(':visible')) {
-					$('#zw-audit-diff-modal').hide();
-					$('body').removeClass('modal-open');
-				}
-			});
 		});
 		</script>
 		<?php
+	}
+
+	/**
+	 * Handle AJAX request for diff modal content
+	 *
+	 * @return void
+	 */
+	public function handle_diff_modal(): void {
+		// Security check - ensure this is a valid admin request
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Onvoldoende rechten.', 'zw-ttvgpt' ) );
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only modal display
+		$post_id = isset( $_GET['post_id'] ) ? absint( $_GET['post_id'] ) : 0;
+
+		if ( ! $post_id ) {
+			wp_die( esc_html__( 'Ongeldig bericht ID.', 'zw-ttvgpt' ) );
+		}
+
+		$post = get_post( $post_id );
+		if ( ! $post ) {
+			wp_die( esc_html__( 'Bericht niet gevonden.', 'zw-ttvgpt' ) );
+		}
+
+		// Get AI and human content
+		$ai_content    = get_post_meta( $post_id, 'post_kabelkrant_content_gpt', true );
+		$human_content = get_post_meta( $post_id, 'post_kabelkrant_content', true );
+
+		if ( empty( $ai_content ) ) {
+			wp_die( esc_html__( 'Geen AI content gevonden voor dit bericht.', 'zw-ttvgpt' ) );
+		}
+
+		// Generate diff
+		$diff = TTVGPTAuditHelper::generate_word_diff( $ai_content, $human_content );
+
+		// Load CSS for modal
+		$version = ZW_TTVGPT_VERSION . ( TTVGPTSettingsManager::is_debug_mode() ? '.' . time() : '' );
+		wp_enqueue_style( 'zw-ttvgpt-audit', ZW_TTVGPT_URL . 'assets/audit.css', array(), $version );
+		wp_print_styles( array( 'zw-ttvgpt-audit' ) );
+		?>
+		<!DOCTYPE html>
+		<html <?php language_attributes(); ?>>
+		<head>
+			<meta charset="<?php bloginfo( 'charset' ); ?>">
+			<meta name="viewport" content="width=device-width, initial-scale=1">
+			<title><?php echo esc_html( sprintf( __( 'Verschillen voor: %s', 'zw-ttvgpt' ), get_the_title( $post_id ) ) ); ?></title>
+			<?php wp_head(); ?>
+			<style>
+				body {
+					margin: 0;
+					padding: 20px;
+					font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+					background: #fff;
+				}
+				.modal-header {
+					margin-bottom: 20px;
+					padding-bottom: 15px;
+					border-bottom: 1px solid #dcdcde;
+				}
+				.modal-header h1 {
+					margin: 0;
+					font-size: 20px;
+					color: #23282d;
+				}
+			</style>
+		</head>
+		<body>
+			<div class="modal-header">
+				<h1><?php echo esc_html( sprintf( __( 'Verschillen voor: %s', 'zw-ttvgpt' ), get_the_title( $post_id ) ) ); ?></h1>
+			</div>
+			
+			<div class="zw-audit-diff">
+				<div class="zw-audit-diff-block before">
+					<div class="zw-audit-diff-header"><?php esc_html_e( 'AI Versie', 'zw-ttvgpt' ); ?></div>
+					<div class="zw-audit-diff-content"><?php echo wp_kses_post( $diff['before'] ); ?></div>
+				</div>
+				<div class="zw-audit-diff-block after">
+					<div class="zw-audit-diff-header"><?php esc_html_e( 'Geredigeerde Versie', 'zw-ttvgpt' ); ?></div>
+					<div class="zw-audit-diff-content"><?php echo wp_kses_post( $diff['after'] ); ?></div>
+				</div>
+			</div>
+			
+			<?php wp_footer(); ?>
+		</body>
+		</html>
+		<?php
+		wp_die();
 	}
 }
