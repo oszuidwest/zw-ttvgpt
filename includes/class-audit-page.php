@@ -115,19 +115,43 @@ class TTVGPTAuditPage {
 		?>
 		
 		<div class="zw-audit-header">
-			<div class="zw-audit-stats-inline">
+			<div class="zw-audit-stats-grid">
 				<?php foreach ( $counts as $status => $count ) : ?>
-					<div class="zw-audit-stat">
-						<span class="zw-audit-stat-dot <?php echo esc_attr( $css_classes[ $status ] ); ?>"></span>
-						<span><?php echo esc_html( (string) $count ); ?> <?php echo esc_html( $labels[ $status ] ); ?></span>
+					<div class="zw-audit-stat-card <?php echo esc_attr( $css_classes[ $status ] ); ?>">
+						<div class="zw-audit-stat-number">
+							<?php echo esc_html( (string) $count ); ?>
+						</div>
+						<div class="zw-audit-stat-label">
+							<?php echo esc_html( $labels[ $status ] ); ?>
+						</div>
+						<?php if ( $total_posts > 0 ) : ?>
+							<div class="zw-audit-stat-percentage">
+								<?php echo esc_html( (string) round( ( $count / $total_posts ) * 100 ) ); ?>% van totaal
+							</div>
+						<?php endif; ?>
 					</div>
 				<?php endforeach; ?>
 			</div>
-			<div class="zw-audit-total">
-				<?php
-				/* translators: %d: total number of posts */
-				printf( esc_html__( 'Totaal: %d artikelen', 'zw-ttvgpt' ), (int) $total_posts );
-				?>
+			
+			<div class="zw-audit-header-summary">
+				<div>
+					<strong>
+						<?php
+						/* translators: %d: total number of posts */
+						printf( esc_html__( 'Totaal: %d artikelen', 'zw-ttvgpt' ), (int) $total_posts );
+						?>
+					</strong>
+				</div>
+				<div>
+					<?php
+					$ai_total = $counts['ai_written_not_edited'] + $counts['ai_written_edited'];
+					if ( $total_posts > 0 ) {
+						$ai_percentage = round( ( $ai_total / $total_posts ) * 100 );
+						/* translators: %d: percentage of AI-generated content */
+						printf( esc_html__( '%d%% AI ondersteund', 'zw-ttvgpt' ), (int) $ai_percentage );
+					}
+					?>
+				</div>
 			</div>
 		</div>
 		<?php
