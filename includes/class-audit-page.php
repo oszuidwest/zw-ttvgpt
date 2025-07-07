@@ -88,25 +88,6 @@ class TTVGPTAuditPage {
 			</div>
 		</div>
 		
-		<script>
-		jQuery(document).ready(function($) {
-			$('.zw-audit-expand-toggle').on('click', function() {
-				var $item = $(this).closest('.zw-audit-item');
-				// Don't toggle AI edited items as they should always show diff
-				if ($item.hasClass('ai-edited')) {
-					return;
-				}
-				
-				$item.toggleClass('expanded');
-				var icon = $(this).find('.dashicons');
-				if ($item.hasClass('expanded')) {
-					icon.removeClass('dashicons-plus-alt2').addClass('dashicons-minus');
-				} else {
-					icon.removeClass('dashicons-minus').addClass('dashicons-plus-alt2');
-				}
-			});
-		});
-		</script>
 		<?php
 	}
 
@@ -196,17 +177,8 @@ class TTVGPTAuditPage {
 				$post_url    = get_edit_post_link( $post->ID );
 				?>
 				
-				<div class="zw-audit-item <?php echo esc_attr( $css_classes[ $status ] ); ?> <?php echo 'ai_written_edited' === $status ? 'expanded' : ''; ?>">
+				<div class="zw-audit-item <?php echo esc_attr( $css_classes[ $status ] ); ?>">
 					<div class="zw-audit-item-content">
-						<?php if ( 'ai_written_edited' !== $status ) : ?>
-							<button class="zw-audit-expand-toggle" type="button">
-								<span class="dashicons dashicons-plus-alt2"></span>
-							</button>
-						<?php else : ?>
-							<div class="zw-audit-diff-indicator">
-								<span class="dashicons dashicons-admin-tools"></span>
-							</div>
-						<?php endif; ?>
 						
 						<div class="zw-audit-article-header">
 							<div class="zw-audit-type-indicator <?php echo esc_attr( $css_classes[ $status ] ); ?>">

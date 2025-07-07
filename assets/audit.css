@@ -153,26 +153,11 @@
 	border-color: #2271b1;
 }
 
-/* Content Preview */
+/* Content Preview - Always visible */
 .zw-audit-content-preview {
 	margin-top: 12px;
-	max-height: 0;
-	overflow: hidden;
-	transition: max-height 0.3s ease, padding 0.3s ease;
-}
-
-.zw-audit-item.expanded .zw-audit-content-preview {
-	max-height: 400px;
 	padding-top: 12px;
 	border-top: 1px solid #f0f0f1;
-}
-
-/* Always show content for AI edited items */
-.zw-audit-item.ai-edited .zw-audit-content-preview {
-	max-height: none;
-	padding-top: 12px;
-	border-top: 1px solid #f0f0f1;
-	overflow: visible;
 }
 
 .zw-audit-content-block {
@@ -224,50 +209,6 @@
 	border: 1px solid #f0bb68;
 }
 
-/* Expand/Collapse Toggle */
-.zw-audit-expand-toggle {
-	position: absolute;
-	right: 20px;
-	top: 16px;
-	width: 20px;
-	height: 20px;
-	border: none;
-	background: #f6f7f7;
-	border-radius: 3px;
-	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 12px;
-	color: #646970;
-	transition: all 0.2s ease;
-}
-
-.zw-audit-expand-toggle:hover {
-	background: #e8eaed;
-	color: #1d2327;
-}
-
-.zw-audit-item.expanded .zw-audit-expand-toggle {
-	background: #2271b1;
-	color: #fff;
-}
-
-/* Diff Indicator for AI Edited Items */
-.zw-audit-diff-indicator {
-	position: absolute;
-	right: 20px;
-	top: 16px;
-	width: 20px;
-	height: 20px;
-	background: #f56e28;
-	border-radius: 3px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 12px;
-	color: #fff;
-}
 
 /* Empty State */
 .zw-audit-empty {
