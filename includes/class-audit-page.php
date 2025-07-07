@@ -91,22 +91,16 @@ class TTVGPTAuditPage {
 
 
 	/**
-	 * Render modern statistics dashboard
+	 * Render compact statistics summary
 	 *
 	 * @param array $counts Statistics counts
 	 * @return void
 	 */
 	private function render_statistics_dashboard( array $counts ): void {
 		$labels = array(
-			'fully_human_written'   => __( 'Volledig handmatig', 'zw-ttvgpt' ),
-			'ai_written_not_edited' => __( 'AI, niet bewerkt', 'zw-ttvgpt' ),
-			'ai_written_edited'     => __( 'AI, bewerkt', 'zw-ttvgpt' ),
-		);
-
-		$icons = array(
-			'fully_human_written'   => 'edit',
-			'ai_written_not_edited' => 'superhero',
-			'ai_written_edited'     => 'admin-tools',
+			'fully_human_written'   => __( 'Handmatig', 'zw-ttvgpt' ),
+			'ai_written_not_edited' => __( 'AI Origineel', 'zw-ttvgpt' ),
+			'ai_written_edited'     => __( 'AI Bewerkt', 'zw-ttvgpt' ),
 		);
 
 		$css_classes = array(
@@ -121,18 +115,11 @@ class TTVGPTAuditPage {
 		<div class="zw-audit-stats">
 			<?php foreach ( $counts as $status => $count ) : ?>
 				<div class="zw-audit-stat-card <?php echo esc_attr( $css_classes[ $status ] ); ?>">
-					<div class="zw-audit-stat-number">
-						<?php echo esc_html( (string) $count ); ?>
-					</div>
-					<div class="zw-audit-stat-label">
-						<span class="dashicons dashicons-<?php echo esc_attr( $icons[ $status ] ); ?>"></span>
-						<?php echo esc_html( $labels[ $status ] ); ?>
-						<?php if ( $total_posts > 0 ) : ?>
-							<div style="margin-top: 4px; font-size: 12px; opacity: 0.8;">
-								<?php echo esc_html( (string) round( ( $count / $total_posts ) * 100 ) ); ?>%
-							</div>
-						<?php endif; ?>
-					</div>
+					<span class="zw-audit-stat-number"><?php echo esc_html( (string) $count ); ?></span>
+					<?php echo esc_html( $labels[ $status ] ); ?>
+					<?php if ( $total_posts > 0 ) : ?>
+						(<?php echo esc_html( (string) round( ( $count / $total_posts ) * 100 ) ); ?>%)
+					<?php endif; ?>
 				</div>
 			<?php endforeach; ?>
 		</div>
@@ -140,7 +127,7 @@ class TTVGPTAuditPage {
 	}
 
 	/**
-	 * Render modern articles list
+	 * Render articles list in WordPress native style
 	 *
 	 * @param array $categorized_posts Array of categorized posts
 	 * @return void
@@ -185,48 +172,33 @@ class TTVGPTAuditPage {
 				<article class="zw-audit-article">
 					<div class="zw-audit-article-header">
 						<div>
-							<h3 class="zw-audit-article-title">
+							<strong class="zw-audit-article-title">
+								<span class="zw-audit-status-badge <?php echo esc_attr( $css_classes[ $status ] ); ?>">
+									<?php echo esc_html( $labels[ $status ] ); ?>
+								</span>
 								<?php if ( $post_url ) : ?>
-									<a href="<?php echo esc_url( $post_url ); ?>" target="_blank">
+									<a href="<?php echo esc_url( $post_url ); ?>" class="row-title">
 										<?php echo esc_html( get_the_title( $post->ID ) ); ?>
 									</a>
 								<?php else : ?>
 									<?php echo esc_html( get_the_title( $post->ID ) ); ?>
 								<?php endif; ?>
-							</h3>
+							</strong>
 							
 							<div class="zw-audit-article-meta">
-								<span>
-									<span class="dashicons dashicons-calendar-alt"></span>
-									<?php
-									$post_date = get_the_date( 'j F Y', $post->ID );
-									echo esc_html( is_string( $post_date ) ? $post_date : '' );
-									?>
-								</span>
-								
-								<span>
-									<span class="dashicons dashicons-admin-users"></span>
-									<?php echo esc_html( $author ? $author->display_name : 'Onbekend' ); ?>
-								</span>
-								
+								<?php
+								$post_date = get_the_date( 'j F Y', $post->ID );
+								echo esc_html( is_string( $post_date ) ? $post_date : '' );
+								?>
+								| <?php echo esc_html( $author ? $author->display_name : 'Onbekend' ); ?>
 								<?php if ( $last_editor && $last_editor->ID !== $post->post_author ) : ?>
-									<span>
-										<span class="dashicons dashicons-edit"></span>
-										<?php echo esc_html( $last_editor->display_name ); ?>
-									</span>
+									| <?php esc_html_e( 'Bewerkt door', 'zw-ttvgpt' ); ?> <?php echo esc_html( $last_editor->display_name ); ?>
 								<?php endif; ?>
-								
-								<span>
-									<span class="dashicons dashicons-visibility"></span>
-									<a href="<?php echo esc_url( get_permalink( $post->ID ) ? get_permalink( $post->ID ) : '' ); ?>" target="_blank">
-										<?php esc_html_e( 'Bekijk live', 'zw-ttvgpt' ); ?>
-									</a>
-								</span>
+								|
+								<a href="<?php echo esc_url( get_permalink( $post->ID ) ? get_permalink( $post->ID ) : '' ); ?>" target="_blank">
+									<?php esc_html_e( 'Bekijk', 'zw-ttvgpt' ); ?>
+								</a>
 							</div>
-						</div>
-						
-						<div class="zw-audit-status-badge <?php echo esc_attr( $css_classes[ $status ] ); ?>">
-							<?php echo esc_html( $labels[ $status ] ); ?>
 						</div>
 					</div>
 					
