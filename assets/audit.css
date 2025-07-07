@@ -44,14 +44,19 @@
 
 /* Article Timeline View */
 .zw-audit-timeline {
-	padding: 0;
+	padding: 20px;
+	background: #f6f7f7;
 }
 
 .zw-audit-item {
 	border-left: 4px solid #f0f0f1;
-	margin: 0;
+	margin: 0 0 20px 0;
 	position: relative;
 	transition: border-color 0.2s ease;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	box-shadow: 0 1px 1px rgba(0,0,0,.04);
 }
 
 .zw-audit-item.human { border-left-color: #2271b1; }
@@ -59,11 +64,11 @@
 .zw-audit-item.ai-edited { border-left-color: #f56e28; }
 
 .zw-audit-item:hover {
-	background: #f9f9f9;
+	box-shadow: 0 2px 4px rgba(0,0,0,.08);
 }
 
 .zw-audit-item-content {
-	padding: 16px 20px;
+	padding: 20px;
 	position: relative;
 }
 
@@ -155,9 +160,9 @@
 
 /* Content Preview - Always visible */
 .zw-audit-content-preview {
-	margin-top: 12px;
-	padding-top: 12px;
-	border-top: 1px solid #f0f0f1;
+	margin-top: 16px;
+	padding-top: 16px;
+	border-top: 2px solid #f0f0f1;
 }
 
 .zw-audit-content-block {
@@ -225,6 +230,18 @@
 
 /* Responsive */
 @media (max-width: 782px) {
+	.zw-audit-timeline {
+		padding: 15px;
+	}
+	
+	.zw-audit-item {
+		margin-bottom: 15px;
+	}
+	
+	.zw-audit-item-content {
+		padding: 15px;
+	}
+	
 	.zw-audit-header {
 		flex-direction: column;
 		align-items: flex-start;
