@@ -21,33 +21,23 @@ class TTVGPTAuditHelper {
 	public static function get_most_recent_month(): ?array {
 		global $wpdb;
 
-		// Fast EXISTS query - proven fastest
+		// Ultra-fast single query with INNERJOINs for maximum speed
 		$result = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT YEAR(p.post_date) AS year, MONTH(p.post_date) AS month
 				FROM {$wpdb->posts} p
+				INNER JOIN {$wpdb->postmeta} pm_kb ON (p.ID = pm_kb.post_id AND pm_kb.meta_key = %s AND pm_kb.meta_value = %s)
+				INNER JOIN {$wpdb->postmeta} pm_gpt ON (p.ID = pm_gpt.post_id AND pm_gpt.meta_key = %s AND pm_gpt.meta_value != %s)
 				WHERE p.post_status = %s
 				  AND p.post_type = %s
-				  AND EXISTS (
-					  SELECT 1 FROM {$wpdb->postmeta} pm1
-					  WHERE pm1.post_id = p.ID
-					    AND pm1.meta_key = %s
-					    AND pm1.meta_value = %s
-				  )
-				  AND EXISTS (
-					  SELECT 1 FROM {$wpdb->postmeta} pm2
-					  WHERE pm2.post_id = p.ID
-					    AND pm2.meta_key = %s
-					    AND pm2.meta_value != %s
-				  )
 				ORDER BY p.post_date DESC
 				LIMIT 1",
-				'publish',
-				'post',
 				'post_in_kabelkrant',
 				'1',
 				'post_kabelkrant_content_gpt',
-				''
+				'',
+				'publish',
+				'post'
 			)
 		);
 
@@ -65,32 +55,22 @@ class TTVGPTAuditHelper {
 	public static function get_months(): array {
 		global $wpdb;
 
-		// Fast EXISTS queries - proven fastest approach
+		// Ultra-fast INNER JOIN with DISTINCT for optimal performance
 		$results = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT DISTINCT YEAR(p.post_date) AS year, MONTH(p.post_date) AS month
 				FROM {$wpdb->posts} p
+				INNER JOIN {$wpdb->postmeta} pm_kb ON (p.ID = pm_kb.post_id AND pm_kb.meta_key = %s AND pm_kb.meta_value = %s)
+				INNER JOIN {$wpdb->postmeta} pm_gpt ON (p.ID = pm_gpt.post_id AND pm_gpt.meta_key = %s AND pm_gpt.meta_value != %s)
 				WHERE p.post_status = %s
 				  AND p.post_type = %s
-				  AND EXISTS (
-					  SELECT 1 FROM {$wpdb->postmeta} pm1
-					  WHERE pm1.post_id = p.ID
-					    AND pm1.meta_key = %s
-					    AND pm1.meta_value = %s
-				  )
-				  AND EXISTS (
-					  SELECT 1 FROM {$wpdb->postmeta} pm2
-					  WHERE pm2.post_id = p.ID
-					    AND pm2.meta_key = %s
-					    AND pm2.meta_value != %s
-				  )
 				ORDER BY year DESC, month DESC",
-				'publish',
-				'post',
 				'post_in_kabelkrant',
 				'1',
 				'post_kabelkrant_content_gpt',
-				''
+				'',
+				'publish',
+				'post'
 			)
 		);
 
@@ -113,60 +93,90 @@ class TTVGPTAuditHelper {
 	 * @return array Array of WP_Post objects
 	 */
 	public static function get_posts( int $year, int $month ): array {
-		// Fast EXISTS queries - optimized for speed
+		// Ultra-fast single query with date range instead of functions
 		global $wpdb;
-		$post_ids = $wpdb->get_col(
+
+		// Calculate date range boundaries for index usage
+		$start_date = sprintf( '%04d-%02d-01 00:00:00', $year, $month );
+		$end_date   = sprintf( '%04d-%02d-01 00:00:00', $year, $month + 1 );
+
+		// Handle December edge case
+		if ( 12 === $month ) {
+			$end_date = sprintf( '%04d-01-01 00:00:00', $year + 1 );
+		}
+
+		// Single optimized query with compound conditions
+		$posts = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT p.ID
+				"SELECT p.ID, p.post_author, p.post_date, p.post_title, p.post_content
 				FROM {$wpdb->posts} p
+				INNER JOIN {$wpdb->postmeta} pm_kb ON (p.ID = pm_kb.post_id AND pm_kb.meta_key = %s AND pm_kb.meta_value = %s)
+				INNER JOIN {$wpdb->postmeta} pm_gpt ON (p.ID = pm_gpt.post_id AND pm_gpt.meta_key = %s)
+				INNER JOIN {$wpdb->postmeta} pm_content ON (p.ID = pm_content.post_id AND pm_content.meta_key = %s)
 				WHERE p.post_status = %s
 				  AND p.post_type = %s
-				  AND YEAR(p.post_date) = %d
-				  AND MONTH(p.post_date) = %d
-				  AND EXISTS (
-					  SELECT 1 FROM {$wpdb->postmeta} pm1
-					  WHERE pm1.post_id = p.ID
-					    AND pm1.meta_key = %s
-					    AND pm1.meta_value = %s
-				  )
-				  AND EXISTS (
-					  SELECT 1 FROM {$wpdb->postmeta} pm2
-					  WHERE pm2.post_id = p.ID
-					    AND pm2.meta_key = %s
-				  )
-				  AND EXISTS (
-					  SELECT 1 FROM {$wpdb->postmeta} pm3
-					  WHERE pm3.post_id = p.ID
-					    AND pm3.meta_key = %s
-				  )
+				  AND p.post_date >= %s
+				  AND p.post_date < %s
 				ORDER BY p.post_date DESC",
-				'publish',
-				'post',
-				$year,
-				$month,
 				'post_in_kabelkrant',
 				'1',
 				'post_kabelkrant_content_gpt',
-				'post_kabelkrant_content'
+				'post_kabelkrant_content',
+				'publish',
+				'post',
+				$start_date,
+				$end_date
 			)
 		);
 
+		if ( empty( $posts ) ) {
+			return array();
+		}
+
+		// Convert to WP_Post objects without additional queries
+		$wp_posts = array();
+		foreach ( $posts as $post_data ) {
+			$wp_posts[] = new \WP_Post( $post_data );
+		}
+
+		return $wp_posts;
+	}
+
+
+	/**
+	 * Bulk fetch meta data for multiple posts to avoid N+1 queries
+	 *
+	 * @param array $post_ids Array of post IDs
+	 * @return array Associative array of post meta data
+	 */
+	public static function get_bulk_meta_data( array $post_ids ): array {
 		if ( empty( $post_ids ) ) {
 			return array();
 		}
 
-		// Get actual post objects efficiently
-		return get_posts(
-			array(
-				'include'        => $post_ids,
-				'post_status'    => 'publish',
-				'posts_per_page' => -1,
-				'orderby'        => 'post_date',
-				'order'          => 'DESC',
-			)
-		);
-	}
+		global $wpdb;
 
+		// Build safe IN clause with proper escaping
+		$safe_post_ids = array_map( 'intval', $post_ids );
+		$ids_string    = implode( ',', $safe_post_ids );
+
+		// Single query to get all meta data for all posts
+		$meta_data = $wpdb->get_results(
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Safely escaped with intval()
+			"SELECT post_id, meta_key, meta_value 
+			FROM {$wpdb->postmeta} 
+			WHERE post_id IN ({$ids_string})
+			AND meta_key IN ('post_kabelkrant_content_gpt', 'post_kabelkrant_content', '_edit_last')
+			ORDER BY post_id"
+		);
+
+		$result = array();
+		foreach ( $meta_data as $meta ) {
+			$result[ $meta->post_id ][ $meta->meta_key ] = $meta->meta_value;
+		}
+
+		return $result;
+	}
 
 	/**
 	 * Remove region prefix from content (everything before and including ' - ')
@@ -183,11 +193,18 @@ class TTVGPTAuditHelper {
 	 * Analyze post to determine AI vs human content status
 	 *
 	 * @param \WP_Post $post Post to analyze
+	 * @param array    $meta_cache Meta data cache to avoid N+1 queries
 	 * @return array{status: string, ai_content: string, human_content: string}
 	 */
-	public static function categorize_post( \WP_Post $post ): array {
-		$ai_meta_content    = get_post_meta( $post->ID, 'post_kabelkrant_content_gpt', true );
-		$human_meta_content = get_post_meta( $post->ID, 'post_kabelkrant_content', true );
+	public static function categorize_post( \WP_Post $post, array $meta_cache = array() ): array {
+		// Use cached meta data if available to avoid N+1 queries
+		if ( isset( $meta_cache[ $post->ID ] ) ) {
+			$ai_meta_content    = $meta_cache[ $post->ID ]['post_kabelkrant_content_gpt'] ?? '';
+			$human_meta_content = $meta_cache[ $post->ID ]['post_kabelkrant_content'] ?? '';
+		} else {
+			$ai_meta_content    = get_post_meta( $post->ID, 'post_kabelkrant_content_gpt', true );
+			$human_meta_content = get_post_meta( $post->ID, 'post_kabelkrant_content', true );
+		}
 
 		$ai_content    = self::strip_region_prefix( trim( is_string( $ai_meta_content ) ? $ai_meta_content : '' ) );
 		$human_content = self::strip_region_prefix( trim( is_string( $human_meta_content ) ? $human_meta_content : '' ) );

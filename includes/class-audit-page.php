@@ -58,9 +58,18 @@ class TTVGPTAuditPage {
 			'ai_written_edited'     => 0,
 		);
 
+		// Bulk fetch all meta data in one query to avoid N+1 problem
+		$post_ids   = array_map(
+			static function ( $post ) {
+				return $post->ID;
+			},
+			$posts
+		);
+		$meta_cache = TTVGPTAuditHelper::get_bulk_meta_data( $post_ids );
+
 		$categorized_posts = array();
 		foreach ( $posts as $post ) {
-			$analysis = TTVGPTAuditHelper::categorize_post( $post );
+			$analysis = TTVGPTAuditHelper::categorize_post( $post, $meta_cache );
 			++$counts[ $analysis['status'] ];
 
 			// Apply status filter if set
@@ -82,7 +91,7 @@ class TTVGPTAuditPage {
 			
 			<?php $this->render_navigation( $year, $month, $available_months, $status_filter ); ?>
 			<?php $this->render_summary( $counts ); ?>
-			<?php $this->render_audit_list( $categorized_posts ); ?>
+			<?php $this->render_audit_list( $categorized_posts, $meta_cache ); ?>
 		</div>
 		<?php
 	}
@@ -127,9 +136,10 @@ class TTVGPTAuditPage {
 	 * Render native WordPress-style list
 	 *
 	 * @param array $categorized_posts Array of categorized posts
+	 * @param array $meta_cache Meta data cache to avoid N+1 queries
 	 * @return void
 	 */
-	private function render_audit_list( array $categorized_posts ): void {
+	private function render_audit_list( array $categorized_posts, array $meta_cache ): void {
 		if ( empty( $categorized_posts ) ) {
 			?>
 			<div class="zw-audit-empty">
@@ -161,7 +171,7 @@ class TTVGPTAuditPage {
 				$human_content = $item['human_content'];
 
 				$author      = get_userdata( $post->post_author );
-				$edit_last   = get_post_meta( $post->ID, '_edit_last', true );
+				$edit_last   = $meta_cache[ $post->ID ]['_edit_last'] ?? '';
 				$last_editor = is_numeric( $edit_last ) ? get_userdata( (int) $edit_last ) : false;
 				$post_url    = get_edit_post_link( $post->ID );
 				?>
