@@ -207,7 +207,7 @@ class TTVGPTAuditPage {
 							<?php $diff = TTVGPTAuditHelper::generate_word_diff( $ai_content, $human_content ); ?>
 							
 							<h4>
-								<span class="dashicons dashicons-arrow-down-alt"></span>
+								<span class="dashicons dashicons-superhero"></span>
 								<?php esc_html_e( 'Voor bewerking (AI origineel):', 'zw-ttvgpt' ); ?>
 							</h4>
 							<div class="zw-audit-content-box zw-audit-diff-before">
@@ -215,7 +215,7 @@ class TTVGPTAuditPage {
 							</div>
 							
 							<h4>
-								<span class="dashicons dashicons-arrow-up-alt"></span>
+								<span class="dashicons dashicons-edit"></span>
 								<?php esc_html_e( 'Na bewerking (Definitief):', 'zw-ttvgpt' ); ?>
 							</h4>
 							<div class="zw-audit-content-box zw-audit-diff-after">
