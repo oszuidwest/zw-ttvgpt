@@ -1,6 +1,6 @@
 {
   "name": "zw-ttvgpt",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "JavaScript assets for ZW TTVGPT WordPress plugin",
   "private": true,
   "scripts": {
@@ -15,7 +15,7 @@
     "@eslint/eslintrc": "^3.3.1",
     "@typescript-eslint/eslint-plugin": "^8.36.0",
     "@typescript-eslint/parser": "^8.36.0",
-    "@wordpress/eslint-plugin": "^21.0.0",
+    "@wordpress/eslint-plugin": "^22.0.0",
     "@wordpress/stylelint-config": "^23.18.0",
     "eslint": "^9.17.0",
     "eslint-plugin-jsx-a11y": "^6.10.2",

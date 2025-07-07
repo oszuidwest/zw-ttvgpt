@@ -74,8 +74,11 @@
 		const content = getEditorContent(),
 			postId = $button.data('post-id');
 
-		if (!content) {
-			showStatus('error', 'Geen content gevonden om samen te vatten.');
+		if (!content || content.trim().length === 0) {
+			showStatus(
+				'error',
+				'Geen content gevonden. Zorg dat de editor geladen is en voeg eerst tekst toe.'
+			);
 			return;
 		}
 
@@ -137,34 +140,33 @@
 	}
 
 	/**
-	 * Extract content from active editor (TinyMCE, textarea, or Gutenberg)
+	 * Extract content from active editor (TinyMCE or textarea fallback)
 	 * @return {string} Editor content as plain text
 	 */
 	function getEditorContent() {
+		let content = '';
+
+		// Try TinyMCE first, but check if it actually has content
 		if (
 			typeof tinyMCE !== 'undefined' &&
 			tinyMCE.activeEditor &&
-			!tinyMCE.activeEditor.isHidden()
+			!tinyMCE.activeEditor.isHidden() &&
+			tinyMCE.activeEditor.initialized
 		) {
-			return tinyMCE.activeEditor.getContent({ format: 'text' });
+			content = tinyMCE.activeEditor.getContent({ format: 'text' });
+			// If TinyMCE returns content, use it
+			if (content && content.trim().length > 0) {
+				return content;
+			}
 		}
 
+		// Fallback to textarea (always available)
 		const $textarea = $(SELECTORS.contentEditor);
 		if ($textarea.length > 0) {
-			return $textarea.val();
-		}
-
-		if (
-			typeof wp !== 'undefined' &&
-			wp.data &&
-			wp.data.select('core/editor')
-		) {
-			const content = wp.data
-					.select('core/editor')
-					.getEditedPostContent(),
-				temp = document.createElement('div');
-			temp.innerHTML = content;
-			return temp.textContent || temp.innerText || '';
+			content = $textarea.val();
+			if (content && content.trim().length > 0) {
+				return content;
+			}
 		}
 
 		return '';
