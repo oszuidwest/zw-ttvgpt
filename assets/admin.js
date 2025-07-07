@@ -131,7 +131,7 @@
 								? response.data
 								: response.data.message || errorMessage;
 					}
-				} catch (parseError) {
+				} catch {
 					errorMessage = error
 						? `${zwTTVGPT.strings.error}: ${error}`
 						: zwTTVGPT.strings.error;
