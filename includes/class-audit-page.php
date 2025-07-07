@@ -87,7 +87,7 @@ class TTVGPTAuditPage {
 		wp_enqueue_style( 'zw-ttvgpt-audit', ZW_TTVGPT_URL . 'assets/audit.css', array(), $version );
 		wp_print_styles( array( 'zw-ttvgpt-audit' ) );
 		?>
-		<div class="wrap">
+		<div class="wrap" style="background: #f1f1f1; margin-left: -20px; margin-right: -20px; padding: 20px; min-height: 100vh;">
 			<h1 class="wp-heading-inline"><?php esc_html_e( 'Tekst TV GPT Audit', 'zw-ttvgpt' ); ?></h1>
 			<hr class="wp-header-end">
 			
