@@ -1,88 +1,119 @@
 /**
- * ZW TTVGPT Audit Dashboard Styles
- * Native WordPress Admin Interface
+ * ZW TTVGPT Audit Dashboard - Fresh Creative Design
+ * Inspired by code diff tools and editorial workflows
  */
 
-/* Statistics Summary - Native WordPress Style */
-.zw-audit-stats {
-	display: flex;
-	gap: 15px;
-	margin: 15px 0;
-	flex-wrap: wrap;
-}
-
-.zw-audit-stat-card {
-	background: #f6f7f7;
-	border: 1px solid #c3c4c7;
-	border-radius: 4px;
-	padding: 8px 12px;
-	font-size: 13px;
-	color: #50575e;
-	white-space: nowrap;
-}
-
-.zw-audit-stat-number {
-	font-weight: 600;
-	margin-right: 4px;
-}
-
-.zw-audit-stat-card.human .zw-audit-stat-number { color: #007cba; }
-.zw-audit-stat-card.ai-unedited .zw-audit-stat-number { color: #d63638; }
-.zw-audit-stat-card.ai-edited .zw-audit-stat-number { color: #b26900; }
-
-/* Articles Table - Native WordPress Posts List Style */
-.zw-audit-articles {
+/* Main Dashboard Layout */
+.zw-audit-overview {
 	background: #fff;
 	border: 1px solid #c3c4c7;
-	box-shadow: 0 1px 1px rgba(0,0,0,.04);
+	margin-bottom: 20px;
 }
 
-.zw-audit-article {
-	border-bottom: 1px solid #f0f0f1;
-	padding: 16px;
-}
-
-.zw-audit-article:last-child {
-	border-bottom: none;
-}
-
-.zw-audit-article:hover {
-	background-color: #f6f7f7;
-}
-
-.zw-audit-article-header {
+.zw-audit-header {
+	background: linear-gradient(135deg, #f7f8f9 0%, #e8eaed 100%);
+	padding: 16px 20px;
+	border-bottom: 1px solid #c3c4c7;
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	margin-bottom: 12px;
-	gap: 15px;
-	padding-bottom: 8px;
-	border-bottom: 1px solid #f6f7f7;
 }
 
-.zw-audit-article-title {
-	font-size: 14px;
-	font-weight: 600;
-	color: #1d2327;
-	margin: 0;
-	line-height: 1.4;
+.zw-audit-stats-inline {
 	display: flex;
-	align-items: center;
-	gap: 8px;
+	gap: 24px;
+	font-size: 14px;
+	font-weight: 500;
 }
 
-.zw-audit-article-title a {
-	text-decoration: none;
-	color: #2271b1;
+.zw-audit-stat {
 	display: flex;
 	align-items: center;
 	gap: 6px;
 }
 
-.zw-audit-article-title a:hover {
-	color: #135e96;
+.zw-audit-stat-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
 }
 
+.zw-audit-stat-dot.human { background: #00a32a; }
+.zw-audit-stat-dot.ai-unedited { background: #d63638; }
+.zw-audit-stat-dot.ai-edited { background: #f56e28; }
+
+/* Article Timeline View */
+.zw-audit-timeline {
+	padding: 0;
+}
+
+.zw-audit-item {
+	border-left: 4px solid #f0f0f1;
+	margin: 0;
+	position: relative;
+	transition: border-color 0.2s ease;
+}
+
+.zw-audit-item.human { border-left-color: #00a32a; }
+.zw-audit-item.ai-unedited { border-left-color: #d63638; }
+.zw-audit-item.ai-edited { border-left-color: #f56e28; }
+
+.zw-audit-item:hover {
+	background: #f9f9f9;
+}
+
+.zw-audit-item-content {
+	padding: 16px 20px;
+	position: relative;
+}
+
+/* Article Header */
+.zw-audit-article-header {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	margin-bottom: 8px;
+}
+
+.zw-audit-type-indicator {
+	flex-shrink: 0;
+	width: 24px;
+	height: 24px;
+	border-radius: 4px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 12px;
+	font-weight: 600;
+	color: #fff;
+	margin-top: 2px;
+}
+
+.zw-audit-type-indicator.human { background: #00a32a; }
+.zw-audit-type-indicator.ai-unedited { background: #d63638; }
+.zw-audit-type-indicator.ai-edited { background: #f56e28; }
+
+.zw-audit-article-info {
+	flex: 1;
+	min-width: 0;
+}
+
+.zw-audit-article-title {
+	font-size: 15px;
+	font-weight: 600;
+	color: #1d2327;
+	margin: 0 0 4px 0;
+	line-height: 1.3;
+}
+
+.zw-audit-article-title a {
+	color: inherit;
+	text-decoration: none;
+}
+
+.zw-audit-article-title a:hover {
+	color: #2271b1;
+}
 
 .zw-audit-article-meta {
 	font-size: 12px;
@@ -91,153 +122,164 @@
 	align-items: center;
 	gap: 12px;
 	flex-wrap: wrap;
-	margin-top: 2px;
 }
 
-.zw-audit-article-meta span {
+.zw-audit-meta-item {
 	display: flex;
 	align-items: center;
 	gap: 4px;
 }
 
-.zw-audit-article-meta .dashicons {
-	font-size: 16px;
-	width: 16px;
-	height: 16px;
-	opacity: 0.7;
-}
-
-.zw-audit-article-meta a {
-	color: #2271b1;
-	text-decoration: none;
-}
-
-.zw-audit-article-meta a:hover {
-	color: #135e96;
-	text-decoration: underline;
-}
-
-/* Status Badges - Native WordPress Style */
-.zw-audit-status-badge {
-	padding: 2px 8px;
-	border-radius: 10px;
-	font-size: 11px;
-	font-weight: 500;
-	white-space: nowrap;
+.zw-audit-actions {
 	flex-shrink: 0;
-	display: inline-block;
+	display: flex;
+	gap: 8px;
 }
 
-.zw-audit-status-badge.human {
-	background: #00a32a;
-	color: #fff;
+.zw-audit-action-btn {
+	padding: 4px 8px;
+	background: #f6f7f7;
+	border: 1px solid #c3c4c7;
+	border-radius: 3px;
+	font-size: 11px;
+	color: #50575e;
+	text-decoration: none;
+	transition: all 0.2s ease;
 }
 
-.zw-audit-status-badge.ai-unedited {
-	background: #d63638;
-	color: #fff;
+.zw-audit-action-btn:hover {
+	background: #fff;
+	color: #2271b1;
+	border-color: #2271b1;
 }
 
-.zw-audit-status-badge.ai-edited {
-	background: #dba617;
-	color: #fff;
-}
-
-/* Content Sections - WordPress Revision Style */
-.zw-audit-content-section {
+/* Content Preview */
+.zw-audit-content-preview {
 	margin-top: 12px;
+	max-height: 0;
+	overflow: hidden;
+	transition: max-height 0.3s ease, padding 0.3s ease;
+}
+
+.zw-audit-item.expanded .zw-audit-content-preview {
+	max-height: 400px;
 	padding-top: 12px;
 	border-top: 1px solid #f0f0f1;
-	background: #fafafa;
-	padding: 12px;
-	border-radius: 3px;
 }
 
-.zw-audit-content-section h4 {
+.zw-audit-content-block {
+	background: #f8f9fa;
+	border: 1px solid #e8eaed;
+	border-radius: 4px;
+	padding: 12px;
+	margin-bottom: 8px;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 	font-size: 13px;
+	line-height: 1.4;
+}
+
+.zw-audit-content-block.diff-before {
+	border-left: 3px solid #d63638;
+	background: #fef7f7;
+}
+
+.zw-audit-content-block.diff-after {
+	border-left: 3px solid #00a32a;
+	background: #f7fef7;
+}
+
+.zw-audit-content-header {
+	font-size: 12px;
 	font-weight: 600;
-	color: #1d2327;
-	margin: 0 0 8px 0;
+	color: #50575e;
+	margin-bottom: 6px;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+/* Diff highlighting */
+.zw-audit-content-block del {
+	background: #ffe6e6;
+	color: #d63638;
+	text-decoration: line-through;
+	padding: 1px 2px;
+	border-radius: 2px;
+}
+
+.zw-audit-content-block ins {
+	background: #e6ffe6;
+	color: #00a32a;
+	text-decoration: none;
+	padding: 1px 2px;
+	border-radius: 2px;
+}
+
+/* Expand/Collapse Toggle */
+.zw-audit-expand-toggle {
+	position: absolute;
+	right: 20px;
+	top: 16px;
+	width: 20px;
+	height: 20px;
+	border: none;
+	background: #f6f7f7;
+	border-radius: 3px;
+	cursor: pointer;
 	display: flex;
 	align-items: center;
-	gap: 6px;
+	justify-content: center;
+	font-size: 12px;
+	color: #646970;
+	transition: all 0.2s ease;
 }
 
-.zw-audit-content-section h4 .dashicons {
-	font-size: 16px;
-	width: 16px;
-	height: 16px;
-	color: #72aee6;
+.zw-audit-expand-toggle:hover {
+	background: #e8eaed;
+	color: #1d2327;
 }
 
-.zw-audit-content-box {
-	background: #f6f7f7;
-	border-left: 4px solid #72aee6;
-	padding: 8px 12px;
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
-	font-size: 13px;
-	line-height: 1.5;
-	max-height: 120px;
-	overflow-y: auto;
-	margin-bottom: 8px;
-	word-wrap: break-word;
+.zw-audit-item.expanded .zw-audit-expand-toggle {
+	background: #2271b1;
+	color: #fff;
 }
 
-
-/* Diff Styling - WordPress Revision Style */
-.zw-audit-diff-before {
-	background: #ffeef0;
-	border-left-color: #d63638;
+/* Empty State */
+.zw-audit-empty {
+	text-align: center;
+	padding: 60px 20px;
+	color: #646970;
 }
 
-.zw-audit-diff-after {
-	background: #f0f9f0;
-	border-left-color: #00a32a;
+.zw-audit-empty .dashicons {
+	font-size: 48px;
+	opacity: 0.3;
+	margin-bottom: 16px;
 }
 
-.zw-audit-content-box del {
-	background: #ffebee;
-	color: #d32f2f;
-	text-decoration: line-through;
-	padding: 2px 4px;
-	border-radius: 2px;
-	margin: 0 1px;
-}
-
-.zw-audit-content-box ins {
-	background: #e8f5e8;
-	color: #2e7d32;
-	text-decoration: none;
-	padding: 2px 4px;
-	border-radius: 2px;
-	margin: 0 1px;
-}
-
-
-/* Responsive Design */
+/* Responsive */
 @media (max-width: 782px) {
-	.zw-audit-stats {
+	.zw-audit-header {
 		flex-direction: column;
-		gap: 8px;
+		align-items: flex-start;
+		gap: 12px;
 	}
 	
-	.zw-audit-article {
-		padding: 10px 12px;
+	.zw-audit-stats-inline {
+		gap: 16px;
 	}
 	
 	.zw-audit-article-header {
 		flex-direction: column;
-		align-items: flex-start;
-		gap: 6px;
+		gap: 8px;
+	}
+	
+	.zw-audit-actions {
+		align-self: flex-start;
 	}
 	
 	.zw-audit-article-meta {
-		gap: 8px;
-		font-size: 11px;
-	}
-	
-	.zw-audit-content-box {
-		font-size: 12px;
-		max-height: 100px;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 4px;
 	}
 }

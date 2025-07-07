@@ -82,21 +82,36 @@ class TTVGPTAuditPage {
 			
 			<?php $this->render_navigation( $year, $month, $available_months, $status_filter ); ?>
 			
-			<?php $this->render_statistics_dashboard( $counts ); ?>
-			
-			<?php $this->render_articles_list( $categorized_posts ); ?>
+			<div class="zw-audit-overview">
+				<?php $this->render_audit_header( $counts ); ?>
+				<?php $this->render_audit_timeline( $categorized_posts ); ?>
+			</div>
 		</div>
+		
+		<script>
+		jQuery(document).ready(function($) {
+			$('.zw-audit-expand-toggle').on('click', function() {
+				$(this).closest('.zw-audit-item').toggleClass('expanded');
+				var icon = $(this).find('.dashicons');
+				if ($(this).closest('.zw-audit-item').hasClass('expanded')) {
+					icon.removeClass('dashicons-plus-alt2').addClass('dashicons-minus');
+				} else {
+					icon.removeClass('dashicons-minus').addClass('dashicons-plus-alt2');
+				}
+			});
+		});
+		</script>
 		<?php
 	}
 
 
 	/**
-	 * Render compact statistics summary
+	 * Render audit header with inline statistics
 	 *
 	 * @param array $counts Statistics counts
 	 * @return void
 	 */
-	private function render_statistics_dashboard( array $counts ): void {
+	private function render_audit_header( array $counts ): void {
 		$labels = array(
 			'fully_human_written'   => __( 'Handmatig', 'zw-ttvgpt' ),
 			'ai_written_not_edited' => __( 'AI Origineel', 'zw-ttvgpt' ),
@@ -112,30 +127,36 @@ class TTVGPTAuditPage {
 		$total_posts = array_sum( $counts );
 		?>
 		
-		<div class="zw-audit-stats">
-			<?php foreach ( $counts as $status => $count ) : ?>
-				<div class="zw-audit-stat-card <?php echo esc_attr( $css_classes[ $status ] ); ?>">
-					<span class="zw-audit-stat-number"><?php echo esc_html( (string) $count ); ?></span>
-					<?php echo esc_html( $labels[ $status ] ); ?>
-					<?php if ( $total_posts > 0 ) : ?>
-						(<?php echo esc_html( (string) round( ( $count / $total_posts ) * 100 ) ); ?>%)
-					<?php endif; ?>
-				</div>
-			<?php endforeach; ?>
+		<div class="zw-audit-header">
+			<div class="zw-audit-stats-inline">
+				<?php foreach ( $counts as $status => $count ) : ?>
+					<div class="zw-audit-stat">
+						<span class="zw-audit-stat-dot <?php echo esc_attr( $css_classes[ $status ] ); ?>"></span>
+						<span><?php echo esc_html( (string) $count ); ?> <?php echo esc_html( $labels[ $status ] ); ?></span>
+					</div>
+				<?php endforeach; ?>
+			</div>
+			<div class="zw-audit-total">
+				<?php
+				/* translators: %d: total number of posts */
+				printf( esc_html__( 'Totaal: %d artikelen', 'zw-ttvgpt' ), (int) $total_posts );
+				?>
+			</div>
 		</div>
 		<?php
 	}
 
 	/**
-	 * Render articles list in WordPress native style
+	 * Render timeline-style audit list
 	 *
 	 * @param array $categorized_posts Array of categorized posts
 	 * @return void
 	 */
-	private function render_articles_list( array $categorized_posts ): void {
+	private function render_audit_timeline( array $categorized_posts ): void {
 		if ( empty( $categorized_posts ) ) {
 			?>
-			<div class="notice notice-info">
+			<div class="zw-audit-empty">
+				<div class="dashicons dashicons-admin-post"></div>
 				<p><?php esc_html_e( 'Geen artikelen gevonden voor de geselecteerde filters.', 'zw-ttvgpt' ); ?></p>
 			</div>
 			<?php
@@ -143,9 +164,9 @@ class TTVGPTAuditPage {
 		}
 
 		$labels = array(
-			'fully_human_written'   => __( 'Handmatig', 'zw-ttvgpt' ),
-			'ai_written_not_edited' => __( 'AI Origineel', 'zw-ttvgpt' ),
-			'ai_written_edited'     => __( 'AI Bewerkt', 'zw-ttvgpt' ),
+			'fully_human_written'   => __( 'H', 'zw-ttvgpt' ),
+			'ai_written_not_edited' => __( 'AI', 'zw-ttvgpt' ),
+			'ai_written_edited'     => __( 'AI+', 'zw-ttvgpt' ),
 		);
 
 		$css_classes = array(
@@ -155,7 +176,7 @@ class TTVGPTAuditPage {
 		);
 		?>
 		
-		<div class="zw-audit-articles">
+		<div class="zw-audit-timeline">
 			<?php foreach ( $categorized_posts as $item ) : ?>
 				<?php
 				$post          = $item['post'];
@@ -169,71 +190,76 @@ class TTVGPTAuditPage {
 				$post_url    = get_edit_post_link( $post->ID );
 				?>
 				
-				<article class="zw-audit-article">
-					<div class="zw-audit-article-header">
-						<div>
-							<strong class="zw-audit-article-title">
-								<span class="zw-audit-status-badge <?php echo esc_attr( $css_classes[ $status ] ); ?>">
-									<?php echo esc_html( $labels[ $status ] ); ?>
-								</span>
-								<?php if ( $post_url ) : ?>
-									<a href="<?php echo esc_url( $post_url ); ?>" class="row-title">
-										<?php echo esc_html( get_the_title( $post->ID ) ); ?>
-									</a>
-								<?php else : ?>
-									<?php echo esc_html( get_the_title( $post->ID ) ); ?>
-								<?php endif; ?>
-							</strong>
+				<div class="zw-audit-item <?php echo esc_attr( $css_classes[ $status ] ); ?>">
+					<div class="zw-audit-item-content">
+						<button class="zw-audit-expand-toggle" type="button">
+							<span class="dashicons dashicons-plus-alt2"></span>
+						</button>
+						
+						<div class="zw-audit-article-header">
+							<div class="zw-audit-type-indicator <?php echo esc_attr( $css_classes[ $status ] ); ?>">
+								<?php echo esc_html( $labels[ $status ] ); ?>
+							</div>
 							
-							<div class="zw-audit-article-meta">
-								<?php
-								$post_date = get_the_date( 'j F Y', $post->ID );
-								echo esc_html( is_string( $post_date ) ? $post_date : '' );
-								?>
-								| <?php echo esc_html( $author ? $author->display_name : 'Onbekend' ); ?>
-								<?php if ( $last_editor && $last_editor->ID !== $post->post_author ) : ?>
-									| <?php esc_html_e( 'Bewerkt door', 'zw-ttvgpt' ); ?> <?php echo esc_html( $last_editor->display_name ); ?>
-								<?php endif; ?>
-								|
-								<a href="<?php echo esc_url( get_permalink( $post->ID ) ? get_permalink( $post->ID ) : '' ); ?>" target="_blank">
+							<div class="zw-audit-article-info">
+								<div class="zw-audit-article-title">
+									<?php if ( $post_url ) : ?>
+										<a href="<?php echo esc_url( $post_url ); ?>">
+											<?php echo esc_html( get_the_title( $post->ID ) ); ?>
+										</a>
+									<?php else : ?>
+										<?php echo esc_html( get_the_title( $post->ID ) ); ?>
+									<?php endif; ?>
+								</div>
+								
+								<div class="zw-audit-article-meta">
+									<span class="zw-audit-meta-item">
+										<?php
+										$post_date = get_the_date( 'j M Y', $post->ID );
+										echo esc_html( is_string( $post_date ) ? $post_date : '' );
+										?>
+									</span>
+									<span class="zw-audit-meta-item">
+										<?php echo esc_html( $author ? $author->display_name : 'Onbekend' ); ?>
+									</span>
+									<?php if ( $last_editor && $last_editor->ID !== $post->post_author ) : ?>
+										<span class="zw-audit-meta-item">
+											<?php esc_html_e( 'Bewerkt door', 'zw-ttvgpt' ); ?> <?php echo esc_html( $last_editor->display_name ); ?>
+										</span>
+									<?php endif; ?>
+								</div>
+							</div>
+							
+							<div class="zw-audit-actions">
+								<a href="<?php echo esc_url( get_permalink( $post->ID ) ? get_permalink( $post->ID ) : '' ); ?>" 
+									class="zw-audit-action-btn" target="_blank">
 									<?php esc_html_e( 'Bekijk', 'zw-ttvgpt' ); ?>
 								</a>
 							</div>
 						</div>
+						
+						<div class="zw-audit-content-preview">
+							<?php if ( 'ai_written_edited' === $status ) : ?>
+								<?php $diff = TTVGPTAuditHelper::generate_word_diff( $ai_content, $human_content ); ?>
+								
+								<div class="zw-audit-content-block diff-before">
+									<div class="zw-audit-content-header"><?php esc_html_e( 'AI Origineel', 'zw-ttvgpt' ); ?></div>
+									<?php echo wp_kses_post( $diff['before'] ); ?>
+								</div>
+								
+								<div class="zw-audit-content-block diff-after">
+									<div class="zw-audit-content-header"><?php esc_html_e( 'Na bewerking', 'zw-ttvgpt' ); ?></div>
+									<?php echo wp_kses_post( $diff['after'] ); ?>
+								</div>
+							<?php else : ?>
+								<div class="zw-audit-content-block">
+									<div class="zw-audit-content-header"><?php esc_html_e( 'Content', 'zw-ttvgpt' ); ?></div>
+									<?php echo esc_html( $human_content ); ?>
+								</div>
+							<?php endif; ?>
+						</div>
 					</div>
-					
-					<?php if ( 'ai_written_edited' === $status ) : ?>
-						<div class="zw-audit-content-section">
-							<?php $diff = TTVGPTAuditHelper::generate_word_diff( $ai_content, $human_content ); ?>
-							
-							<h4>
-								<span class="dashicons dashicons-superhero"></span>
-								<?php esc_html_e( 'Voor bewerking (AI origineel):', 'zw-ttvgpt' ); ?>
-							</h4>
-							<div class="zw-audit-content-box zw-audit-diff-before">
-								<?php echo wp_kses_post( $diff['before'] ); ?>
-							</div>
-							
-							<h4>
-								<span class="dashicons dashicons-edit"></span>
-								<?php esc_html_e( 'Na bewerking (Definitief):', 'zw-ttvgpt' ); ?>
-							</h4>
-							<div class="zw-audit-content-box zw-audit-diff-after">
-								<?php echo wp_kses_post( $diff['after'] ); ?>
-							</div>
-						</div>
-					<?php else : ?>
-						<div class="zw-audit-content-section">
-							<h4>
-								<span class="dashicons dashicons-media-text"></span>
-								<?php esc_html_e( 'Tekst TV Content:', 'zw-ttvgpt' ); ?>
-							</h4>
-							<div class="zw-audit-content-box">
-								<?php echo esc_html( $human_content ); ?>
-							</div>
-						</div>
-					<?php endif; ?>
-				</article>
+				</div>
 			<?php endforeach; ?>
 		</div>
 		<?php
