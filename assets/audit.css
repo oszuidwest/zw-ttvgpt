@@ -1,0 +1,341 @@
+/**
+ * ZW TTVGPT Audit Dashboard Styles
+ * Modern WordPress Admin Interface
+ */
+
+/* Statistics Dashboard */
+.zw-audit-stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+	gap: 20px;
+	margin: 20px 0 30px 0;
+}
+
+.zw-audit-stat-card {
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	padding: 20px;
+	text-align: center;
+	box-shadow: 0 1px 1px rgba(0,0,0,.04);
+	transition: all 0.2s ease-in-out;
+	position: relative;
+	overflow: hidden;
+}
+
+.zw-audit-stat-card:hover {
+	box-shadow: 0 2px 8px rgba(0,0,0,.1);
+	transform: translateY(-2px);
+}
+
+.zw-audit-stat-card::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 3px;
+	transition: opacity 0.2s ease-in-out;
+	opacity: 0;
+}
+
+.zw-audit-stat-card:hover::before {
+	opacity: 1;
+}
+
+.zw-audit-stat-card.human::before { background: #007cba; }
+.zw-audit-stat-card.ai-unedited::before { background: #d63638; }
+.zw-audit-stat-card.ai-edited::before { background: #dba617; }
+
+.zw-audit-stat-number {
+	font-size: 32px;
+	font-weight: 600;
+	line-height: 1;
+	margin-bottom: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+}
+
+.zw-audit-stat-label {
+	font-size: 14px;
+	color: #646970;
+	font-weight: 500;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	flex-direction: column;
+}
+
+.zw-audit-stat-card.human .zw-audit-stat-number { color: #007cba; }
+.zw-audit-stat-card.ai-unedited .zw-audit-stat-number { color: #d63638; }
+.zw-audit-stat-card.ai-edited .zw-audit-stat-number { color: #dba617; }
+
+/* Articles List */
+.zw-audit-articles {
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	box-shadow: 0 1px 1px rgba(0,0,0,.04);
+	overflow: hidden;
+}
+
+.zw-audit-article {
+	border-bottom: 1px solid #f0f0f1;
+	padding: 20px;
+	transition: background-color 0.1s ease-in-out;
+}
+
+.zw-audit-article:last-child {
+	border-bottom: none;
+}
+
+.zw-audit-article:hover {
+	background-color: #f9f9f9;
+}
+
+.zw-audit-article-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	margin-bottom: 12px;
+	gap: 15px;
+}
+
+.zw-audit-article-title {
+	font-size: 16px;
+	font-weight: 600;
+	color: #1d2327;
+	margin: 0 0 4px 0;
+	line-height: 1.3;
+}
+
+.zw-audit-article-title a {
+	text-decoration: none;
+	color: #2271b1;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.zw-audit-article-title a:hover {
+	color: #135e96;
+}
+
+.zw-audit-article-title a::after {
+	content: '\f504';
+	font-family: dashicons;
+	font-size: 14px;
+	opacity: 0.6;
+}
+
+.zw-audit-article-meta {
+	font-size: 13px;
+	color: #646970;
+	display: flex;
+	align-items: center;
+	gap: 15px;
+	flex-wrap: wrap;
+}
+
+.zw-audit-article-meta span {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.zw-audit-article-meta .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	opacity: 0.7;
+}
+
+.zw-audit-article-meta a {
+	color: #2271b1;
+	text-decoration: none;
+}
+
+.zw-audit-article-meta a:hover {
+	color: #135e96;
+	text-decoration: underline;
+}
+
+/* Status Badges */
+.zw-audit-status-badge {
+	padding: 6px 10px;
+	border-radius: 3px;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+.zw-audit-status-badge.human {
+	background: #e7f5ff;
+	color: #0073aa;
+	border: 1px solid #007cba;
+}
+
+.zw-audit-status-badge.ai-unedited {
+	background: #ffebee;
+	color: #d63638;
+	border: 1px solid #d63638;
+}
+
+.zw-audit-status-badge.ai-edited {
+	background: #fff8e1;
+	color: #b26900;
+	border: 1px solid #dba617;
+}
+
+/* Content Sections */
+.zw-audit-content-section {
+	margin-top: 16px;
+}
+
+.zw-audit-content-section h4 {
+	font-size: 14px;
+	font-weight: 600;
+	color: #1d2327;
+	margin: 0 0 8px 0;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.zw-audit-content-section h4 .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	opacity: 0.7;
+}
+
+.zw-audit-content-box {
+	background: #f9f9f9;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	padding: 12px;
+	font-family: Consolas, Monaco, 'Courier New', monospace;
+	font-size: 13px;
+	line-height: 1.5;
+	max-height: 200px;
+	overflow-y: auto;
+	margin-bottom: 12px;
+	word-wrap: break-word;
+}
+
+.zw-audit-content-box::-webkit-scrollbar {
+	width: 8px;
+}
+
+.zw-audit-content-box::-webkit-scrollbar-track {
+	background: #f1f1f1;
+	border-radius: 4px;
+}
+
+.zw-audit-content-box::-webkit-scrollbar-thumb {
+	background: #c1c1c1;
+	border-radius: 4px;
+}
+
+.zw-audit-content-box::-webkit-scrollbar-thumb:hover {
+	background: #a8a8a8;
+}
+
+/* Diff Styling */
+.zw-audit-diff-before {
+	background: #ffeef0;
+	border-color: #ffb3ba;
+}
+
+.zw-audit-diff-after {
+	background: #f0f9f0;
+	border-color: #b3dfb3;
+}
+
+.zw-audit-content-box del {
+	background: #ffebee;
+	color: #d32f2f;
+	text-decoration: line-through;
+	padding: 2px 4px;
+	border-radius: 2px;
+	margin: 0 1px;
+}
+
+.zw-audit-content-box ins {
+	background: #e8f5e8;
+	color: #2e7d32;
+	text-decoration: none;
+	padding: 2px 4px;
+	border-radius: 2px;
+	margin: 0 1px;
+}
+
+/* Empty State */
+.zw-audit-empty-state {
+	text-align: center;
+	padding: 40px 20px;
+	color: #646970;
+}
+
+.zw-audit-empty-state .dashicons {
+	font-size: 48px;
+	width: 48px;
+	height: 48px;
+	opacity: 0.3;
+	margin-bottom: 16px;
+}
+
+/* Responsive Design */
+@media (max-width: 782px) {
+	.zw-audit-stats {
+		grid-template-columns: 1fr;
+		gap: 15px;
+		margin: 15px 0 20px 0;
+	}
+	
+	.zw-audit-stat-card {
+		padding: 15px;
+	}
+	
+	.zw-audit-stat-number {
+		font-size: 28px;
+	}
+	
+	.zw-audit-article {
+		padding: 15px;
+	}
+	
+	.zw-audit-article-header {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 10px;
+	}
+	
+	.zw-audit-article-meta {
+		gap: 10px;
+		font-size: 12px;
+	}
+	
+	.zw-audit-content-box {
+		font-size: 12px;
+		max-height: 150px;
+	}
+}
+
+@media (max-width: 480px) {
+	.zw-audit-article-meta {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 6px;
+	}
+	
+	.zw-audit-stat-number {
+		font-size: 24px;
+	}
+}
