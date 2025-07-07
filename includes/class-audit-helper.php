@@ -84,7 +84,7 @@ class TTVGPTAuditHelper {
 		global $wpdb;
 
 		// REVOLUTIONARY: Direct GROUP BY month buckets in SQL - eliminates PHP processing!
-		// Let database handle month grouping efficiently using post_date index
+		// Shows ALL years for complete audit history access
 		$results = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT YEAR(p.post_date) as year, MONTH(p.post_date) as month
@@ -634,6 +634,10 @@ class TTVGPTAuditHelper {
 
 	/**
 	 * Strategy 3: Two-step query with IN clause for maximum MySQL optimization
+	 *
+	 * @param int $year Target year
+	 * @param int $month Target month
+	 * @return array Array of WP_Post objects
 	 */
 	private static function get_posts_strategy_3( int $year, int $month ): array {
 		global $wpdb;
@@ -689,6 +693,10 @@ class TTVGPTAuditHelper {
 
 	/**
 	 * Strategy 4: Optimized LEFT JOIN with NULL checks for better performance
+	 *
+	 * @param int $year Target year
+	 * @param int $month Target month
+	 * @return array Array of WP_Post objects
 	 */
 	private static function get_posts_strategy_4( int $year, int $month ): array {
 		global $wpdb;
@@ -731,6 +739,10 @@ class TTVGPTAuditHelper {
 
 	/**
 	 * Strategy 5: Minimal query with post-processing (WordPress way)
+	 *
+	 * @param int $year Target year
+	 * @param int $month Target month
+	 * @return array Array of WP_Post objects
 	 */
 	private static function get_posts_strategy_5( int $year, int $month ): array {
 		global $wpdb;
@@ -780,6 +792,9 @@ class TTVGPTAuditHelper {
 
 	/**
 	 * Convert raw database results to WP_Post objects
+	 *
+	 * @param array $posts Array of post data from database
+	 * @return array Array of WP_Post objects
 	 */
 	private static function convert_to_wp_posts( array $posts ): array {
 		if ( empty( $posts ) ) {
