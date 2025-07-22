@@ -54,15 +54,9 @@ class TTVGPTFineTuningExport {
 	 * @return array Array containing training data and metadata
 	 */
 	public function generate_training_data( array $filters = array() ): array {
-		error_log( 'ZW_TTVGPT: generate_training_data called with filters: ' . wp_json_encode( $filters ) );
-		$this->logger->log( 'Starting DPO training data generation with filters: ' . wp_json_encode( $filters ) );
-
-		error_log( 'ZW_TTVGPT: Calling get_suitable_posts' );
 		$posts = $this->get_suitable_posts( $filters );
-		error_log( 'ZW_TTVGPT: get_suitable_posts returned ' . count( $posts ) . ' posts' );
 
 		if ( empty( $posts ) ) {
-			$this->logger->log( 'No suitable posts found for training data generation' );
 			return array(
 				'success' => false,
 				'message' => __( 'Geen geschikte berichten gevonden voor training data', 'zw-ttvgpt' ),
@@ -108,11 +102,8 @@ class TTVGPTFineTuningExport {
 				}
 			} catch ( Exception $e ) {
 				++$stats['errors'];
-				$this->logger->log( 'Error processing post ' . $post->ID . ': ' . $e->getMessage() );
 			}
 		}
-
-		$this->logger->log( 'Training data generation completed. Stats: ' . wp_json_encode( $stats ) );
 
 		return array(
 			'success' => true,
@@ -134,43 +125,25 @@ class TTVGPTFineTuningExport {
 	 * @return array Array of post objects
 	 */
 	private function get_suitable_posts( array $filters ): array {
-		error_log( 'ZW_TTVGPT: get_suitable_posts called' );
-		
-		try {
-			global $wpdb;
-			
-			if ( ! $wpdb ) {
-				error_log( 'ZW_TTVGPT: $wpdb not available' );
-				throw new Exception( 'WordPress database connection not available' );
-			}
+		global $wpdb;
 
-			$date_filter  = '';
-			$limit_clause = '';
+		$date_filter  = '';
+		$limit_clause = '';
 
-			// Apply date filter
-			if ( ! empty( $filters['start_date'] ) && ! empty( $filters['end_date'] ) ) {
-				$start_date  = sanitize_text_field( $filters['start_date'] );
-				$end_date    = sanitize_text_field( $filters['end_date'] );
-				error_log( 'ZW_TTVGPT: Preparing date filter: ' . $start_date . ' to ' . $end_date );
-				
-				$date_filter = $wpdb->prepare(
-					'AND p.post_date >= %s AND p.post_date <= %s',
-					$start_date . ' 00:00:00',
-					$end_date . ' 23:59:59'
-				);
-				error_log( 'ZW_TTVGPT: Date filter prepared: ' . $date_filter );
-			}
+		// Apply date filter
+		if ( ! empty( $filters['start_date'] ) && ! empty( $filters['end_date'] ) ) {
+			$start_date  = sanitize_text_field( $filters['start_date'] );
+			$end_date    = sanitize_text_field( $filters['end_date'] );
+			$date_filter = $wpdb->prepare(
+				'AND p.post_date >= %s AND p.post_date <= %s',
+				$start_date . ' 00:00:00',
+				$end_date . ' 23:59:59'
+			);
+		}
 
-			// Apply limit
-			if ( ! empty( $filters['limit'] ) && is_numeric( $filters['limit'] ) ) {
-				$limit_value = absint( $filters['limit'] );
-				error_log( 'ZW_TTVGPT: Preparing limit: ' . $limit_value );
-				$limit_clause = $wpdb->prepare( 'LIMIT %d', $limit_value );
-				error_log( 'ZW_TTVGPT: Limit clause prepared: ' . $limit_clause );
-			}
-		} catch ( Exception $e ) {
-			error_log( 'ZW_TTVGPT: Exception in filter preparation: ' . $e->getMessage() );
-			return array();
+		// Apply limit
+		if ( ! empty( $filters['limit'] ) && is_numeric( $filters['limit'] ) ) {
+			$limit_clause = $wpdb->prepare( 'LIMIT %d', absint( $filters['limit'] ) );
 		}
 
 		// Query for posts with AI content that has been edited by humans
@@ -195,17 +168,12 @@ class TTVGPTFineTuningExport {
 			{$limit_clause}
 		";
 
-		error_log( 'ZW_TTVGPT: Executing query: ' . $query );
 		$results = $wpdb->get_results( $query );
-		error_log( 'ZW_TTVGPT: Query executed, results: ' . ( is_array( $results ) ? count( $results ) : 'null/false' ) );
 
 		if ( $wpdb->last_error ) {
-			error_log( 'ZW_TTVGPT: Database error: ' . $wpdb->last_error );
-			$this->logger->log( 'Database error in get_suitable_posts: ' . $wpdb->last_error );
 			return array();
 		}
 
-		$this->logger->log( 'Found ' . count( $results ) . ' suitable posts for training data' );
 		return $results;
 	}
 
@@ -218,7 +186,6 @@ class TTVGPTFineTuningExport {
 	private function create_training_entry( object $post ): ?array {
 		// Validate content
 		if ( empty( $post->ai_content ) || empty( $post->human_content ) ) {
-			$this->logger->log( 'Skipping post ' . $post->ID . ': missing AI or human content' );
 			return null;
 		}
 
@@ -228,7 +195,6 @@ class TTVGPTFineTuningExport {
 
 		// Double-check that content is actually different
 		if ( $ai_clean === $human_clean ) {
-			$this->logger->log( 'Skipping post ' . $post->ID . ': AI and human content are identical after cleaning' );
 			return null;
 		}
 
@@ -317,8 +283,6 @@ class TTVGPTFineTuningExport {
 
 			$file_size = filesize( $file_path );
 
-			$this->logger->log( "JSONL export completed: {$filename} ({$line_count} lines, {$file_size} bytes)" );
-
 			return array(
 				'success'    => true,
 				// translators: %1$s: filename, %2$d: number of records
@@ -335,8 +299,6 @@ class TTVGPTFineTuningExport {
 			);
 
 		} catch ( Exception $e ) {
-			$this->logger->log( 'JSONL export error: ' . $e->getMessage() );
-
 			return array(
 				'success' => false,
 				'message' => __( 'Fout bij exporteren van training data: ', 'zw-ttvgpt' ) . $e->getMessage(),

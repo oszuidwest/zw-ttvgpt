@@ -311,9 +311,7 @@ class TTVGPTFineTuningPage {
 	 * @return void
 	 */
 	public function handle_export_ajax(): void {
-		error_log( 'ZW_TTVGPT: Export AJAX handler called - simplified version' );
-		
-		// Simple security checks
+		// Security checks
 		if ( ! check_ajax_referer( 'zw_ttvgpt_fine_tuning_nonce', 'nonce', false ) ) {
 			wp_send_json_error( array( 'message' => __( 'Beveiligingscontrole mislukt', 'zw-ttvgpt' ) ), 403 );
 		}
@@ -334,43 +332,69 @@ class TTVGPTFineTuningPage {
 			$filters['limit'] = absint( $_POST['limit'] );
 		}
 
-		error_log( 'ZW_TTVGPT: Simple export starting with filters: ' . wp_json_encode( $filters ) );
+		try {
+			// Use export object but with fallback if it fails
+			$result = $this->export->generate_training_data( $filters );
+			
+			if ( ! $result['success'] ) {
+				wp_send_json_error( array( 'message' => $result['message'] ) );
+			}
 
-		// Direct database query instead of using complex objects
-		$training_data = $this->simple_get_training_data( $filters );
-		
-		if ( empty( $training_data ) ) {
-			wp_send_json_error( array( 'message' => 'Geen training data gevonden' ) );
+			// Export to JSONL file
+			$export_result = $this->export->export_to_jsonl( $result['data'] );
+			
+			if ( ! $export_result['success'] ) {
+				wp_send_json_error( array( 'message' => $export_result['message'] ) );
+			}
+
+			wp_send_json_success(
+				array(
+					'message'   => $result['message'] . ' ' . $export_result['message'],
+					'stats'     => $result['stats'],
+					'file_info' => array(
+						'filename'   => $export_result['filename'],
+						'file_url'   => $export_result['file_url'],
+						'line_count' => $export_result['line_count'],
+						'file_size'  => $export_result['file_size'],
+					),
+				)
+			);
+
+		} catch ( Exception $e ) {
+			// Fallback to simple implementation if export object fails
+			$training_data = $this->simple_get_training_data( $filters );
+			
+			if ( empty( $training_data ) ) {
+				wp_send_json_error( array( 'message' => 'Geen training data gevonden' ) );
+			}
+
+			// Simple JSONL export
+			$filename = 'dpo_training_data_' . gmdate( 'Y-m-d_H-i-s' ) . '.jsonl';
+			$upload_dir = wp_upload_dir();
+			$file_path = $upload_dir['path'] . '/' . $filename;
+
+			$file_handle = fopen( $file_path, 'w' );
+			if ( ! $file_handle ) {
+				wp_send_json_error( array( 'message' => 'Kan bestand niet maken' ) );
+			}
+
+			$line_count = 0;
+			foreach ( $training_data as $entry ) {
+				fwrite( $file_handle, wp_json_encode( $entry, JSON_UNESCAPED_UNICODE ) . "\n" );
+				$line_count++;
+			}
+			fclose( $file_handle );
+
+			wp_send_json_success( array(
+				'message' => "Training data geëxporteerd: {$line_count} records",
+				'file_info' => array(
+					'filename' => $filename,
+					'file_url' => $upload_dir['url'] . '/' . $filename,
+					'line_count' => $line_count,
+					'file_size' => filesize( $file_path ),
+				),
+			) );
 		}
-
-		// Simple JSONL export
-		$filename = 'dpo_training_data_' . gmdate( 'Y-m-d_H-i-s' ) . '.jsonl';
-		$upload_dir = wp_upload_dir();
-		$file_path = $upload_dir['path'] . '/' . $filename;
-
-		$file_handle = fopen( $file_path, 'w' );
-		if ( ! $file_handle ) {
-			wp_send_json_error( array( 'message' => 'Kan bestand niet maken' ) );
-		}
-
-		$line_count = 0;
-		foreach ( $training_data as $entry ) {
-			fwrite( $file_handle, wp_json_encode( $entry, JSON_UNESCAPED_UNICODE ) . "\n" );
-			$line_count++;
-		}
-		fclose( $file_handle );
-
-		error_log( 'ZW_TTVGPT: Simple export completed: ' . $line_count . ' lines' );
-
-		wp_send_json_success( array(
-			'message' => "Training data geëxporteerd: {$line_count} records",
-			'file_info' => array(
-				'filename' => $filename,
-				'file_url' => $upload_dir['url'] . '/' . $filename,
-				'line_count' => $line_count,
-				'file_size' => filesize( $file_path ),
-			),
-		) );
 	}
 
 	/**
