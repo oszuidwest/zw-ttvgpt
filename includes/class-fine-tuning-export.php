@@ -54,9 +54,12 @@ class TTVGPTFineTuningExport {
 	 * @return array Array containing training data and metadata
 	 */
 	public function generate_training_data( array $filters = array() ): array {
+		error_log( 'ZW_TTVGPT: generate_training_data called with filters: ' . wp_json_encode( $filters ) );
 		$this->logger->log( 'Starting DPO training data generation with filters: ' . wp_json_encode( $filters ) );
 
+		error_log( 'ZW_TTVGPT: Calling get_suitable_posts' );
 		$posts = $this->get_suitable_posts( $filters );
+		error_log( 'ZW_TTVGPT: get_suitable_posts returned ' . count( $posts ) . ' posts' );
 
 		if ( empty( $posts ) ) {
 			$this->logger->log( 'No suitable posts found for training data generation' );
@@ -131,6 +134,7 @@ class TTVGPTFineTuningExport {
 	 * @return array Array of post objects
 	 */
 	private function get_suitable_posts( array $filters ): array {
+		error_log( 'ZW_TTVGPT: get_suitable_posts called' );
 		global $wpdb;
 
 		$date_filter  = '';
@@ -174,9 +178,12 @@ class TTVGPTFineTuningExport {
 			{$limit_clause}
 		";
 
+		error_log( 'ZW_TTVGPT: Executing query: ' . $query );
 		$results = $wpdb->get_results( $query );
+		error_log( 'ZW_TTVGPT: Query executed, results: ' . ( is_array( $results ) ? count( $results ) : 'null/false' ) );
 
 		if ( $wpdb->last_error ) {
+			error_log( 'ZW_TTVGPT: Database error: ' . $wpdb->last_error );
 			$this->logger->log( 'Database error in get_suitable_posts: ' . $wpdb->last_error );
 			return array();
 		}
