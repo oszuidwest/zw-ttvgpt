@@ -332,153 +332,32 @@ class TTVGPTFineTuningPage {
 			$filters['limit'] = absint( $_POST['limit'] );
 		}
 
-		try {
-			// Use export object but with fallback if it fails
-			$result = $this->export->generate_training_data( $filters );
-			
-			if ( ! $result['success'] ) {
-				wp_send_json_error( array( 'message' => $result['message'] ) );
-			}
+		// Generate training data
+		$result = $this->export->generate_training_data( $filters );
+		
+		if ( ! $result['success'] ) {
+			wp_send_json_error( array( 'message' => $result['message'] ) );
+		}
 
-			// Export to JSONL file
-			$export_result = $this->export->export_to_jsonl( $result['data'] );
-			
-			if ( ! $export_result['success'] ) {
-				wp_send_json_error( array( 'message' => $export_result['message'] ) );
-			}
+		// Export to JSONL file
+		$export_result = $this->export->export_to_jsonl( $result['data'] );
+		
+		if ( ! $export_result['success'] ) {
+			wp_send_json_error( array( 'message' => $export_result['message'] ) );
+		}
 
-			wp_send_json_success(
-				array(
-					'message'   => $result['message'] . ' ' . $export_result['message'],
-					'stats'     => $result['stats'],
-					'file_info' => array(
-						'filename'   => $export_result['filename'],
-						'file_url'   => $export_result['file_url'],
-						'line_count' => $export_result['line_count'],
-						'file_size'  => $export_result['file_size'],
-					),
-				)
-			);
-
-		} catch ( Exception $e ) {
-			// Fallback to simple implementation if export object fails
-			$training_data = $this->simple_get_training_data( $filters );
-			
-			if ( empty( $training_data ) ) {
-				wp_send_json_error( array( 'message' => 'Geen training data gevonden' ) );
-			}
-
-			// Simple JSONL export
-			$filename = 'dpo_training_data_' . gmdate( 'Y-m-d_H-i-s' ) . '.jsonl';
-			$upload_dir = wp_upload_dir();
-			$file_path = $upload_dir['path'] . '/' . $filename;
-
-			$file_handle = fopen( $file_path, 'w' );
-			if ( ! $file_handle ) {
-				wp_send_json_error( array( 'message' => 'Kan bestand niet maken' ) );
-			}
-
-			$line_count = 0;
-			foreach ( $training_data as $entry ) {
-				fwrite( $file_handle, wp_json_encode( $entry, JSON_UNESCAPED_UNICODE ) . "\n" );
-				$line_count++;
-			}
-			fclose( $file_handle );
-
-			wp_send_json_success( array(
-				'message' => "Training data geëxporteerd: {$line_count} records",
+		wp_send_json_success(
+			array(
+				'message'   => $result['message'] . ' ' . $export_result['message'],
+				'stats'     => $result['stats'],
 				'file_info' => array(
-					'filename' => $filename,
-					'file_url' => $upload_dir['url'] . '/' . $filename,
-					'line_count' => $line_count,
-					'file_size' => filesize( $file_path ),
+					'filename'   => $export_result['filename'],
+					'file_url'   => $export_result['file_url'],
+					'line_count' => $export_result['line_count'],
+					'file_size'  => $export_result['file_size'],
 				),
-			) );
-		}
+			)
+		);
 	}
 
-	/**
-	 * Simple training data retrieval without complex objects
-	 *
-	 * @param array $filters Filters for data retrieval
-	 * @return array Training data entries
-	 */
-	private function simple_get_training_data( array $filters ): array {
-		global $wpdb;
-
-		$limit_clause = '';
-		if ( ! empty( $filters['limit'] ) && is_numeric( $filters['limit'] ) ) {
-			$limit_clause = $wpdb->prepare( 'LIMIT %d', absint( $filters['limit'] ) );
-		}
-
-		$query = "
-			SELECT p.ID, p.post_content,
-			       pm1.meta_value as ai_content,
-			       pm2.meta_value as human_content
-			FROM {$wpdb->posts} p
-			INNER JOIN {$wpdb->postmeta} pm1 ON p.ID = pm1.post_id 
-				AND pm1.meta_key = 'post_kabelkrant_content_gpt'
-			INNER JOIN {$wpdb->postmeta} pm2 ON p.ID = pm2.post_id 
-				AND pm2.meta_key = 'post_kabelkrant_content'
-			WHERE p.post_status = 'publish'
-			  AND p.post_type = 'post'
-			  AND pm1.meta_value != ''
-			  AND pm1.meta_value != pm2.meta_value
-			ORDER BY p.post_date DESC
-			{$limit_clause}
-		";
-
-		$results = $wpdb->get_results( $query );
-		if ( ! $results ) {
-			return array();
-		}
-
-		$training_data = array();
-		foreach ( $results as $post ) {
-			if ( empty( $post->ai_content ) || empty( $post->human_content ) ) {
-				continue;
-			}
-
-			// Clean content
-			$cleaned_content = wp_strip_all_tags( $post->post_content );
-			$word_limit = 150; // Default word limit
-
-			// Create DPO entry
-			$training_entry = array(
-				'input' => array(
-					'messages' => array(
-						array(
-							'role' => 'system',
-							'content' => sprintf(
-								'Please summarize the following news article in a clear and concise manner that is easy to understand for a general audience. Use short sentences. Do it in Dutch. Ignore everything in the article that\'s not a Dutch word. Parse HTML. Never output English words. Use maximal %d words.',
-								$word_limit
-							),
-						),
-						array(
-							'role' => 'user',
-							'content' => $cleaned_content,
-						),
-					),
-					'tools' => array(),
-					'parallel_tool_calls' => true,
-				),
-				'preferred_output' => array(
-					array(
-						'role' => 'assistant',
-						'content' => trim( $post->human_content ),
-					),
-				),
-				'non_preferred_output' => array(
-					array(
-						'role' => 'assistant',
-						'content' => trim( $post->ai_content ),
-					),
-				),
-			);
-
-			$training_data[] = $training_entry;
-		}
-
-		return $training_data;
-	}
 }
