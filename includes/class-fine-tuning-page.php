@@ -311,55 +311,76 @@ class TTVGPTFineTuningPage {
 	 * @return void
 	 */
 	public function handle_export_ajax(): void {
-		if ( ! check_ajax_referer( 'zw_ttvgpt_fine_tuning_nonce', 'nonce', false ) ) {
-			wp_send_json_error( array( 'message' => __( 'Beveiligingscontrole mislukt', 'zw-ttvgpt' ) ), 403 );
+		// Debug: Log that we're in the handler
+		error_log( 'ZW_TTVGPT: Export AJAX handler called' );
+		
+		try {
+			if ( ! check_ajax_referer( 'zw_ttvgpt_fine_tuning_nonce', 'nonce', false ) ) {
+				error_log( 'ZW_TTVGPT: Nonce check failed' );
+				wp_send_json_error( array( 'message' => __( 'Beveiligingscontrole mislukt', 'zw-ttvgpt' ) ), 403 );
+			}
+
+			if ( ! current_user_can( TTVGPTConstants::REQUIRED_CAPABILITY ) ) {
+				error_log( 'ZW_TTVGPT: Capability check failed' );
+				wp_send_json_error( array( 'message' => __( 'Onvoldoende rechten', 'zw-ttvgpt' ) ), 403 );
+			}
+		} catch ( Exception $e ) {
+			error_log( 'ZW_TTVGPT: Exception in handler: ' . $e->getMessage() );
+			wp_send_json_error( array( 'message' => 'Debug error: ' . $e->getMessage() ) );
 		}
 
-		if ( ! current_user_can( TTVGPTConstants::REQUIRED_CAPABILITY ) ) {
-			wp_send_json_error( array( 'message' => __( 'Onvoldoende rechten', 'zw-ttvgpt' ) ), 403 );
+		try {
+			$filters = array();
+
+			if ( ! empty( $_POST['start_date'] ) ) {
+				$filters['start_date'] = sanitize_text_field( $_POST['start_date'] );
+			}
+
+			if ( ! empty( $_POST['end_date'] ) ) {
+				$filters['end_date'] = sanitize_text_field( $_POST['end_date'] );
+			}
+
+			if ( ! empty( $_POST['limit'] ) ) {
+				$filters['limit'] = absint( $_POST['limit'] );
+			}
+
+			error_log( 'ZW_TTVGPT: Filters prepared: ' . wp_json_encode( $filters ) );
+			$this->logger->log( 'Export training data requested with filters: ' . wp_json_encode( $filters ) );
+
+			// Generate training data
+			error_log( 'ZW_TTVGPT: Starting generate_training_data' );
+			$result = $this->export->generate_training_data( $filters );
+
+			if ( ! $result['success'] ) {
+				error_log( 'ZW_TTVGPT: Generate training data failed: ' . $result['message'] );
+				wp_send_json_error( array( 'message' => $result['message'] ) );
+			}
+
+			// Export to JSONL file
+			error_log( 'ZW_TTVGPT: Starting export_to_jsonl' );
+			$export_result = $this->export->export_to_jsonl( $result['data'] );
+
+			if ( ! $export_result['success'] ) {
+				error_log( 'ZW_TTVGPT: Export to JSONL failed: ' . $export_result['message'] );
+				wp_send_json_error( array( 'message' => $export_result['message'] ) );
+			}
+
+			error_log( 'ZW_TTVGPT: Export successful' );
+			wp_send_json_success(
+				array(
+					'message'   => $result['message'] . ' ' . $export_result['message'],
+					'stats'     => $result['stats'],
+					'file_info' => array(
+						'filename'   => $export_result['filename'],
+						'file_url'   => $export_result['file_url'],
+						'line_count' => $export_result['line_count'],
+						'file_size'  => $export_result['file_size'],
+					),
+				)
+			);
+		} catch ( Exception $e ) {
+			error_log( 'ZW_TTVGPT: Fatal error in export: ' . $e->getMessage() );
+			wp_send_json_error( array( 'message' => 'Fatal error: ' . $e->getMessage() ) );
 		}
-
-		$filters = array();
-
-		if ( ! empty( $_POST['start_date'] ) ) {
-			$filters['start_date'] = sanitize_text_field( $_POST['start_date'] );
-		}
-
-		if ( ! empty( $_POST['end_date'] ) ) {
-			$filters['end_date'] = sanitize_text_field( $_POST['end_date'] );
-		}
-
-		if ( ! empty( $_POST['limit'] ) ) {
-			$filters['limit'] = absint( $_POST['limit'] );
-		}
-
-		$this->logger->log( 'Export training data requested with filters: ' . wp_json_encode( $filters ) );
-
-		// Generate training data
-		$result = $this->export->generate_training_data( $filters );
-
-		if ( ! $result['success'] ) {
-			wp_send_json_error( array( 'message' => $result['message'] ) );
-		}
-
-		// Export to JSONL file
-		$export_result = $this->export->export_to_jsonl( $result['data'] );
-
-		if ( ! $export_result['success'] ) {
-			wp_send_json_error( array( 'message' => $export_result['message'] ) );
-		}
-
-		wp_send_json_success(
-			array(
-				'message'   => $result['message'] . ' ' . $export_result['message'],
-				'stats'     => $result['stats'],
-				'file_info' => array(
-					'filename'   => $export_result['filename'],
-					'file_url'   => $export_result['file_url'],
-					'line_count' => $export_result['line_count'],
-					'file_size'  => $export_result['file_size'],
-				),
-			)
-		);
 	}
 }
