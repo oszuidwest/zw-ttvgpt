@@ -21,12 +21,21 @@ class TTVGPTAdminMenu {
 	private TTVGPTLogger $logger;
 
 	/**
+	 * Fine tuning page instance
+	 *
+	 * @var TTVGPTFineTuningPage
+	 */
+	private TTVGPTFineTuningPage $fine_tuning_page;
+
+	/**
 	 * Initialize admin menu and register WordPress hooks
 	 *
-	 * @param TTVGPTLogger $logger Logger instance for debugging
+	 * @param TTVGPTLogger         $logger            Logger instance for debugging
+	 * @param TTVGPTFineTuningPage $fine_tuning_page  Fine tuning page instance
 	 */
-	public function __construct( TTVGPTLogger $logger ) {
-		$this->logger = $logger;
+	public function __construct( TTVGPTLogger $logger, TTVGPTFineTuningPage $fine_tuning_page ) {
+		$this->logger           = $logger;
+		$this->fine_tuning_page = $fine_tuning_page;
 
 		add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
@@ -53,6 +62,14 @@ class TTVGPTAdminMenu {
 			'zw-ttvgpt-audit',
 			array( new TTVGPTAuditPage(), 'render' )
 		);
+
+		add_management_page(
+			__( 'Training Data Export', 'zw-ttvgpt' ),
+			__( 'Training Data', 'zw-ttvgpt' ),
+			TTVGPTConstants::REQUIRED_CAPABILITY,
+			'zw-ttvgpt-fine-tuning',
+			array( $this->fine_tuning_page, 'render' )
+		);
 	}
 
 	/**
@@ -67,6 +84,13 @@ class TTVGPTAdminMenu {
 		// Enqueue audit CSS on audit page
 		if ( 'tools_page_zw-ttvgpt-audit' === $hook ) {
 			wp_enqueue_style( 'zw-ttvgpt-audit', ZW_TTVGPT_URL . 'assets/audit.css', array(), $version );
+			return;
+		}
+
+		// Enqueue fine tuning page assets
+		if ( 'tools_page_zw-ttvgpt-fine-tuning' === $hook ) {
+			wp_enqueue_style( 'zw-ttvgpt-fine-tuning', ZW_TTVGPT_URL . 'assets/admin.css', array(), $version );
+			wp_enqueue_script( 'jquery' );
 			return;
 		}
 

@@ -74,7 +74,7 @@ class TTVGPTSummaryGenerator {
 			wp_send_json_error( __( 'Ongeldige gegevens', 'zw-ttvgpt' ), 400 );
 		}
 
-		$clean_content = wp_strip_all_tags( $content );
+		$clean_content = $this->api_handler->prepare_content( $content );
 		$word_count    = str_word_count( $clean_content );
 
 		if ( $word_count < TTVGPTConstants::MIN_WORD_COUNT ) {

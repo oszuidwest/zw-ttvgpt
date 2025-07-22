@@ -69,6 +69,46 @@ class TTVGPTApiHandler {
 	}
 
 	/**
+	 * Generate system prompt for summarization
+	 *
+	 * @param int $word_limit Maximum words for summary
+	 * @return string System prompt text
+	 */
+	public function get_system_prompt( int $word_limit ): string {
+		return sprintf( 'Please summarize the following news article in a clear and concise manner that is easy to understand for a general audience. Use short sentences. Do it in Dutch. Ignore everything in the article that\'s not a Dutch word. Parse HTML. Never output English words. Use maximal %d words.', $word_limit );
+	}
+
+	/**
+	 * Prepare content for API request (same cleaning as used in production)
+	 *
+	 * @param string $content Raw content to clean
+	 * @return string Cleaned content ready for API
+	 */
+	public function prepare_content( string $content ): string {
+		return wp_strip_all_tags( $content );
+	}
+
+	/**
+	 * Build messages array for OpenAI API (exact format used in production)
+	 *
+	 * @param string $content    Cleaned content to summarize
+	 * @param int    $word_limit Maximum words for summary
+	 * @return array Messages array for OpenAI API
+	 */
+	public function build_messages( string $content, int $word_limit ): array {
+		return array(
+			array(
+				'role'    => 'system',
+				'content' => $this->get_system_prompt( $word_limit ),
+			),
+			array(
+				'role'    => 'user',
+				'content' => $content,
+			),
+		);
+	}
+
+	/**
 	 * Generate text summary using OpenAI Chat Completions API
 	 *
 	 * @param string $content    Content to summarize
@@ -95,16 +135,7 @@ class TTVGPTApiHandler {
 		$request_body = wp_json_encode(
 			array(
 				'model'       => $this->model,
-				'messages'    => array(
-					array(
-						'role'    => 'system',
-						'content' => sprintf( 'Summarize in Dutch, max %d words, short sentences, ignore non-Dutch content.', $word_limit ),
-					),
-					array(
-						'role'    => 'user',
-						'content' => $content,
-					),
-				),
+				'messages'    => $this->build_messages( $content, $word_limit ),
 				'max_tokens'  => self::MAX_TOKENS,
 				'temperature' => self::TEMPERATURE,
 			)

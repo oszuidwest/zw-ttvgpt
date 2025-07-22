@@ -16,10 +16,11 @@ class TTVGPTAdmin {
 	/**
 	 * Initialize admin interface
 	 *
-	 * @param TTVGPTLogger $logger Logger instance for debugging
+	 * @param TTVGPTLogger         $logger            Logger instance for debugging
+	 * @param TTVGPTFineTuningPage $fine_tuning_page  Fine tuning page instance
 	 */
-	public function __construct( TTVGPTLogger $logger ) {
+	public function __construct( TTVGPTLogger $logger, TTVGPTFineTuningPage $fine_tuning_page ) {
 		// Initialize admin components
-		new TTVGPTAdminMenu( $logger );
+		new TTVGPTAdminMenu( $logger, $fine_tuning_page );
 	}
 }

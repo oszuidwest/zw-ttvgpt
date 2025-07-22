@@ -31,6 +31,8 @@ require_once ZW_TTVGPT_DIR . 'includes/class-helper.php';
 require_once ZW_TTVGPT_DIR . 'includes/class-logger.php';
 require_once ZW_TTVGPT_DIR . 'includes/class-api-handler.php';
 require_once ZW_TTVGPT_DIR . 'includes/class-summary-generator.php';
+require_once ZW_TTVGPT_DIR . 'includes/class-fine-tuning-export.php';
+require_once ZW_TTVGPT_DIR . 'includes/class-fine-tuning-page.php';
 require_once ZW_TTVGPT_DIR . 'includes/class-admin-menu.php';
 require_once ZW_TTVGPT_DIR . 'includes/class-settings-page.php';
 require_once ZW_TTVGPT_DIR . 'includes/class-audit-page.php';
@@ -59,7 +61,18 @@ function zw_ttvgpt_init() {
 	);
 
 	if ( is_admin() ) {
-		new ZW_TTVGPT_Core\TTVGPTAdmin( $logger );
+		// Initialize fine tuning export
+		$fine_tuning_export = new ZW_TTVGPT_Core\TTVGPTFineTuningExport(
+			$logger,
+			$api_handler,
+			ZW_TTVGPT_Core\TTVGPTSettingsManager::get_word_limit()
+		);
+		$fine_tuning_page   = new ZW_TTVGPT_Core\TTVGPTFineTuningPage(
+			$fine_tuning_export,
+			$logger
+		);
+
+		new ZW_TTVGPT_Core\TTVGPTAdmin( $logger, $fine_tuning_page );
 	}
 }
 add_action( 'init', 'zw_ttvgpt_init' );
