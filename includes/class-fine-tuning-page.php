@@ -345,13 +345,17 @@ class TTVGPTFineTuningPage {
 			}
 
 			error_log( 'ZW_TTVGPT: Filters prepared: ' . wp_json_encode( $filters ) );
+			error_log( 'ZW_TTVGPT: About to call logger->log' );
 			$this->logger->log( 'Export training data requested with filters: ' . wp_json_encode( $filters ) );
+			error_log( 'ZW_TTVGPT: Logger called successfully' );
 
 			// Verify export object exists
+			error_log( 'ZW_TTVGPT: About to check export object' );
 			if ( ! $this->export ) {
 				error_log( 'ZW_TTVGPT: Export object is null' );
 				wp_send_json_error( array( 'message' => 'Export functionality not available' ) );
 			}
+			error_log( 'ZW_TTVGPT: Export object exists, getting class name' );
 			
 			error_log( 'ZW_TTVGPT: Export object class: ' . get_class( $this->export ) );
 
