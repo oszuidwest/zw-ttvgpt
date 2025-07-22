@@ -135,25 +135,42 @@ class TTVGPTFineTuningExport {
 	 */
 	private function get_suitable_posts( array $filters ): array {
 		error_log( 'ZW_TTVGPT: get_suitable_posts called' );
-		global $wpdb;
+		
+		try {
+			global $wpdb;
+			
+			if ( ! $wpdb ) {
+				error_log( 'ZW_TTVGPT: $wpdb not available' );
+				throw new Exception( 'WordPress database connection not available' );
+			}
 
-		$date_filter  = '';
-		$limit_clause = '';
+			$date_filter  = '';
+			$limit_clause = '';
 
-		// Apply date filter
-		if ( ! empty( $filters['start_date'] ) && ! empty( $filters['end_date'] ) ) {
-			$start_date  = sanitize_text_field( $filters['start_date'] );
-			$end_date    = sanitize_text_field( $filters['end_date'] );
-			$date_filter = $wpdb->prepare(
-				'AND p.post_date >= %s AND p.post_date <= %s',
-				$start_date . ' 00:00:00',
-				$end_date . ' 23:59:59'
-			);
-		}
+			// Apply date filter
+			if ( ! empty( $filters['start_date'] ) && ! empty( $filters['end_date'] ) ) {
+				$start_date  = sanitize_text_field( $filters['start_date'] );
+				$end_date    = sanitize_text_field( $filters['end_date'] );
+				error_log( 'ZW_TTVGPT: Preparing date filter: ' . $start_date . ' to ' . $end_date );
+				
+				$date_filter = $wpdb->prepare(
+					'AND p.post_date >= %s AND p.post_date <= %s',
+					$start_date . ' 00:00:00',
+					$end_date . ' 23:59:59'
+				);
+				error_log( 'ZW_TTVGPT: Date filter prepared: ' . $date_filter );
+			}
 
-		// Apply limit
-		if ( ! empty( $filters['limit'] ) && is_numeric( $filters['limit'] ) ) {
-			$limit_clause = $wpdb->prepare( 'LIMIT %d', absint( $filters['limit'] ) );
+			// Apply limit
+			if ( ! empty( $filters['limit'] ) && is_numeric( $filters['limit'] ) ) {
+				$limit_value = absint( $filters['limit'] );
+				error_log( 'ZW_TTVGPT: Preparing limit: ' . $limit_value );
+				$limit_clause = $wpdb->prepare( 'LIMIT %d', $limit_value );
+				error_log( 'ZW_TTVGPT: Limit clause prepared: ' . $limit_clause );
+			}
+		} catch ( Exception $e ) {
+			error_log( 'ZW_TTVGPT: Exception in filter preparation: ' . $e->getMessage() );
+			return array();
 		}
 
 		// Query for posts with AI content that has been edited by humans

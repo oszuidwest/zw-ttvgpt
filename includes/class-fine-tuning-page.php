@@ -347,9 +347,26 @@ class TTVGPTFineTuningPage {
 			error_log( 'ZW_TTVGPT: Filters prepared: ' . wp_json_encode( $filters ) );
 			$this->logger->log( 'Export training data requested with filters: ' . wp_json_encode( $filters ) );
 
+			// Verify export object exists
+			if ( ! $this->export ) {
+				error_log( 'ZW_TTVGPT: Export object is null' );
+				wp_send_json_error( array( 'message' => 'Export functionality not available' ) );
+			}
+			
+			error_log( 'ZW_TTVGPT: Export object class: ' . get_class( $this->export ) );
+
 			// Generate training data
 			error_log( 'ZW_TTVGPT: Starting generate_training_data' );
-			$result = $this->export->generate_training_data( $filters );
+			try {
+				$result = $this->export->generate_training_data( $filters );
+				error_log( 'ZW_TTVGPT: generate_training_data completed successfully' );
+			} catch ( Error $e ) {
+				error_log( 'ZW_TTVGPT: Fatal error in generate_training_data: ' . $e->getMessage() );
+				wp_send_json_error( array( 'message' => 'Fatal error: ' . $e->getMessage() ) );
+			} catch ( Exception $e ) {
+				error_log( 'ZW_TTVGPT: Exception in generate_training_data: ' . $e->getMessage() );
+				wp_send_json_error( array( 'message' => 'Exception: ' . $e->getMessage() ) );
+			}
 
 			if ( ! $result['success'] ) {
 				error_log( 'ZW_TTVGPT: Generate training data failed: ' . $result['message'] );
