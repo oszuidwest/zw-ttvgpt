@@ -311,97 +311,150 @@ class TTVGPTFineTuningPage {
 	 * @return void
 	 */
 	public function handle_export_ajax(): void {
-		// Debug: Log that we're in the handler
-		error_log( 'ZW_TTVGPT: Export AJAX handler called' );
+		error_log( 'ZW_TTVGPT: Export AJAX handler called - simplified version' );
 		
-		try {
-			if ( ! check_ajax_referer( 'zw_ttvgpt_fine_tuning_nonce', 'nonce', false ) ) {
-				error_log( 'ZW_TTVGPT: Nonce check failed' );
-				wp_send_json_error( array( 'message' => __( 'Beveiligingscontrole mislukt', 'zw-ttvgpt' ) ), 403 );
-			}
-
-			if ( ! current_user_can( TTVGPTConstants::REQUIRED_CAPABILITY ) ) {
-				error_log( 'ZW_TTVGPT: Capability check failed' );
-				wp_send_json_error( array( 'message' => __( 'Onvoldoende rechten', 'zw-ttvgpt' ) ), 403 );
-			}
-		} catch ( Exception $e ) {
-			error_log( 'ZW_TTVGPT: Exception in handler: ' . $e->getMessage() );
-			wp_send_json_error( array( 'message' => 'Debug error: ' . $e->getMessage() ) );
+		// Simple security checks
+		if ( ! check_ajax_referer( 'zw_ttvgpt_fine_tuning_nonce', 'nonce', false ) ) {
+			wp_send_json_error( array( 'message' => __( 'Beveiligingscontrole mislukt', 'zw-ttvgpt' ) ), 403 );
 		}
 
-		try {
-			$filters = array();
+		if ( ! current_user_can( TTVGPTConstants::REQUIRED_CAPABILITY ) ) {
+			wp_send_json_error( array( 'message' => __( 'Onvoldoende rechten', 'zw-ttvgpt' ) ), 403 );
+		}
 
-			if ( ! empty( $_POST['start_date'] ) ) {
-				$filters['start_date'] = sanitize_text_field( $_POST['start_date'] );
+		// Get filters
+		$filters = array();
+		if ( ! empty( $_POST['start_date'] ) ) {
+			$filters['start_date'] = sanitize_text_field( $_POST['start_date'] );
+		}
+		if ( ! empty( $_POST['end_date'] ) ) {
+			$filters['end_date'] = sanitize_text_field( $_POST['end_date'] );
+		}
+		if ( ! empty( $_POST['limit'] ) ) {
+			$filters['limit'] = absint( $_POST['limit'] );
+		}
+
+		error_log( 'ZW_TTVGPT: Simple export starting with filters: ' . wp_json_encode( $filters ) );
+
+		// Direct database query instead of using complex objects
+		$training_data = $this->simple_get_training_data( $filters );
+		
+		if ( empty( $training_data ) ) {
+			wp_send_json_error( array( 'message' => 'Geen training data gevonden' ) );
+		}
+
+		// Simple JSONL export
+		$filename = 'dpo_training_data_' . gmdate( 'Y-m-d_H-i-s' ) . '.jsonl';
+		$upload_dir = wp_upload_dir();
+		$file_path = $upload_dir['path'] . '/' . $filename;
+
+		$file_handle = fopen( $file_path, 'w' );
+		if ( ! $file_handle ) {
+			wp_send_json_error( array( 'message' => 'Kan bestand niet maken' ) );
+		}
+
+		$line_count = 0;
+		foreach ( $training_data as $entry ) {
+			fwrite( $file_handle, wp_json_encode( $entry, JSON_UNESCAPED_UNICODE ) . "\n" );
+			$line_count++;
+		}
+		fclose( $file_handle );
+
+		error_log( 'ZW_TTVGPT: Simple export completed: ' . $line_count . ' lines' );
+
+		wp_send_json_success( array(
+			'message' => "Training data geëxporteerd: {$line_count} records",
+			'file_info' => array(
+				'filename' => $filename,
+				'file_url' => $upload_dir['url'] . '/' . $filename,
+				'line_count' => $line_count,
+				'file_size' => filesize( $file_path ),
+			),
+		) );
+	}
+
+	/**
+	 * Simple training data retrieval without complex objects
+	 *
+	 * @param array $filters Filters for data retrieval
+	 * @return array Training data entries
+	 */
+	private function simple_get_training_data( array $filters ): array {
+		global $wpdb;
+
+		$limit_clause = '';
+		if ( ! empty( $filters['limit'] ) && is_numeric( $filters['limit'] ) ) {
+			$limit_clause = $wpdb->prepare( 'LIMIT %d', absint( $filters['limit'] ) );
+		}
+
+		$query = "
+			SELECT p.ID, p.post_content,
+			       pm1.meta_value as ai_content,
+			       pm2.meta_value as human_content
+			FROM {$wpdb->posts} p
+			INNER JOIN {$wpdb->postmeta} pm1 ON p.ID = pm1.post_id 
+				AND pm1.meta_key = 'post_kabelkrant_content_gpt'
+			INNER JOIN {$wpdb->postmeta} pm2 ON p.ID = pm2.post_id 
+				AND pm2.meta_key = 'post_kabelkrant_content'
+			WHERE p.post_status = 'publish'
+			  AND p.post_type = 'post'
+			  AND pm1.meta_value != ''
+			  AND pm1.meta_value != pm2.meta_value
+			ORDER BY p.post_date DESC
+			{$limit_clause}
+		";
+
+		$results = $wpdb->get_results( $query );
+		if ( ! $results ) {
+			return array();
+		}
+
+		$training_data = array();
+		foreach ( $results as $post ) {
+			if ( empty( $post->ai_content ) || empty( $post->human_content ) ) {
+				continue;
 			}
 
-			if ( ! empty( $_POST['end_date'] ) ) {
-				$filters['end_date'] = sanitize_text_field( $_POST['end_date'] );
-			}
+			// Clean content
+			$cleaned_content = wp_strip_all_tags( $post->post_content );
+			$word_limit = 150; // Default word limit
 
-			if ( ! empty( $_POST['limit'] ) ) {
-				$filters['limit'] = absint( $_POST['limit'] );
-			}
-
-			error_log( 'ZW_TTVGPT: Filters prepared: ' . wp_json_encode( $filters ) );
-			error_log( 'ZW_TTVGPT: About to call logger->log' );
-			$this->logger->log( 'Export training data requested with filters: ' . wp_json_encode( $filters ) );
-			error_log( 'ZW_TTVGPT: Logger called successfully' );
-
-			// Verify export object exists
-			error_log( 'ZW_TTVGPT: About to check export object' );
-			if ( ! $this->export ) {
-				error_log( 'ZW_TTVGPT: Export object is null' );
-				wp_send_json_error( array( 'message' => 'Export functionality not available' ) );
-			}
-			error_log( 'ZW_TTVGPT: Export object exists, getting class name' );
-			
-			error_log( 'ZW_TTVGPT: Export object class: ' . get_class( $this->export ) );
-
-			// Generate training data
-			error_log( 'ZW_TTVGPT: Starting generate_training_data' );
-			try {
-				$result = $this->export->generate_training_data( $filters );
-				error_log( 'ZW_TTVGPT: generate_training_data completed successfully' );
-			} catch ( Error $e ) {
-				error_log( 'ZW_TTVGPT: Fatal error in generate_training_data: ' . $e->getMessage() );
-				wp_send_json_error( array( 'message' => 'Fatal error: ' . $e->getMessage() ) );
-			} catch ( Exception $e ) {
-				error_log( 'ZW_TTVGPT: Exception in generate_training_data: ' . $e->getMessage() );
-				wp_send_json_error( array( 'message' => 'Exception: ' . $e->getMessage() ) );
-			}
-
-			if ( ! $result['success'] ) {
-				error_log( 'ZW_TTVGPT: Generate training data failed: ' . $result['message'] );
-				wp_send_json_error( array( 'message' => $result['message'] ) );
-			}
-
-			// Export to JSONL file
-			error_log( 'ZW_TTVGPT: Starting export_to_jsonl' );
-			$export_result = $this->export->export_to_jsonl( $result['data'] );
-
-			if ( ! $export_result['success'] ) {
-				error_log( 'ZW_TTVGPT: Export to JSONL failed: ' . $export_result['message'] );
-				wp_send_json_error( array( 'message' => $export_result['message'] ) );
-			}
-
-			error_log( 'ZW_TTVGPT: Export successful' );
-			wp_send_json_success(
-				array(
-					'message'   => $result['message'] . ' ' . $export_result['message'],
-					'stats'     => $result['stats'],
-					'file_info' => array(
-						'filename'   => $export_result['filename'],
-						'file_url'   => $export_result['file_url'],
-						'line_count' => $export_result['line_count'],
-						'file_size'  => $export_result['file_size'],
+			// Create DPO entry
+			$training_entry = array(
+				'input' => array(
+					'messages' => array(
+						array(
+							'role' => 'system',
+							'content' => sprintf(
+								'Please summarize the following news article in a clear and concise manner that is easy to understand for a general audience. Use short sentences. Do it in Dutch. Ignore everything in the article that\'s not a Dutch word. Parse HTML. Never output English words. Use maximal %d words.',
+								$word_limit
+							),
+						),
+						array(
+							'role' => 'user',
+							'content' => $cleaned_content,
+						),
 					),
-				)
+					'tools' => array(),
+					'parallel_tool_calls' => true,
+				),
+				'preferred_output' => array(
+					array(
+						'role' => 'assistant',
+						'content' => trim( $post->human_content ),
+					),
+				),
+				'non_preferred_output' => array(
+					array(
+						'role' => 'assistant',
+						'content' => trim( $post->ai_content ),
+					),
+				),
 			);
-		} catch ( Exception $e ) {
-			error_log( 'ZW_TTVGPT: Fatal error in export: ' . $e->getMessage() );
-			wp_send_json_error( array( 'message' => 'Fatal error: ' . $e->getMessage() ) );
+
+			$training_data[] = $training_entry;
 		}
+
+		return $training_data;
 	}
 }
