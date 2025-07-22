@@ -54,9 +54,12 @@ class TTVGPTFineTuningExport {
 	 * @return array Array containing training data and metadata
 	 */
 	public function generate_training_data( array $filters = array() ): array {
+		$this->logger->debug( 'Starting DPO training data generation with filters: ' . wp_json_encode( $filters ) );
+
 		$posts = $this->get_suitable_posts( $filters );
 
 		if ( empty( $posts ) ) {
+			$this->logger->debug( 'No suitable posts found for training data generation' );
 			return array(
 				'success' => false,
 				'message' => __( 'Geen geschikte berichten gevonden voor training data', 'zw-ttvgpt' ),
@@ -102,8 +105,11 @@ class TTVGPTFineTuningExport {
 				}
 			} catch ( Exception $e ) {
 				++$stats['errors'];
+				$this->logger->debug( 'Error processing post ' . $post->ID . ': ' . $e->getMessage() );
 			}
 		}
+
+		$this->logger->debug( 'Training data generation completed. Stats: ' . wp_json_encode( $stats ) );
 
 		return array(
 			'success' => true,
@@ -147,17 +153,21 @@ class TTVGPTFineTuningExport {
 		}
 
 		// Query for posts with AI content that has been edited by humans
+		$ai_field = TTVGPTConstants::ACF_FIELD_AI_CONTENT;
+		$human_field = TTVGPTConstants::ACF_FIELD_HUMAN_CONTENT;
+		$kabelkrant_field = TTVGPTConstants::ACF_FIELD_IN_KABELKRANT;
+		
 		$query = "
 			SELECT p.ID, p.post_title, p.post_content, p.post_date,
 			       pm1.meta_value as ai_content,
 			       pm2.meta_value as human_content
 			FROM {$wpdb->posts} p
 			INNER JOIN {$wpdb->postmeta} pm1 ON p.ID = pm1.post_id 
-				AND pm1.meta_key = 'post_kabelkrant_content_gpt'
+				AND pm1.meta_key = '{$ai_field}'
 			INNER JOIN {$wpdb->postmeta} pm2 ON p.ID = pm2.post_id 
-				AND pm2.meta_key = 'post_kabelkrant_content'
+				AND pm2.meta_key = '{$human_field}'
 			INNER JOIN {$wpdb->postmeta} pm3 ON p.ID = pm3.post_id 
-				AND pm3.meta_key = 'post_in_kabelkrant' 
+				AND pm3.meta_key = '{$kabelkrant_field}' 
 				AND pm3.meta_value = '1'
 			WHERE p.post_status = 'publish'
 			  AND p.post_type = 'post'
@@ -171,9 +181,11 @@ class TTVGPTFineTuningExport {
 		$results = $wpdb->get_results( $query );
 
 		if ( $wpdb->last_error ) {
+			$this->logger->error( 'Database error in get_suitable_posts: ' . $wpdb->last_error );
 			return array();
 		}
 
+		$this->logger->debug( 'Found ' . count( $results ) . ' suitable posts for training data' );
 		return $results;
 	}
 
@@ -186,15 +198,17 @@ class TTVGPTFineTuningExport {
 	private function create_training_entry( object $post ): ?array {
 		// Validate content
 		if ( empty( $post->ai_content ) || empty( $post->human_content ) ) {
+			$this->logger->debug( 'Skipping post ' . $post->ID . ': missing AI or human content' );
 			return null;
 		}
 
-		// Strip region prefixes for comparison (from audit helper logic)
-		$ai_clean    = $this->strip_region_prefix( $post->ai_content );
-		$human_clean = $this->strip_region_prefix( $post->human_content );
+		// Strip region prefixes for comparison (reuse audit helper logic)
+		$ai_clean    = TTVGPTAuditHelper::strip_region_prefix( $post->ai_content );
+		$human_clean = TTVGPTAuditHelper::strip_region_prefix( $post->human_content );
 
 		// Double-check that content is actually different
 		if ( $ai_clean === $human_clean ) {
+			$this->logger->debug( 'Skipping post ' . $post->ID . ': AI and human content are identical after cleaning' );
 			return null;
 		}
 
@@ -226,15 +240,6 @@ class TTVGPTFineTuningExport {
 	}
 
 
-	/**
-	 * Strip region prefix from content (copied from audit helper)
-	 *
-	 * @param string $content Content to clean
-	 * @return string Cleaned content
-	 */
-	private function strip_region_prefix( string $content ): string {
-		return preg_replace( '/^[A-Z\s]+:\s*/', '', trim( $content ) );
-	}
 
 	/**
 	 * Export training data as JSONL file
@@ -283,6 +288,8 @@ class TTVGPTFineTuningExport {
 
 			$file_size = filesize( $file_path );
 
+			$this->logger->debug( "JSONL export completed: {$filename} ({$line_count} lines, {$file_size} bytes)" );
+
 			return array(
 				'success'    => true,
 				// translators: %1$s: filename, %2$d: number of records
@@ -299,6 +306,8 @@ class TTVGPTFineTuningExport {
 			);
 
 		} catch ( Exception $e ) {
+			$this->logger->error( 'JSONL export error: ' . $e->getMessage() );
+
 			return array(
 				'success' => false,
 				'message' => __( 'Fout bij exporteren van training data: ', 'zw-ttvgpt' ) . $e->getMessage(),

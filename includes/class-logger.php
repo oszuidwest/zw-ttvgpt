@@ -62,6 +62,7 @@ class TTVGPTLogger {
 		$this->write_log( 'ERROR', $message, $this->debug_mode ? $context : array() );
 	}
 
+
 	/**
 	 * Write formatted log entry to PHP error log
 	 *

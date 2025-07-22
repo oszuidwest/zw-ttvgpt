@@ -13,6 +13,7 @@ namespace ZW_TTVGPT_Core;
  * Admin interface for managing OpenAI fine tuning jobs and training data export
  */
 class TTVGPTFineTuningPage {
+	use TTVGPTAjaxSecurity;
 	/**
 	 * Fine tuning export instance
 	 *
@@ -47,9 +48,7 @@ class TTVGPTFineTuningPage {
 	 * @return void
 	 */
 	public function render(): void {
-		if ( ! current_user_can( TTVGPTConstants::REQUIRED_CAPABILITY ) ) {
-			wp_die( esc_html__( 'Je hebt geen toestemming om deze pagina te bekijken.', 'zw-ttvgpt' ) );
-		}
+		$this->validate_page_access( TTVGPTConstants::REQUIRED_CAPABILITY );
 
 		?>
 		<div class="wrap">
@@ -312,13 +311,7 @@ class TTVGPTFineTuningPage {
 	 */
 	public function handle_export_ajax(): void {
 		// Security checks
-		if ( ! check_ajax_referer( 'zw_ttvgpt_fine_tuning_nonce', 'nonce', false ) ) {
-			wp_send_json_error( array( 'message' => __( 'Beveiligingscontrole mislukt', 'zw-ttvgpt' ) ), 403 );
-		}
-
-		if ( ! current_user_can( TTVGPTConstants::REQUIRED_CAPABILITY ) ) {
-			wp_send_json_error( array( 'message' => __( 'Onvoldoende rechten', 'zw-ttvgpt' ) ), 403 );
-		}
+		$this->validate_ajax_request( 'zw_ttvgpt_fine_tuning_nonce', TTVGPTConstants::REQUIRED_CAPABILITY );
 
 		// Get filters
 		$filters = array();
@@ -333,6 +326,7 @@ class TTVGPTFineTuningPage {
 		}
 
 		// Generate training data
+		$this->logger->debug( 'Export training data requested with filters: ' . wp_json_encode( $filters ) );
 		$result = $this->export->generate_training_data( $filters );
 		
 		if ( ! $result['success'] ) {

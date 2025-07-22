@@ -13,6 +13,7 @@ namespace ZW_TTVGPT_Core;
  * Core functionality for generating summaries
  */
 class TTVGPTSummaryGenerator {
+	use TTVGPTAjaxSecurity;
 	/**
 	 * API handler instance
 	 *
@@ -55,16 +56,13 @@ class TTVGPTSummaryGenerator {
 	 * @return void
 	 */
 	public function handle_ajax_request(): void {
-		if ( ! check_ajax_referer( 'zw_ttvgpt_nonce', 'nonce', false ) ) {
-			wp_send_json_error( __( 'Beveiligingscontrole mislukt', 'zw-ttvgpt' ), 403 );
-		}
-
-		if ( ! current_user_can( TTVGPTConstants::EDIT_CAPABILITY ) ) {
-			wp_send_json_error( __( 'Onvoldoende rechten', 'zw-ttvgpt' ), 403 );
-		}
+		$this->validate_ajax_request( 'zw_ttvgpt_nonce', TTVGPTConstants::EDIT_CAPABILITY );
 
 		if ( empty( TTVGPTSettingsManager::get_api_key() ) ) {
-			wp_send_json_error( __( 'API key niet geconfigureerd. Ga naar Instellingen > ZW Tekst TV GPT om een API key in te stellen.', 'zw-ttvgpt' ), 400 );
+			wp_send_json_error( 
+				array( 'message' => __( 'API key niet geconfigureerd. Ga naar Instellingen > ZW Tekst TV GPT om een API key in te stellen.', 'zw-ttvgpt' ) ), 
+				400 
+			);
 		}
 
 		$content = isset( $_POST['content'] ) ? wp_unslash( $_POST['content'] ) : '';

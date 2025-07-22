@@ -28,6 +28,7 @@ require_once ZW_TTVGPT_DIR . 'includes/class-api-error-handler.php';
 require_once ZW_TTVGPT_DIR . 'includes/class-rate-limiter.php';
 require_once ZW_TTVGPT_DIR . 'includes/class-audit-helper.php';
 require_once ZW_TTVGPT_DIR . 'includes/class-helper.php';
+require_once ZW_TTVGPT_DIR . 'includes/trait-ajax-security.php';
 require_once ZW_TTVGPT_DIR . 'includes/class-logger.php';
 require_once ZW_TTVGPT_DIR . 'includes/class-api-handler.php';
 require_once ZW_TTVGPT_DIR . 'includes/class-summary-generator.php';
