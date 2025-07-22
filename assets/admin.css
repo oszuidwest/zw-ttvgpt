@@ -96,3 +96,56 @@
 .acf-field-66ad2a3105371 {
     display: none !important;
 }
+
+/* Fine-tuning export page styles */
+.export-summary {
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 20px;
+    margin: 15px 0;
+}
+
+.export-summary h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #1d2327;
+}
+
+.file-download {
+    text-decoration: none;
+    font-weight: 600;
+    color: #2271b1;
+}
+
+.file-download:hover {
+    color: #135e96;
+}
+
+.file-size {
+    color: #646970;
+    font-size: 0.9em;
+}
+
+.export-stats {
+    margin: 15px 0;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+}
+
+.export-stats summary {
+    padding: 10px 15px;
+    background: #f6f7f7;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.export-stats summary:hover {
+    background: #f0f0f1;
+}
+
+.export-stats .export-stats {
+    margin: 0;
+    border: none;
+    background: white;
+}

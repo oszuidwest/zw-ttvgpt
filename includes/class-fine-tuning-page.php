@@ -96,17 +96,6 @@ class TTVGPTFineTuningPage {
 			max-width: 300px;
 		}
 		
-		.export-stats, .job-details {
-			background: #f8f9fa;
-			border-left: 4px solid #007cba;
-			padding: 15px;
-			margin: 15px 0;
-		}
-		
-		.export-stats h4, .job-details h4 {
-			margin-top: 0;
-		}
-		
 		.stats-grid {
 			display: grid;
 			grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -134,43 +123,9 @@ class TTVGPTFineTuningPage {
 			text-transform: uppercase;
 		}
 		
-		.jobs-table {
-			width: 100%;
-			border-collapse: collapse;
-		}
-		
-		.jobs-table th,
-		.jobs-table td {
-			padding: 10px;
-			text-align: left;
-			border-bottom: 1px solid #e0e0e0;
-		}
-		
-		.jobs-table th {
-			background: #f8f9fa;
-			font-weight: 600;
-		}
-		
-		.status-badge {
-			padding: 3px 8px;
-			border-radius: 12px;
-			font-size: 11px;
-			font-weight: 600;
-			text-transform: uppercase;
-		}
-		
-		.status-running { background: #ffeaa7; color: #d63031; }
-		.status-succeeded { background: #00b894; color: white; }
-		.status-failed { background: #e17055; color: white; }
-		.status-cancelled { background: #636e72; color: white; }
-		
 		.loading {
 			opacity: 0.6;
 			pointer-events: none;
-		}
-		
-		.notice {
-			margin: 15px 0;
 		}
 		</style>
 
@@ -194,9 +149,18 @@ class TTVGPTFineTuningPage {
 				$.post(ajaxurl, formData, function(response) {
 					if (response.success) {
 						$('#export-results').html(
-							'<div class="notice notice-success"><p>' + response.data.message + '</p></div>' +
-							(response.data.stats ? generateStatsHTML(response.data.stats) : '') +
-							(response.data.file_info ? generateFileInfoHTML(response.data.file_info) : '')
+							'<div class="notice notice-success">' +
+								'<p>✓ Export succesvol voltooid</p>' +
+							'</div>' +
+							'<div class="export-summary">' +
+								'<h4>Export Details</h4>' +
+								'<p><strong>' + response.data.file_info.line_count + ' training records</strong> geëxporteerd</p>' +
+								'<p><a href="' + response.data.file_info.file_url + '" target="_blank" class="file-download">📄 ' + response.data.file_info.filename + '</a> <span class="file-size">(' + Math.round(response.data.file_info.file_size / 1024) + ' KB)</span></p>' +
+							'</div>' +
+							'<details class="export-stats">' +
+								'<summary>Technische details</summary>' +
+								generateStatsHTML(response.data.stats) +
+							'</details>'
 						);
 					} else {
 						$('#export-results').html(
