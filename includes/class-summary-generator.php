@@ -14,6 +14,7 @@ namespace ZW_TTVGPT_Core;
  */
 class TTVGPTSummaryGenerator {
 	use TTVGPTAjaxSecurity;
+
 	/**
 	 * API handler instance
 	 *
@@ -59,9 +60,9 @@ class TTVGPTSummaryGenerator {
 		$this->validate_ajax_request( 'zw_ttvgpt_nonce', TTVGPTConstants::EDIT_CAPABILITY );
 
 		if ( empty( TTVGPTSettingsManager::get_api_key() ) ) {
-			wp_send_json_error( 
-				array( 'message' => __( 'API key niet geconfigureerd. Ga naar Instellingen > ZW Tekst TV GPT om een API key in te stellen.', 'zw-ttvgpt' ) ), 
-				400 
+			wp_send_json_error(
+				array( 'message' => __( 'API key niet geconfigureerd. Ga naar Instellingen > ZW Tekst TV GPT om een API key in te stellen.', 'zw-ttvgpt' ) ),
+				400
 			);
 		}
 

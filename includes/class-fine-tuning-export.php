@@ -153,10 +153,10 @@ class TTVGPTFineTuningExport {
 		}
 
 		// Query for posts with AI content that has been edited by humans
-		$ai_field = TTVGPTConstants::ACF_FIELD_AI_CONTENT;
-		$human_field = TTVGPTConstants::ACF_FIELD_HUMAN_CONTENT;
+		$ai_field         = TTVGPTConstants::ACF_FIELD_AI_CONTENT;
+		$human_field      = TTVGPTConstants::ACF_FIELD_HUMAN_CONTENT;
 		$kabelkrant_field = TTVGPTConstants::ACF_FIELD_IN_KABELKRANT;
-		
+
 		$query = "
 			SELECT p.ID, p.post_title, p.post_content, p.post_date,
 			       pm1.meta_value as ai_content,

@@ -115,7 +115,7 @@ class TTVGPTAuditPage {
 		add_thickbox();
 		?>
 		<div class="wrap">
-			<h1 class="wp-heading-inline"><?php esc_html_e( 'Tekst TV GPT Audit', 'zw-ttvgpt' ); ?></h1>
+			<h1 class="wp-heading-inline"><?php esc_html_e( 'Tekst TV GPT-audit', 'zw-ttvgpt' ); ?></h1>
 			<hr class="wp-header-end">
 			
 			<?php $this->render_status_links( $year, $month, $status_filter, $counts ); ?>
@@ -164,12 +164,12 @@ class TTVGPTAuditPage {
 			</li>
 			<li class="ai-unedited">
 				<a href="<?php echo esc_url( add_query_arg( array_merge( $current_params, array( 'status' => 'ai_written_not_edited' ) ), $base_url ) ); ?>" <?php echo 'ai_written_not_edited' === $status_filter ? 'class="current" aria-current="page"' : ''; ?>>
-					<?php esc_html_e( 'AI Gegenereerd', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $counts['ai_written_not_edited'] ); ?>)</span>
+					<?php esc_html_e( 'AI-gegenereerd', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $counts['ai_written_not_edited'] ); ?>)</span>
 				</a>
 			</li>
 			<li class="ai-edited">
 				<a href="<?php echo esc_url( add_query_arg( array_merge( $current_params, array( 'status' => 'ai_written_edited' ) ), $base_url ) ); ?>" <?php echo 'ai_written_edited' === $status_filter ? 'class="current" aria-current="page"' : ''; ?>>
-					<?php esc_html_e( 'AI + Bewerkt', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $counts['ai_written_edited'] ); ?>)</span>
+					<?php esc_html_e( 'AI+bewerkt', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $counts['ai_written_edited'] ); ?>)</span>
 				</a>
 			</li>
 		</ul>

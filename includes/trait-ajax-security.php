@@ -22,16 +22,16 @@ trait TTVGPTAjaxSecurity {
 	 */
 	protected function validate_ajax_request( string $nonce_action, string $required_capability ): void {
 		if ( ! check_ajax_referer( $nonce_action, 'nonce', false ) ) {
-			wp_send_json_error( 
-				array( 'message' => __( 'Beveiligingscontrole mislukt', 'zw-ttvgpt' ) ), 
-				403 
+			wp_send_json_error(
+				array( 'message' => __( 'Beveiligingscontrole mislukt', 'zw-ttvgpt' ) ),
+				403
 			);
 		}
 
 		if ( ! current_user_can( $required_capability ) ) {
-			wp_send_json_error( 
-				array( 'message' => __( 'Onvoldoende rechten', 'zw-ttvgpt' ) ), 
-				403 
+			wp_send_json_error(
+				array( 'message' => __( 'Onvoldoende rechten', 'zw-ttvgpt' ) ),
+				403
 			);
 		}
 	}
