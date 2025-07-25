@@ -79,7 +79,8 @@ class TTVGPTLogger {
 			$log_message .= ' | Context: ' . wp_json_encode( $context );
 		}
 
-        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+		// Use PHP error_log as designed - this logger intentionally logs to PHP error log, not WordPress debug.log
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Intentional design choice
 		error_log( $log_message );
 	}
 }

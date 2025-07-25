@@ -99,11 +99,11 @@
 
 /* Fine-tuning export page styles */
 .export-summary {
+    padding: 20px;
+    margin: 15px 0;
     background: #f8f9fa;
     border: 1px solid #e0e0e0;
     border-radius: 4px;
-    padding: 20px;
-    margin: 15px 0;
 }
 
 .export-summary h4 {
@@ -113,9 +113,9 @@
 }
 
 .file-download {
-    text-decoration: none;
     font-weight: 600;
     color: #2271b1;
+    text-decoration: none;
 }
 
 .file-download:hover {
@@ -123,8 +123,8 @@
 }
 
 .file-size {
-    color: #646970;
     font-size: 0.9em;
+    color: #646970;
 }
 
 .export-stats {
@@ -135,9 +135,9 @@
 
 .export-stats summary {
     padding: 10px 15px;
-    background: #f6f7f7;
-    cursor: pointer;
     font-weight: 600;
+    cursor: pointer;
+    background: #f6f7f7;
 }
 
 .export-stats summary:hover {
@@ -146,19 +146,19 @@
 
 .export-stats .export-stats-content {
     padding: 15px;
-    background: white;
+    background: #fff;
 }
 
 .export-stats-list {
-    margin: 0;
     padding: 0;
+    margin: 0;
     list-style: none;
 }
 
 .export-stats-list li {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
     padding: 8px 0;
     border-bottom: 1px solid #f0f0f1;
 }
@@ -173,9 +173,9 @@
 }
 
 .export-stats-value {
+    font-family: Monaco, 'Courier New', monospace;
     font-weight: 600;
     color: #1d2327;
-    font-family: Monaco, 'Courier New', monospace;
 }
 
 .export-stats-value.error {

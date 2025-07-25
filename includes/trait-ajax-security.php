@@ -45,7 +45,7 @@ trait TTVGPTAjaxSecurity {
 	 */
 	protected function validate_page_access( string $required_capability, string $error_message = '' ): void {
 		if ( ! current_user_can( $required_capability ) ) {
-			$message = $error_message ?: __( 'Je hebt geen toestemming om deze pagina te bekijken.', 'zw-ttvgpt' );
+			$message = $error_message ? $error_message : __( 'Je hebt geen toestemming om deze pagina te bekijken.', 'zw-ttvgpt' );
 			wp_die( esc_html( $message ) );
 		}
 	}

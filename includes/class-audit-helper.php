@@ -217,15 +217,37 @@ class TTVGPTAuditHelper {
 		$ids_string = implode( ',', $post_ids );
 
 		// Single query to get all meta data for all posts
-		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$meta_data = $wpdb->get_results(
-			"SELECT post_id, meta_key, meta_value 
-			FROM {$wpdb->postmeta} 
-			WHERE post_id IN ({$ids_string})
-			AND meta_key IN ('" . TTVGPTConstants::ACF_FIELD_AI_CONTENT . "', '" . TTVGPTConstants::ACF_FIELD_HUMAN_CONTENT . "', '_edit_last')
-			ORDER BY post_id"
+		$meta_keys = array(
+			TTVGPTConstants::ACF_FIELD_AI_CONTENT,
+			TTVGPTConstants::ACF_FIELD_HUMAN_CONTENT,
+			'_edit_last',
 		);
-		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+		// Build WHERE clause for post IDs
+		$where_post_ids = array();
+		foreach ( $post_ids as $id ) {
+			$where_post_ids[] = $wpdb->prepare( 'post_id = %d', $id );
+		}
+
+		// Build WHERE clause for meta keys
+		$where_meta_keys = array();
+		foreach ( $meta_keys as $key ) {
+			$where_meta_keys[] = $wpdb->prepare( 'meta_key = %s', $key );
+		}
+
+		// Combine conditions
+		$where_post_clause = '(' . implode( ' OR ', $where_post_ids ) . ')';
+		$where_key_clause  = '(' . implode( ' OR ', $where_meta_keys ) . ')';
+
+		// Build final query
+		$query = "SELECT post_id, meta_key, meta_value 
+			FROM {$wpdb->postmeta} 
+			WHERE {$where_post_clause}
+			AND {$where_key_clause}
+			ORDER BY post_id";
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Query is built from individually prepared fragments above
+		$meta_data = $wpdb->get_results( $query );
 
 		// Organize data by post_id for fast lookup
 		$meta_cache = array();

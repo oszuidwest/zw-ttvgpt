@@ -275,10 +275,23 @@ class TTVGPTFineTuningPage {
 	 * @return void
 	 */
 	public function handle_export_ajax(): void {
-		// Security checks
-		$this->validate_ajax_request( 'zw_ttvgpt_fine_tuning_nonce', TTVGPTConstants::REQUIRED_CAPABILITY );
+		// Verify nonce first
+		if ( ! check_ajax_referer( 'zw_ttvgpt_fine_tuning_nonce', 'nonce', false ) ) {
+			wp_send_json_error(
+				array( 'message' => __( 'Beveiligingscontrole mislukt', 'zw-ttvgpt' ) ),
+				403
+			);
+		}
 
-		// Get filters
+		// Check capability
+		if ( ! current_user_can( TTVGPTConstants::REQUIRED_CAPABILITY ) ) {
+			wp_send_json_error(
+				array( 'message' => __( 'Onvoldoende rechten', 'zw-ttvgpt' ) ),
+				403
+			);
+		}
+
+		// Get filters - now safe to access $_POST
 		$filters = array();
 		if ( ! empty( $_POST['start_date'] ) ) {
 			$filters['start_date'] = sanitize_text_field( $_POST['start_date'] );

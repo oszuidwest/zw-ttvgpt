@@ -21,19 +21,33 @@ class TTVGPTAuditPage {
 	}
 
 	/**
+	 * Get validated filter parameters from GET request
+	 *
+	 * @return array Validated parameters
+	 */
+	private function get_filter_params(): array {
+		// This is a read-only page, nonce verification is not required for filtering
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended
+		return array(
+			'year'          => isset( $_GET['year'] ) ? absint( $_GET['year'] ) : null,
+			'month'         => isset( $_GET['month'] ) ? absint( $_GET['month'] ) : null,
+			'status_filter' => isset( $_GET['status'] ) ? sanitize_text_field( $_GET['status'] ) : '',
+			'change_filter' => isset( $_GET['change'] ) ? sanitize_text_field( $_GET['change'] ) : '',
+		);
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+	}
+
+	/**
 	 * Render audit analysis page
 	 *
 	 * @return void
 	 */
 	public function render(): void {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only audit page
-		$year = isset( $_GET['year'] ) ? absint( $_GET['year'] ) : null;
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only audit page
-		$month = isset( $_GET['month'] ) ? absint( $_GET['month'] ) : null;
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only audit page
-		$status_filter = isset( $_GET['status'] ) ? sanitize_text_field( $_GET['status'] ) : '';
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only audit page
-		$change_filter = isset( $_GET['change'] ) ? sanitize_text_field( $_GET['change'] ) : '';
+		$params        = $this->get_filter_params();
+		$year          = $params['year'];
+		$month         = $params['month'];
+		$status_filter = $params['status_filter'];
+		$change_filter = $params['change_filter'];
 
 		if ( ! $year || ! $month ) {
 			$most_recent = TTVGPTAuditHelper::get_most_recent_month();

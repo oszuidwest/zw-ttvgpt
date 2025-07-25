@@ -103,7 +103,7 @@ class TTVGPTFineTuningExport {
 				} else {
 					++$stats['skipped'];
 				}
-			} catch ( Exception $e ) {
+			} catch ( \Exception $e ) {
 				++$stats['errors'];
 				$this->logger->debug( 'Error processing post ' . $post->ID . ': ' . $e->getMessage() );
 			}
@@ -113,8 +113,8 @@ class TTVGPTFineTuningExport {
 
 		return array(
 			'success' => true,
-			// translators: %1$d: number of processed posts, %2$d: number of suitable posts for training
 			'message' => sprintf(
+				/* translators: %1$d: number of processed posts, %2$d: number of suitable posts for training */
 				__( '%1$d berichten verwerkt, %2$d geschikt voor training', 'zw-ttvgpt' ),
 				$stats['total_posts'],
 				$stats['processed']
@@ -157,28 +157,43 @@ class TTVGPTFineTuningExport {
 		$human_field      = TTVGPTConstants::ACF_FIELD_HUMAN_CONTENT;
 		$kabelkrant_field = TTVGPTConstants::ACF_FIELD_IN_KABELKRANT;
 
-		$query = "
-			SELECT p.ID, p.post_title, p.post_content, p.post_date,
+		// Build base query
+		$base_query = $wpdb->prepare(
+			"SELECT p.ID, p.post_title, p.post_content, p.post_date,
 			       pm1.meta_value as ai_content,
 			       pm2.meta_value as human_content
 			FROM {$wpdb->posts} p
 			INNER JOIN {$wpdb->postmeta} pm1 ON p.ID = pm1.post_id 
-				AND pm1.meta_key = '{$ai_field}'
+				AND pm1.meta_key = %s
 			INNER JOIN {$wpdb->postmeta} pm2 ON p.ID = pm2.post_id 
-				AND pm2.meta_key = '{$human_field}'
+				AND pm2.meta_key = %s
 			INNER JOIN {$wpdb->postmeta} pm3 ON p.ID = pm3.post_id 
-				AND pm3.meta_key = '{$kabelkrant_field}' 
+				AND pm3.meta_key = %s 
 				AND pm3.meta_value = '1'
 			WHERE p.post_status = 'publish'
 			  AND p.post_type = 'post'
 			  AND pm1.meta_value != ''
-			  AND pm1.meta_value != pm2.meta_value
-			  {$date_filter}
-			ORDER BY p.post_date DESC
-			{$limit_clause}
-		";
+			  AND pm1.meta_value != pm2.meta_value",
+			$ai_field,
+			$human_field,
+			$kabelkrant_field
+		);
 
-		$results = $wpdb->get_results( $query );
+		// Add date filter if provided
+		if ( ! empty( $date_filter ) ) {
+			$base_query .= ' ' . $date_filter;
+		}
+
+		// Add order by
+		$base_query .= ' ORDER BY p.post_date DESC';
+
+		// Add limit if provided
+		if ( ! empty( $limit_clause ) ) {
+			$base_query .= ' ' . $limit_clause;
+		}
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Base query is prepared above, date/limit clauses are also prepared
+		$results = $wpdb->get_results( $base_query );
 
 		if ( $wpdb->last_error ) {
 			$this->logger->error( 'Database error in get_suitable_posts: ' . $wpdb->last_error );
@@ -192,10 +207,15 @@ class TTVGPTFineTuningExport {
 	/**
 	 * Create a single training entry in DPO format
 	 *
-	 * @param object $post Post object with AI and human content
+	 * @param \stdClass $post Post object with ID, ai_content, human_content, and post_content properties
 	 * @return array|null Training entry or null if invalid
 	 */
-	private function create_training_entry( object $post ): ?array {
+	private function create_training_entry( \stdClass $post ): ?array {
+		// Validate required properties exist
+		if ( ! isset( $post->ID ) || ! isset( $post->ai_content ) || ! isset( $post->human_content ) || ! isset( $post->post_content ) ) {
+			return null;
+		}
+
 		// Validate content
 		if ( empty( $post->ai_content ) || empty( $post->human_content ) ) {
 			$this->logger->debug( 'Skipping post ' . $post->ID . ': missing AI or human content' );
@@ -247,6 +267,7 @@ class TTVGPTFineTuningExport {
 	 * @param array  $training_data Array of training entries
 	 * @param string $filename Optional filename
 	 * @return array Result with file path and stats
+	 * @throws \Exception If upload directory cannot be created or file cannot be written.
 	 */
 	public function export_to_jsonl( array $training_data, string $filename = '' ): array {
 		if ( empty( $training_data ) ) {
@@ -271,20 +292,25 @@ class TTVGPTFineTuningExport {
 		$file_path  = $upload_dir['path'] . '/' . $filename;
 
 		try {
-			$file_handle = fopen( $file_path, 'w' );
-
-			if ( ! $file_handle ) {
-				throw new Exception( 'Could not create file: ' . $file_path );
+			// Initialize WP_Filesystem
+			global $wp_filesystem;
+			if ( ! function_exists( 'WP_Filesystem' ) ) {
+				require_once ABSPATH . 'wp-admin/includes/file.php';
 			}
+			WP_Filesystem();
 
-			$line_count = 0;
+			// Build JSONL content
+			$jsonl_content = '';
+			$line_count    = 0;
 			foreach ( $training_data as $entry ) {
-				$json_line = wp_json_encode( $entry, JSON_UNESCAPED_UNICODE ) . "\n";
-				fwrite( $file_handle, $json_line );
+				$jsonl_content .= wp_json_encode( $entry, JSON_UNESCAPED_UNICODE ) . "\n";
 				++$line_count;
 			}
 
-			fclose( $file_handle );
+			// Write file using WP_Filesystem
+			if ( ! $wp_filesystem->put_contents( $file_path, $jsonl_content, FS_CHMOD_FILE ) ) {
+				throw new \Exception( 'Could not create file: ' . $file_path );
+			}
 
 			$file_size = filesize( $file_path );
 
@@ -292,8 +318,8 @@ class TTVGPTFineTuningExport {
 
 			return array(
 				'success'    => true,
-				// translators: %1$s: filename, %2$d: number of records
 				'message'    => sprintf(
+					/* translators: %1$s: filename, %2$d: number of records */
 					__( 'Training data geëxporteerd naar %1$s (%2$d records)', 'zw-ttvgpt' ),
 					$filename,
 					$line_count
@@ -305,7 +331,7 @@ class TTVGPTFineTuningExport {
 				'file_size'  => $file_size,
 			);
 
-		} catch ( Exception $e ) {
+		} catch ( \Exception $e ) {
 			$this->logger->error( 'JSONL export error: ' . $e->getMessage() );
 
 			return array(
@@ -334,16 +360,26 @@ class TTVGPTFineTuningExport {
 		$line_count    = 0;
 		$valid_entries = 0;
 
-		$file_handle = fopen( $file_path, 'r' );
+		// Initialize WP_Filesystem for reading
+		global $wp_filesystem;
+		if ( ! function_exists( 'WP_Filesystem' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+		}
+		WP_Filesystem();
 
-		if ( ! $file_handle ) {
+		$file_contents = $wp_filesystem->get_contents( $file_path );
+		if ( false === $file_contents ) {
 			return array(
 				'valid'   => false,
 				'message' => __( 'Kan bestand niet lezen', 'zw-ttvgpt' ),
 			);
 		}
 
-		while ( ( $line = fgets( $file_handle ) ) !== false && ( $max_lines === 0 || $line_count < $max_lines ) ) {
+		$lines = explode( "\n", $file_contents );
+		foreach ( $lines as $line ) {
+			if ( $max_lines > 0 && $line_count >= $max_lines ) {
+				break;
+			}
 			++$line_count;
 			$line = trim( $line );
 
@@ -360,7 +396,7 @@ class TTVGPTFineTuningExport {
 			}
 
 			// Validate DPO structure
-			if ( ! $this->validate_dpo_entry( $data ) ) {
+			if ( ! is_array( $data ) || ! $this->validate_dpo_entry( $data ) ) {
 				// translators: %d: line number with invalid DPO structure
 				$errors[] = sprintf( __( 'Regel %d: Ongeldige DPO structuur', 'zw-ttvgpt' ), $line_count );
 				continue;
@@ -368,8 +404,6 @@ class TTVGPTFineTuningExport {
 
 			++$valid_entries;
 		}
-
-		fclose( $file_handle );
 
 		$is_valid = empty( $errors ) || count( $errors ) / $line_count < 0.1; // Allow 10% error rate
 
@@ -420,10 +454,10 @@ class TTVGPTFineTuningExport {
 			if ( ! isset( $message['role'] ) || ! isset( $message['content'] ) ) {
 				return false;
 			}
-			if ( $message['role'] === 'system' ) {
+			if ( 'system' === $message['role'] ) {
 				$has_system = true;
 			}
-			if ( $message['role'] === 'user' ) {
+			if ( 'user' === $message['role'] ) {
 				$has_user = true;
 			}
 		}
@@ -443,7 +477,7 @@ class TTVGPTFineTuningExport {
 				return false;
 			}
 
-			if ( $output['role'] !== 'assistant' ) {
+			if ( 'assistant' !== $output['role'] ) {
 				return false;
 			}
 		}

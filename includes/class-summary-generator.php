@@ -57,7 +57,21 @@ class TTVGPTSummaryGenerator {
 	 * @return void
 	 */
 	public function handle_ajax_request(): void {
-		$this->validate_ajax_request( 'zw_ttvgpt_nonce', TTVGPTConstants::EDIT_CAPABILITY );
+		// Verify nonce first
+		if ( ! check_ajax_referer( 'zw_ttvgpt_nonce', 'nonce', false ) ) {
+			wp_send_json_error(
+				array( 'message' => __( 'Beveiligingscontrole mislukt', 'zw-ttvgpt' ) ),
+				403
+			);
+		}
+
+		// Check capability
+		if ( ! current_user_can( TTVGPTConstants::EDIT_CAPABILITY ) ) {
+			wp_send_json_error(
+				array( 'message' => __( 'Onvoldoende rechten', 'zw-ttvgpt' ) ),
+				403
+			);
+		}
 
 		if ( empty( TTVGPTSettingsManager::get_api_key() ) ) {
 			wp_send_json_error(
@@ -66,6 +80,7 @@ class TTVGPTSummaryGenerator {
 			);
 		}
 
+		// Now safe to access $_POST after nonce verification
 		$content = isset( $_POST['content'] ) ? wp_unslash( $_POST['content'] ) : '';
 		$post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
 
