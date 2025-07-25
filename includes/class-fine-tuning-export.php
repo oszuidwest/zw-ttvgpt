@@ -245,13 +245,13 @@ class TTVGPTFineTuningExport {
 			'preferred_output'     => array(
 				array(
 					'role'    => 'assistant',
-					'content' => trim( $post->human_content ),
+					'content' => $human_clean, // Use cleaned version without region prefix
 				),
 			),
 			'non_preferred_output' => array(
 				array(
 					'role'    => 'assistant',
-					'content' => trim( $post->ai_content ),
+					'content' => $ai_clean, // Use cleaned version without region prefix
 				),
 			),
 		);
