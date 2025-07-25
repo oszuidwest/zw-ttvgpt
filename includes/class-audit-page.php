@@ -21,19 +21,33 @@ class TTVGPTAuditPage {
 	}
 
 	/**
+	 * Get validated filter parameters from GET request
+	 *
+	 * @return array Validated parameters
+	 */
+	private function get_filter_params(): array {
+		// This is a read-only page, nonce verification is not required for filtering
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended
+		return array(
+			'year'          => isset( $_GET['year'] ) ? absint( $_GET['year'] ) : null,
+			'month'         => isset( $_GET['month'] ) ? absint( $_GET['month'] ) : null,
+			'status_filter' => isset( $_GET['status'] ) ? sanitize_text_field( $_GET['status'] ) : '',
+			'change_filter' => isset( $_GET['change'] ) ? sanitize_text_field( $_GET['change'] ) : '',
+		);
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+	}
+
+	/**
 	 * Render audit analysis page
 	 *
 	 * @return void
 	 */
 	public function render(): void {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only audit page
-		$year = isset( $_GET['year'] ) ? absint( $_GET['year'] ) : null;
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only audit page
-		$month = isset( $_GET['month'] ) ? absint( $_GET['month'] ) : null;
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only audit page
-		$status_filter = isset( $_GET['status'] ) ? sanitize_text_field( $_GET['status'] ) : '';
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only audit page
-		$change_filter = isset( $_GET['change'] ) ? sanitize_text_field( $_GET['change'] ) : '';
+		$params        = $this->get_filter_params();
+		$year          = $params['year'];
+		$month         = $params['month'];
+		$status_filter = $params['status_filter'];
+		$change_filter = $params['change_filter'];
 
 		if ( ! $year || ! $month ) {
 			$most_recent = TTVGPTAuditHelper::get_most_recent_month();
@@ -115,7 +129,7 @@ class TTVGPTAuditPage {
 		add_thickbox();
 		?>
 		<div class="wrap">
-			<h1 class="wp-heading-inline"><?php esc_html_e( 'Tekst TV GPT Audit', 'zw-ttvgpt' ); ?></h1>
+			<h1 class="wp-heading-inline"><?php esc_html_e( 'Tekst TV GPT-audit', 'zw-ttvgpt' ); ?></h1>
 			<hr class="wp-header-end">
 			
 			<?php $this->render_status_links( $year, $month, $status_filter, $counts ); ?>
@@ -164,12 +178,12 @@ class TTVGPTAuditPage {
 			</li>
 			<li class="ai-unedited">
 				<a href="<?php echo esc_url( add_query_arg( array_merge( $current_params, array( 'status' => 'ai_written_not_edited' ) ), $base_url ) ); ?>" <?php echo 'ai_written_not_edited' === $status_filter ? 'class="current" aria-current="page"' : ''; ?>>
-					<?php esc_html_e( 'AI Gegenereerd', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $counts['ai_written_not_edited'] ); ?>)</span>
+					<?php esc_html_e( 'AI-gegenereerd', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $counts['ai_written_not_edited'] ); ?>)</span>
 				</a>
 			</li>
 			<li class="ai-edited">
 				<a href="<?php echo esc_url( add_query_arg( array_merge( $current_params, array( 'status' => 'ai_written_edited' ) ), $base_url ) ); ?>" <?php echo 'ai_written_edited' === $status_filter ? 'class="current" aria-current="page"' : ''; ?>>
-					<?php esc_html_e( 'AI + Bewerkt', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $counts['ai_written_edited'] ); ?>)</span>
+					<?php esc_html_e( 'AI+bewerkt', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $counts['ai_written_edited'] ); ?>)</span>
 				</a>
 			</li>
 		</ul>

@@ -47,9 +47,9 @@ class TTVGPTAuditHelper {
 				LIMIT 1",
 				'publish',
 				'post',
-				'post_in_kabelkrant',
+				TTVGPTConstants::ACF_FIELD_IN_KABELKRANT,
 				'1',
-				'post_kabelkrant_content_gpt',
+				TTVGPTConstants::ACF_FIELD_AI_CONTENT,
 				''
 			)
 		);
@@ -102,9 +102,9 @@ class TTVGPTAuditHelper {
 				ORDER BY year DESC, month DESC",
 				'publish',
 				'post',
-				'post_in_kabelkrant',
+				TTVGPTConstants::ACF_FIELD_IN_KABELKRANT,
 				'1',
-				'post_kabelkrant_content_gpt',
+				TTVGPTConstants::ACF_FIELD_AI_CONTENT,
 				''
 			)
 		);
@@ -170,10 +170,10 @@ class TTVGPTAuditHelper {
 				'post',
 				$start_date,
 				$end_date,
-				'post_in_kabelkrant',
+				TTVGPTConstants::ACF_FIELD_IN_KABELKRANT,
 				'1',
-				'post_kabelkrant_content_gpt',
-				'post_kabelkrant_content'
+				TTVGPTConstants::ACF_FIELD_AI_CONTENT,
+				TTVGPTConstants::ACF_FIELD_HUMAN_CONTENT
 			)
 		);
 
@@ -217,15 +217,37 @@ class TTVGPTAuditHelper {
 		$ids_string = implode( ',', $post_ids );
 
 		// Single query to get all meta data for all posts
-		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$meta_data = $wpdb->get_results(
-			"SELECT post_id, meta_key, meta_value 
-			FROM {$wpdb->postmeta} 
-			WHERE post_id IN ({$ids_string})
-			AND meta_key IN ('post_kabelkrant_content_gpt', 'post_kabelkrant_content', '_edit_last')
-			ORDER BY post_id"
+		$meta_keys = array(
+			TTVGPTConstants::ACF_FIELD_AI_CONTENT,
+			TTVGPTConstants::ACF_FIELD_HUMAN_CONTENT,
+			'_edit_last',
 		);
-		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+		// Build WHERE clause for post IDs
+		$where_post_ids = array();
+		foreach ( $post_ids as $id ) {
+			$where_post_ids[] = $wpdb->prepare( 'post_id = %d', $id );
+		}
+
+		// Build WHERE clause for meta keys
+		$where_meta_keys = array();
+		foreach ( $meta_keys as $key ) {
+			$where_meta_keys[] = $wpdb->prepare( 'meta_key = %s', $key );
+		}
+
+		// Combine conditions
+		$where_post_clause = '(' . implode( ' OR ', $where_post_ids ) . ')';
+		$where_key_clause  = '(' . implode( ' OR ', $where_meta_keys ) . ')';
+
+		// Build final query
+		$query = "SELECT post_id, meta_key, meta_value 
+			FROM {$wpdb->postmeta} 
+			WHERE {$where_post_clause}
+			AND {$where_key_clause}
+			ORDER BY post_id";
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Query is built from individually prepared fragments above
+		$meta_data = $wpdb->get_results( $query );
 
 		// Organize data by post_id for fast lookup
 		$meta_cache = array();
@@ -257,8 +279,8 @@ class TTVGPTAuditHelper {
 	 * @return array Analysis result with status, ai_content, and human_content
 	 */
 	public static function categorize_post( \WP_Post $post, array $meta_cache = array() ): array {
-		$ai_content    = $meta_cache[ $post->ID ]['post_kabelkrant_content_gpt'] ?? get_post_meta( $post->ID, 'post_kabelkrant_content_gpt', true );
-		$human_content = $meta_cache[ $post->ID ]['post_kabelkrant_content'] ?? get_post_meta( $post->ID, 'post_kabelkrant_content', true );
+		$ai_content    = $meta_cache[ $post->ID ][ TTVGPTConstants::ACF_FIELD_AI_CONTENT ] ?? get_post_meta( $post->ID, TTVGPTConstants::ACF_FIELD_AI_CONTENT, true );
+		$human_content = $meta_cache[ $post->ID ][ TTVGPTConstants::ACF_FIELD_HUMAN_CONTENT ] ?? get_post_meta( $post->ID, TTVGPTConstants::ACF_FIELD_HUMAN_CONTENT, true );
 
 		// Clean content for accurate comparison
 		$ai_clean    = self::strip_region_prefix( $ai_content );

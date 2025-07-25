@@ -38,6 +38,13 @@ class TTVGPTConstants {
 	const ACF_GPT_MARKER_FIELD = 'field_66ad2a3105371';
 
 	/**
+	 * ACF field names (meta keys)
+	 */
+	const ACF_FIELD_AI_CONTENT    = 'post_kabelkrant_content_gpt';
+	const ACF_FIELD_HUMAN_CONTENT = 'post_kabelkrant_content';
+	const ACF_FIELD_IN_KABELKRANT = 'post_in_kabelkrant';
+
+	/**
 	 * OpenAI models
 	 */
 	const DEFAULT_MODEL = 'gpt-4.1-mini';

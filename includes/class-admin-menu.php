@@ -21,12 +21,21 @@ class TTVGPTAdminMenu {
 	private TTVGPTLogger $logger;
 
 	/**
+	 * Fine tuning page instance
+	 *
+	 * @var TTVGPTFineTuningPage
+	 */
+	private TTVGPTFineTuningPage $fine_tuning_page;
+
+	/**
 	 * Initialize admin menu and register WordPress hooks
 	 *
-	 * @param TTVGPTLogger $logger Logger instance for debugging
+	 * @param TTVGPTLogger         $logger            Logger instance for debugging
+	 * @param TTVGPTFineTuningPage $fine_tuning_page  Fine tuning page instance
 	 */
-	public function __construct( TTVGPTLogger $logger ) {
-		$this->logger = $logger;
+	public function __construct( TTVGPTLogger $logger, TTVGPTFineTuningPage $fine_tuning_page ) {
+		$this->logger           = $logger;
+		$this->fine_tuning_page = $fine_tuning_page;
 
 		add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
@@ -39,7 +48,7 @@ class TTVGPTAdminMenu {
 	 */
 	public function add_admin_menu(): void {
 		add_options_page(
-			__( 'ZW Tekst TV GPT Instellingen', 'zw-ttvgpt' ),
+			__( 'ZW Tekst TV GPT-instellingen', 'zw-ttvgpt' ),
 			__( 'ZW Tekst TV GPT', 'zw-ttvgpt' ),
 			TTVGPTConstants::REQUIRED_CAPABILITY,
 			TTVGPTConstants::SETTINGS_PAGE_SLUG,
@@ -47,11 +56,19 @@ class TTVGPTAdminMenu {
 		);
 
 		add_management_page(
-			__( 'Tekst TV GPT Audit', 'zw-ttvgpt' ),
-			__( 'Tekst TV GPT Audit', 'zw-ttvgpt' ),
+			__( 'Tekst TV GPT-audit', 'zw-ttvgpt' ),
+			__( 'Tekst TV GPT-audit', 'zw-ttvgpt' ),
 			TTVGPTConstants::REQUIRED_CAPABILITY,
 			'zw-ttvgpt-audit',
 			array( new TTVGPTAuditPage(), 'render' )
+		);
+
+		add_management_page(
+			__( 'Trainingsdata-export', 'zw-ttvgpt' ),
+			__( 'Trainingsdata', 'zw-ttvgpt' ),
+			TTVGPTConstants::REQUIRED_CAPABILITY,
+			'zw-ttvgpt-fine-tuning',
+			array( $this->fine_tuning_page, 'render' )
 		);
 	}
 
@@ -67,6 +84,13 @@ class TTVGPTAdminMenu {
 		// Enqueue audit CSS on audit page
 		if ( 'tools_page_zw-ttvgpt-audit' === $hook ) {
 			wp_enqueue_style( 'zw-ttvgpt-audit', ZW_TTVGPT_URL . 'assets/audit.css', array(), $version );
+			return;
+		}
+
+		// Enqueue fine tuning page assets
+		if ( 'tools_page_zw-ttvgpt-fine-tuning' === $hook ) {
+			wp_enqueue_style( 'zw-ttvgpt-fine-tuning', ZW_TTVGPT_URL . 'assets/admin.css', array(), $version );
+			wp_enqueue_script( 'jquery' );
 			return;
 		}
 
@@ -97,10 +121,10 @@ class TTVGPTAdminMenu {
 				),
 				'timeouts'       => array( 'successMessage' => 3000 ),
 				'strings'        => array(
-					'generating'      => __( 'Genereren', 'zw-ttvgpt' ),
+					'generating'      => __( 'Bezig met genereren', 'zw-ttvgpt' ),
 					'error'           => __( 'Er is een fout opgetreden', 'zw-ttvgpt' ),
 					'success'         => __( 'Samenvatting gegenereerd', 'zw-ttvgpt' ),
-					'buttonText'      => __( 'Genereer', 'zw-ttvgpt' ),
+					'buttonText'      => __( 'Genereer samenvatting', 'zw-ttvgpt' ),
 					'loadingMessages' => array(
 						__( '🤔 Even nadenken...', 'zw-ttvgpt' ),
 						__( '📰 Artikel aan het lezen...', 'zw-ttvgpt' ),

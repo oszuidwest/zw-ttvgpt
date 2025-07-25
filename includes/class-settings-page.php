@@ -47,7 +47,7 @@ class TTVGPTSettingsPage {
 
 		add_settings_section(
 			'zw_ttvgpt_api_section',
-			__( 'API Instellingen', 'zw-ttvgpt' ),
+			__( 'API-instellingen', 'zw-ttvgpt' ),
 			array( $this, 'render_api_section' ),
 			TTVGPTConstants::SETTINGS_PAGE_SLUG
 		);
