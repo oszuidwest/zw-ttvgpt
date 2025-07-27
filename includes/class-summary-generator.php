@@ -80,7 +80,7 @@ class TTVGPTSummaryGenerator {
 			);
 		}
 
-		// Now safe to access $_POST after nonce verification
+		// Get content and post ID from request
 		$content = isset( $_POST['content'] ) ? wp_unslash( $_POST['content'] ) : '';
 		$post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
 
@@ -109,12 +109,12 @@ class TTVGPTSummaryGenerator {
 		}
 
 		$result = $this->api_handler->generate_summary( $clean_content, $this->word_limit );
-		if ( ! $result['success'] ) {
-			wp_send_json_error( $result['error'] ?? __( 'Onbekende fout', 'zw-ttvgpt' ), 500 );
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( $result->get_error_message(), 500 );
 		}
 
 		$regions = isset( $_POST['regions'] ) ? array_map( 'sanitize_text_field', (array) $_POST['regions'] ) : array();
-		$summary = $result['data'] ?? '';
+		$summary = $result;
 
 		if ( ! empty( $regions ) ) {
 			$summary = implode( ' / ', array_map( 'strtoupper', $regions ) ) . ' - ' . $summary;

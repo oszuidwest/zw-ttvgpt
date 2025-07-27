@@ -79,7 +79,7 @@ class TTVGPTApiHandler {
 	}
 
 	/**
-	 * Prepare content for API request (same cleaning as used in production)
+	 * Prepare content for API request by stripping HTML tags
 	 *
 	 * @param string $content Raw content to clean
 	 * @return string Cleaned content ready for API
@@ -89,7 +89,7 @@ class TTVGPTApiHandler {
 	}
 
 	/**
-	 * Build messages array for OpenAI API (exact format used in production)
+	 * Build messages array for OpenAI API chat completion
 	 *
 	 * @param string $content    Cleaned content to summarize
 	 * @param int    $word_limit Maximum words for summary
@@ -113,9 +113,9 @@ class TTVGPTApiHandler {
 	 *
 	 * @param string $content    Content to summarize
 	 * @param int    $word_limit Maximum words for summary
-	 * @return array{success: bool, data?: string, error?: string} API response with success status
+	 * @return string|\WP_Error Summary string on success, WP_Error on failure
 	 */
-	public function generate_summary( string $content, int $word_limit ): array {
+	public function generate_summary( string $content, int $word_limit ) {
 		$this->logger->debug(
 			'Starting API request',
 			array(
@@ -126,9 +126,9 @@ class TTVGPTApiHandler {
 
 		if ( empty( $this->api_key ) ) {
 			$this->logger->error( 'API key is missing' );
-			return array(
-				'success' => false,
-				'error'   => __( 'API key niet geconfigureerd', 'zw-ttvgpt' ),
+			return new \WP_Error(
+				'missing_api_key',
+				__( 'API key niet geconfigureerd', 'zw-ttvgpt' )
 			);
 		}
 
@@ -143,9 +143,9 @@ class TTVGPTApiHandler {
 
 		if ( false === $request_body ) {
 			$this->logger->error( 'Failed to encode JSON request body' );
-			return array(
-				'success' => false,
-				'error'   => __( 'Fout bij het voorbereiden van API aanvraag', 'zw-ttvgpt' ),
+			return new \WP_Error(
+				'json_encode_failed',
+				__( 'Fout bij het voorbereiden van API aanvraag', 'zw-ttvgpt' )
 			);
 		}
 
@@ -163,40 +163,39 @@ class TTVGPTApiHandler {
 
 		if ( is_wp_error( $response ) ) {
 			$this->logger->error( 'API request failed: ' . $response->get_error_message() );
-			return array(
-				'success' => false,
-				'error'   => sprintf(
+			return new \WP_Error(
+				'network_error',
+				sprintf(
 					/* translators: %s: Error message */
 					__( 'Netwerkfout: %s', 'zw-ttvgpt' ),
 					$response->get_error_message()
 				),
+				array( 'original_error' => $response )
 			);
 		}
 
 		$status_code = wp_remote_retrieve_response_code( $response );
 		if ( 200 !== (int) $status_code ) {
 			$this->logger->error( 'API error: HTTP ' . $status_code );
-			return array(
-				'success' => false,
-				'error'   => TTVGPTApiErrorHandler::get_error_message( (int) $status_code ),
+			return new \WP_Error(
+				'api_error',
+				TTVGPTApiErrorHandler::get_error_message( (int) $status_code ),
+				array( 'status_code' => $status_code )
 			);
 		}
 
 		$data = json_decode( wp_remote_retrieve_body( $response ), true );
 		if ( json_last_error() !== JSON_ERROR_NONE || ! is_array( $data ) || ! isset( $data['choices'][0]['message']['content'] ) ) {
 			$this->logger->error( 'Invalid API response' );
-			return array(
-				'success' => false,
-				'error'   => __( 'Ongeldig antwoord van API', 'zw-ttvgpt' ),
+			return new \WP_Error(
+				'invalid_response',
+				__( 'Ongeldig antwoord van API', 'zw-ttvgpt' )
 			);
 		}
 
 		$summary = trim( (string) $data['choices'][0]['message']['content'] );
 		$this->logger->debug( 'Summary generated', array( 'word_count' => str_word_count( $summary ) ) );
 
-		return array(
-			'success' => true,
-			'data'    => $summary,
-		);
+		return $summary;
 	}
 }

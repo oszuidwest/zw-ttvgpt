@@ -26,7 +26,7 @@ class TTVGPTAuditPage {
 	 * @return array Validated parameters
 	 */
 	private function get_filter_params(): array {
-		// This is a read-only page, nonce verification is not required for filtering
+		// Read-only page - nonce verification not required for display filters
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended
 		return array(
 			'year'          => isset( $_GET['year'] ) ? absint( $_GET['year'] ) : null,

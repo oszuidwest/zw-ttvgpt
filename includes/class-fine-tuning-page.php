@@ -291,7 +291,7 @@ class TTVGPTFineTuningPage {
 			);
 		}
 
-		// Get filters - now safe to access $_POST
+		// Get filters from POST data
 		$filters = array();
 		if ( ! empty( $_POST['start_date'] ) ) {
 			$filters['start_date'] = sanitize_text_field( $_POST['start_date'] );
