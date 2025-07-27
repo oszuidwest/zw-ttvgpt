@@ -317,51 +317,52 @@ class TTVGPTAuditHelper {
 	 * @return array Array with 'before' and 'after' highlighted versions
 	 */
 	public static function generate_word_diff( string $old, string $modified ): array {
-		// Clean input and split into words
-		$old_words_result      = preg_split( '/\s+/', self::strip_region_prefix( $old ) );
-		$modified_words_result = preg_split( '/\s+/', self::strip_region_prefix( $modified ) );
+		// Strip region prefixes for comparison
+		$old_clean      = self::strip_region_prefix( $old );
+		$modified_clean = self::strip_region_prefix( $modified );
 
-		// Handle preg_split potentially returning false
-		$old_words      = false !== $old_words_result ? $old_words_result : array();
-		$modified_words = false !== $modified_words_result ? $modified_words_result : array();
-
-		// Simple word-level diff algorithm
-		$old_html      = array();
-		$modified_html = array();
-
-		$old_index      = 0;
-		$modified_index = 0;
-
-		$old_count      = count( $old_words );
-		$modified_count = count( $modified_words );
-
-		while ( $old_index < $old_count || $modified_index < $modified_count ) {
-			if ( $old_index >= $old_count ) {
-				// Only modified words left
-				$modified_html[] = '<span class="zw-diff-added">' . esc_html( $modified_words[ $modified_index ] ) . '</span>';
-				++$modified_index;
-			} elseif ( $modified_index >= $modified_count ) {
-				// Only old words left
-				$old_html[] = '<span class="zw-diff-removed">' . esc_html( $old_words[ $old_index ] ) . '</span>';
-				++$old_index;
-			} elseif ( $old_words[ $old_index ] === $modified_words[ $modified_index ] ) {
-				// Words match
-				$old_html[]      = esc_html( $old_words[ $old_index ] );
-				$modified_html[] = esc_html( $modified_words[ $modified_index ] );
-				++$old_index;
-				++$modified_index;
-			} else {
-				// Words differ - mark as changed
-				$old_html[]      = '<span class="zw-diff-removed">' . esc_html( $old_words[ $old_index ] ) . '</span>';
-				$modified_html[] = '<span class="zw-diff-added">' . esc_html( $modified_words[ $modified_index ] ) . '</span>';
-				++$old_index;
-				++$modified_index;
-			}
+		// Load WordPress diff functions
+		if ( ! function_exists( 'wp_text_diff' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/revision.php';
 		}
 
+		// Use WordPress built-in diff with inline renderer
+		if ( ! class_exists( 'WP_Text_Diff_Renderer_inline' ) ) {
+			require_once ABSPATH . 'wp-includes/wp-diff.php';
+		}
+
+		// Split into lines for WordPress diff (works better with sentences)
+		$old_lines      = preg_split( '/([.!?]\s+)/', $old_clean, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY );
+		$modified_lines = preg_split( '/([.!?]\s+)/', $modified_clean, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY );
+
+		// Create the diff
+		$text_diff = new \Text_Diff( 'auto', array( $old_lines, $modified_lines ) );
+		$renderer  = new \WP_Text_Diff_Renderer_inline();
+		$diff_html = $renderer->render( $text_diff );
+
+		// WordPress uses <ins> and <del>, convert to our classes
+		$diff_html = str_replace(
+			array( '<ins>', '</ins>', '<del>', '</del>' ),
+			array(
+				'<span class="zw-diff-added">',
+				'</span>',
+				'<span class="zw-diff-removed">',
+				'</span>',
+			),
+			$diff_html
+		);
+
+		// Split the diff into before/after by removing the opposite tags
+		$before = preg_replace( '/<span class="zw-diff-added">.*?<\/span>/s', '', $diff_html );
+		$after  = preg_replace( '/<span class="zw-diff-removed">.*?<\/span>/s', '', $diff_html );
+
+		// Clean up any double spaces
+		$before = preg_replace( '/\s+/', ' ', $before );
+		$after  = preg_replace( '/\s+/', ' ', $after );
+
 		return array(
-			'before' => implode( ' ', $old_html ),
-			'after'  => implode( ' ', $modified_html ),
+			'before' => trim( $before ),
+			'after'  => trim( $after ),
 		);
 	}
 
