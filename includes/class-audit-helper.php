@@ -340,6 +340,14 @@ class TTVGPTAuditHelper {
 		$renderer  = new \WP_Text_Diff_Renderer_inline();
 		$diff_html = $renderer->render( $text_diff );
 
+		// Handle null case
+		if ( null === $diff_html ) {
+			return array(
+				'before' => $old_clean,
+				'after'  => $modified_clean,
+			);
+		}
+
 		// WordPress uses <ins> and <del>, convert to our classes
 		$diff_html = str_replace(
 			array( '<ins>', '</ins>', '<del>', '</del>' ),
@@ -356,9 +364,13 @@ class TTVGPTAuditHelper {
 		$before = preg_replace( '/<span class="zw-diff-added">.*?<\/span>/s', '', $diff_html );
 		$after  = preg_replace( '/<span class="zw-diff-removed">.*?<\/span>/s', '', $diff_html );
 
-		// Clean up any double spaces
-		$before = preg_replace( '/\s+/', ' ', $before );
-		$after  = preg_replace( '/\s+/', ' ', $after );
+		// Clean up any double spaces - handle potential null from preg_replace
+		$before = is_string( $before ) ? preg_replace( '/\s+/', ' ', $before ) : $diff_html;
+		$after  = is_string( $after ) ? preg_replace( '/\s+/', ' ', $after ) : $diff_html;
+
+		// Ensure before and after are strings before trimming
+		$before = is_string( $before ) ? $before : '';
+		$after  = is_string( $after ) ? $after : '';
 
 		return array(
 			'before' => trim( $before ),
