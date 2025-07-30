@@ -60,7 +60,7 @@ class TTVGPTSummaryGenerator {
 		// Verify nonce first
 		if ( ! check_ajax_referer( 'zw_ttvgpt_nonce', 'nonce', false ) ) {
 			wp_send_json_error(
-				array( 'message' => __( 'Beveiligingscontrole mislukt', 'zw-ttvgpt' ) ),
+				array( 'message' => __( 'Sessie verlopen - ververs de pagina', 'zw-ttvgpt' ) ),
 				403
 			);
 		}
@@ -68,14 +68,14 @@ class TTVGPTSummaryGenerator {
 		// Check capability
 		if ( ! current_user_can( TTVGPTConstants::EDIT_CAPABILITY ) ) {
 			wp_send_json_error(
-				array( 'message' => __( 'Onvoldoende rechten', 'zw-ttvgpt' ) ),
+				array( 'message' => __( 'Je hebt geen rechten om samenvattingen te maken', 'zw-ttvgpt' ) ),
 				403
 			);
 		}
 
 		if ( empty( TTVGPTSettingsManager::get_api_key() ) ) {
 			wp_send_json_error(
-				array( 'message' => __( 'API key niet geconfigureerd. Ga naar Instellingen > ZW Tekst TV GPT om een API key in te stellen.', 'zw-ttvgpt' ) ),
+				array( 'message' => __( 'Geen API-sleutel - ga naar Instellingen > Tekst TV GPT', 'zw-ttvgpt' ) ),
 				400
 			);
 		}
@@ -85,7 +85,7 @@ class TTVGPTSummaryGenerator {
 		$post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
 
 		if ( empty( $content ) || ! $post_id || ! get_post( $post_id ) ) {
-			wp_send_json_error( __( 'Ongeldige gegevens', 'zw-ttvgpt' ), 400 );
+			wp_send_json_error( __( 'Ongeldige gegevens - controleer artikel', 'zw-ttvgpt' ), 400 );
 		}
 
 		$clean_content = $this->api_handler->prepare_content( $content );
@@ -105,7 +105,7 @@ class TTVGPTSummaryGenerator {
 
 		$user_id = get_current_user_id();
 		if ( TTVGPTRateLimiter::is_limited( $user_id ) ) {
-			wp_send_json_error( __( 'Te veel aanvragen. Wacht even voordat je opnieuw probeert.', 'zw-ttvgpt' ), 429 );
+			wp_send_json_error( __( 'Wacht even - max 10 per minuut', 'zw-ttvgpt' ), 429 );
 		}
 
 		$result = $this->api_handler->generate_summary( $clean_content, $this->word_limit );

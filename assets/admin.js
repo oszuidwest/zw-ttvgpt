@@ -77,7 +77,7 @@
 		if (!content || content.trim().length === 0) {
 			showStatus(
 				'error',
-				'Geen content gevonden. Zorg dat de editor geladen is en voeg eerst tekst toe.'
+				'Geen inhoud gevonden. Zorg dat de editor geladen is en voeg eerst tekst toe.'
 			);
 			return;
 		}

@@ -57,9 +57,9 @@ class TTVGPTAuditPage {
 			} else {
 				?>
 				<div class="wrap">
-					<h1><?php esc_html_e( 'Tekst TV GPT Audit', 'zw-ttvgpt' ); ?></h1>
+					<h1><?php esc_html_e( 'Tekst TV GPT - Auditlog', 'zw-ttvgpt' ); ?></h1>
 					<div class="notice notice-info">
-						<p><?php esc_html_e( 'Geen posts gevonden voor audit analyse.', 'zw-ttvgpt' ); ?></p>
+						<p><?php esc_html_e( 'Geen artikelen gevonden voor auditanalyse.', 'zw-ttvgpt' ); ?></p>
 					</div>
 				</div>
 				<?php
@@ -129,7 +129,7 @@ class TTVGPTAuditPage {
 		add_thickbox();
 		?>
 		<div class="wrap">
-			<h1 class="wp-heading-inline"><?php esc_html_e( 'Tekst TV GPT-audit', 'zw-ttvgpt' ); ?></h1>
+			<h1 class="wp-heading-inline"><?php esc_html_e( 'Tekst TV GPT - Auditlog', 'zw-ttvgpt' ); ?></h1>
 			<hr class="wp-header-end">
 			
 			<?php $this->render_status_links( $year, $month, $status_filter, $counts ); ?>
@@ -164,7 +164,7 @@ class TTVGPTAuditPage {
 			'month' => $month,
 		);
 		?>
-		<h2 class="screen-reader-text"><?php esc_html_e( 'Auditlijst filteren', 'zw-ttvgpt' ); ?></h2>
+		<h2 class="screen-reader-text"><?php esc_html_e( 'Auditlog filteren', 'zw-ttvgpt' ); ?></h2>
 		<ul class="subsubsub">
 			<li class="all">
 				<a href="<?php echo esc_url( add_query_arg( $current_params, $base_url ) ); ?>" <?php echo empty( $status_filter ) ? 'class="current" aria-current="page"' : ''; ?>>
@@ -173,7 +173,7 @@ class TTVGPTAuditPage {
 			</li>
 			<li class="human">
 				<a href="<?php echo esc_url( add_query_arg( array_merge( $current_params, array( 'status' => 'fully_human_written' ) ), $base_url ) ); ?>" <?php echo 'fully_human_written' === $status_filter ? 'class="current" aria-current="page"' : ''; ?>>
-					<?php esc_html_e( 'Hand', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $counts['fully_human_written'] ); ?>)</span>
+					<?php esc_html_e( 'Handgeschreven', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $counts['fully_human_written'] ); ?>)</span>
 				</a>
 			</li>
 			<li class="ai-unedited">
@@ -183,7 +183,7 @@ class TTVGPTAuditPage {
 			</li>
 			<li class="ai-edited">
 				<a href="<?php echo esc_url( add_query_arg( array_merge( $current_params, array( 'status' => 'ai_written_edited' ) ), $base_url ) ); ?>" <?php echo 'ai_written_edited' === $status_filter ? 'class="current" aria-current="page"' : ''; ?>>
-					<?php esc_html_e( 'AI+bewerkt', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $counts['ai_written_edited'] ); ?>)</span>
+					<?php esc_html_e( 'AI-bewerkt', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $counts['ai_written_edited'] ); ?>)</span>
 				</a>
 			</li>
 		</ul>
@@ -227,13 +227,13 @@ class TTVGPTAuditPage {
 					<select name="status" id="filter-by-status">
 						<option value=""><?php esc_html_e( 'Alle types', 'zw-ttvgpt' ); ?></option>
 						<option value="fully_human_written" <?php selected( $status_filter, 'fully_human_written' ); ?>>
-							<?php esc_html_e( 'Volledig handgeschreven', 'zw-ttvgpt' ); ?>
+							<?php esc_html_e( 'Handgeschreven', 'zw-ttvgpt' ); ?>
 						</option>
 						<option value="ai_written_not_edited" <?php selected( $status_filter, 'ai_written_not_edited' ); ?>>
-							<?php esc_html_e( 'AI, niet bewerkt', 'zw-ttvgpt' ); ?>
+							<?php esc_html_e( 'AI-gegenereerd', 'zw-ttvgpt' ); ?>
 						</option>
 						<option value="ai_written_edited" <?php selected( $status_filter, 'ai_written_edited' ); ?>>
-							<?php esc_html_e( 'AI, bewerkt', 'zw-ttvgpt' ); ?>
+							<?php esc_html_e( 'AI-bewerkt', 'zw-ttvgpt' ); ?>
 						</option>
 					</select>
 
@@ -244,7 +244,7 @@ class TTVGPTAuditPage {
 							<?php esc_html_e( 'Laag (≤20%)', 'zw-ttvgpt' ); ?>
 						</option>
 						<option value="medium" <?php selected( $change_filter, 'medium' ); ?>>
-							<?php esc_html_e( 'Middel (21-50%)', 'zw-ttvgpt' ); ?>
+							<?php esc_html_e( 'Gemiddeld (21-50%)', 'zw-ttvgpt' ); ?>
 						</option>
 						<option value="high" <?php selected( $change_filter, 'high' ); ?>>
 							<?php esc_html_e( 'Hoog (>50%)', 'zw-ttvgpt' ); ?>
@@ -273,9 +273,9 @@ class TTVGPTAuditPage {
 	 */
 	private function render_audit_table( array $categorized_posts, array $meta_cache ): void {
 		$type_labels = array(
-			'fully_human_written'   => __( 'Hand', 'zw-ttvgpt' ),
-			'ai_written_not_edited' => __( 'AI', 'zw-ttvgpt' ),
-			'ai_written_edited'     => __( 'AI+', 'zw-ttvgpt' ),
+			'fully_human_written'   => __( 'Handgeschreven', 'zw-ttvgpt' ),
+			'ai_written_not_edited' => __( 'AI-gegenereerd', 'zw-ttvgpt' ),
+			'ai_written_edited'     => __( 'AI-bewerkt', 'zw-ttvgpt' ),
 		);
 
 		$css_classes = array(
@@ -284,15 +284,15 @@ class TTVGPTAuditPage {
 			'ai_written_edited'     => 'ai-edited',
 		);
 		?>
-		<h2 class="screen-reader-text"><?php esc_html_e( 'Auditlijst', 'zw-ttvgpt' ); ?></h2>
+		<h2 class="screen-reader-text"><?php esc_html_e( 'Auditlog', 'zw-ttvgpt' ); ?></h2>
 		<table class="wp-list-table widefat fixed striped table-view-list posts zw-audit-table">
 			<thead>
 				<tr>
 					<th scope="col" id="type" class="manage-column column-type" style="width: 80px;"><?php esc_html_e( 'Type', 'zw-ttvgpt' ); ?></th>
 					<th scope="col" id="title" class="manage-column column-title column-primary"><?php esc_html_e( 'Titel', 'zw-ttvgpt' ); ?></th>
 					<th scope="col" id="author" class="manage-column column-author"><?php esc_html_e( 'Auteur', 'zw-ttvgpt' ); ?></th>
-					<th scope="col" id="editor" class="manage-column column-editor"><?php esc_html_e( 'Eindredactie', 'zw-ttvgpt' ); ?></th>
-					<th scope="col" id="change" class="manage-column column-change"><?php esc_html_e( '% Gewijzigd', 'zw-ttvgpt' ); ?></th>
+					<th scope="col" id="editor" class="manage-column column-editor"><?php esc_html_e( 'Eindredacteur', 'zw-ttvgpt' ); ?></th>
+					<th scope="col" id="change" class="manage-column column-change"><?php esc_html_e( 'Wijzigingen %', 'zw-ttvgpt' ); ?></th>
 					<th scope="col" id="date" class="manage-column column-date"><?php esc_html_e( 'Datum', 'zw-ttvgpt' ); ?></th>
 				</tr>
 			</thead>
@@ -369,15 +369,15 @@ class TTVGPTAuditPage {
 							<td class="author column-author" data-colname="<?php esc_attr_e( 'Auteur', 'zw-ttvgpt' ); ?>">
 								<?php echo esc_html( $author ? $author->display_name : __( 'Onbekend', 'zw-ttvgpt' ) ); ?>
 							</td>
-							<td class="editor column-editor" data-colname="<?php esc_attr_e( 'Eindredactie', 'zw-ttvgpt' ); ?>">
+							<td class="editor column-editor" data-colname="<?php esc_attr_e( 'Eindredacteur', 'zw-ttvgpt' ); ?>">
 								<?php if ( $last_editor && $last_editor->ID !== $post->post_author ) : ?>
 									<?php echo esc_html( $last_editor->display_name ); ?>
 								<?php else : ?>
 									<span aria-hidden="true">—</span>
-									<span class="screen-reader-text"><?php esc_html_e( 'Geen eindredactie', 'zw-ttvgpt' ); ?></span>
+									<span class="screen-reader-text"><?php esc_html_e( 'Geen eindredacteur', 'zw-ttvgpt' ); ?></span>
 								<?php endif; ?>
 							</td>
-							<td class="change column-change" data-colname="<?php esc_attr_e( '% Gewijzigd', 'zw-ttvgpt' ); ?>">
+							<td class="change column-change" data-colname="<?php esc_attr_e( 'Wijzigingen %', 'zw-ttvgpt' ); ?>">
 								<?php if ( 'ai_written_edited' === $status && isset( $item['change_percentage'] ) ) : ?>
 									<span class="change-percentage <?php echo esc_attr( $item['change_percentage'] > 50 ? 'high-change' : ( $item['change_percentage'] > 20 ? 'medium-change' : 'low-change' ) ); ?>">
 										<?php echo esc_html( $item['change_percentage'] . '%' ); ?>
@@ -404,8 +404,8 @@ class TTVGPTAuditPage {
 					<th scope="col" class="manage-column column-type"><?php esc_html_e( 'Type', 'zw-ttvgpt' ); ?></th>
 					<th scope="col" class="manage-column column-title column-primary"><?php esc_html_e( 'Titel', 'zw-ttvgpt' ); ?></th>
 					<th scope="col" class="manage-column column-author"><?php esc_html_e( 'Auteur', 'zw-ttvgpt' ); ?></th>
-					<th scope="col" class="manage-column column-editor"><?php esc_html_e( 'Eindredactie', 'zw-ttvgpt' ); ?></th>
-					<th scope="col" class="manage-column column-change"><?php esc_html_e( '% Gewijzigd', 'zw-ttvgpt' ); ?></th>
+					<th scope="col" class="manage-column column-editor"><?php esc_html_e( 'Eindredacteur', 'zw-ttvgpt' ); ?></th>
+					<th scope="col" class="manage-column column-change"><?php esc_html_e( 'Wijzigingen %', 'zw-ttvgpt' ); ?></th>
 					<th scope="col" class="manage-column column-date"><?php esc_html_e( 'Datum', 'zw-ttvgpt' ); ?></th>
 				</tr>
 			</tfoot>
@@ -429,7 +429,7 @@ class TTVGPTAuditPage {
 						<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
 							<div class="postbox">
 								<div class="postbox-header">
-									<h3 class="hndle"><?php esc_html_e( 'AI Versie', 'zw-ttvgpt' ); ?></h3>
+									<h3 class="hndle"><?php esc_html_e( 'AI-versie', 'zw-ttvgpt' ); ?></h3>
 								</div>
 								<div class="inside">
 									<div style="max-height: 400px; overflow-y: auto; padding: 10px; font-size: 13px; line-height: 1.6;">
@@ -440,7 +440,7 @@ class TTVGPTAuditPage {
 							
 							<div class="postbox">
 								<div class="postbox-header">
-									<h3 class="hndle"><?php esc_html_e( 'Geredigeerde Versie', 'zw-ttvgpt' ); ?></h3>
+									<h3 class="hndle"><?php esc_html_e( 'Bewerkte versie', 'zw-ttvgpt' ); ?></h3>
 								</div>
 								<div class="inside">
 									<div style="max-height: 400px; overflow-y: auto; padding: 10px; font-size: 13px; line-height: 1.6;">

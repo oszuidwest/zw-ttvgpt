@@ -128,7 +128,7 @@ class TTVGPTApiHandler {
 			$this->logger->error( 'API key is missing' );
 			return new \WP_Error(
 				'missing_api_key',
-				__( 'API key niet geconfigureerd', 'zw-ttvgpt' )
+				__( 'API-sleutel niet geconfigureerd', 'zw-ttvgpt' )
 			);
 		}
 
@@ -145,7 +145,7 @@ class TTVGPTApiHandler {
 			$this->logger->error( 'Failed to encode JSON request body' );
 			return new \WP_Error(
 				'json_encode_failed',
-				__( 'Fout bij het voorbereiden van API aanvraag', 'zw-ttvgpt' )
+				__( 'Fout bij het voorbereiden van API-verzoek', 'zw-ttvgpt' )
 			);
 		}
 
@@ -189,7 +189,7 @@ class TTVGPTApiHandler {
 			$this->logger->error( 'Invalid API response' );
 			return new \WP_Error(
 				'invalid_response',
-				__( 'Ongeldig antwoord van API', 'zw-ttvgpt' )
+				__( 'Ongeldig antwoord van de API', 'zw-ttvgpt' )
 			);
 		}
 

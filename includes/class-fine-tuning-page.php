@@ -53,7 +53,7 @@ class TTVGPTFineTuningPage {
 
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'Trainingsdata-export', 'zw-ttvgpt' ); ?></h1>
+			<h1><?php esc_html_e( 'Training Data Export', 'zw-ttvgpt' ); ?></h1>
 			
 			<div class="zw-ttvgpt-fine-tuning-container">
 				<?php $this->render_export_section(); ?>
@@ -137,7 +137,7 @@ class TTVGPTFineTuningPage {
 				const button = $(this);
 				const originalText = button.text();
 				
-				button.text('<?php esc_html_e( 'Exporteren...', 'zw-ttvgpt' ); ?>').prop('disabled', true);
+				button.text('<?php esc_html_e( '⏳ Bezig met exporteren...', 'zw-ttvgpt' ); ?>').prop('disabled', true);
 				
 				const formData = {
 					action: 'zw_ttvgpt_export_training_data',
@@ -151,7 +151,7 @@ class TTVGPTFineTuningPage {
 					if (response.success) {
 						$('#export-results').html(
 							'<div class="notice notice-success">' +
-								'<p>✓ Export succesvol voltooid</p>' +
+								'<p>✅ Export succesvol voltooid</p>' +
 							'</div>' +
 							'<div class="export-summary">' +
 								'<h4>Exportdetails</h4>' +
@@ -170,7 +170,7 @@ class TTVGPTFineTuningPage {
 					}
 				}).fail(function() {
 					$('#export-results').html(
-						'<div class="notice notice-error"><p><?php esc_html_e( 'Onverwachte fout opgetreden', 'zw-ttvgpt' ); ?></p></div>'
+						'<div class="notice notice-error"><p><?php esc_html_e( 'Er is een onverwachte fout opgetreden', 'zw-ttvgpt' ); ?></p></div>'
 					);
 				}).always(function() {
 					button.text(originalText).prop('disabled', false);
@@ -180,7 +180,7 @@ class TTVGPTFineTuningPage {
 			function generateStatsHTML(stats) {
 				return '<div class="export-stats-content">' +
 					'<ul class="export-stats-list">' +
-					'<li><span class="export-stats-label"><?php esc_html_e( 'Totaal berichten', 'zw-ttvgpt' ); ?></span><span class="export-stats-value">' + stats.total_posts + '</span></li>' +
+					'<li><span class="export-stats-label"><?php esc_html_e( 'Totaal artikelen', 'zw-ttvgpt' ); ?></span><span class="export-stats-value">' + stats.total_posts + '</span></li>' +
 					'<li><span class="export-stats-label"><?php esc_html_e( 'Verwerkt', 'zw-ttvgpt' ); ?></span><span class="export-stats-value success">' + stats.processed + '</span></li>' +
 					'<li><span class="export-stats-label"><?php esc_html_e( 'Overgeslagen', 'zw-ttvgpt' ); ?></span><span class="export-stats-value">' + stats.skipped + '</span></li>' +
 					'<li><span class="export-stats-label"><?php esc_html_e( 'Fouten', 'zw-ttvgpt' ); ?></span><span class="export-stats-value' + (stats.errors > 0 ? ' error' : '') + '">' + stats.errors + '</span></li>' +
@@ -190,7 +190,7 @@ class TTVGPTFineTuningPage {
 			
 			function generateFileInfoHTML(fileInfo) {
 				return '<div class="file-info">' +
-					'<h4><?php esc_html_e( 'Geëxporteerd Bestand', 'zw-ttvgpt' ); ?></h4>' +
+					'<h4><?php esc_html_e( 'Geëxporteerd bestand', 'zw-ttvgpt' ); ?></h4>' +
 					'<p><strong><?php esc_html_e( 'Bestandsnaam:', 'zw-ttvgpt' ); ?></strong> <a href="' + fileInfo.file_url + '" target="_blank">' + fileInfo.filename + '</a></p>' +
 					'<p><strong><?php esc_html_e( 'Records:', 'zw-ttvgpt' ); ?></strong> ' + fileInfo.line_count + '</p>' +
 					'<p><strong><?php esc_html_e( 'Bestandsgrootte:', 'zw-ttvgpt' ); ?></strong> ' + Math.round(fileInfo.file_size / 1024) + ' KB</p>' +
@@ -209,8 +209,8 @@ class TTVGPTFineTuningPage {
 	private function render_export_section(): void {
 		?>
 		<div class="fine-tuning-section">
-			<h2><?php esc_html_e( 'Trainingsdata exporteren', 'zw-ttvgpt' ); ?></h2>
-			<p><?php esc_html_e( 'Exporteer AI+mensbewerkte berichten als JSONL-bestand voor DPO-finetuning. Het bestand gebruikt exact dezelfde systeemprompt en contentformattering als de productieplugin.', 'zw-ttvgpt' ); ?></p>
+			<h2><?php esc_html_e( 'Training data exporteren', 'zw-ttvgpt' ); ?></h2>
+			<p><?php esc_html_e( 'Exporteer door AI gegenereerde en menselijk bewerkte berichten als JSONL-bestand voor DPO-finetuning. Het bestand gebruikt exact dezelfde systeemprompt en contentformattering als de productieplugin.', 'zw-ttvgpt' ); ?></p>
 			
 			<div class="form-row">
 				<label for="export-start-date"><?php esc_html_e( 'Startdatum:', 'zw-ttvgpt' ); ?></label>
@@ -228,7 +228,7 @@ class TTVGPTFineTuningPage {
 			</div>
 			
 			<button type="button" id="export-training-data" class="button button-primary">
-				<?php esc_html_e( 'Trainingsdata exporteren', 'zw-ttvgpt' ); ?>
+				<?php esc_html_e( 'Training data exporteren', 'zw-ttvgpt' ); ?>
 			</button>
 			
 			<div id="export-results"></div>
@@ -245,7 +245,7 @@ class TTVGPTFineTuningPage {
 		?>
 		<div class="fine-tuning-section">
 			<h2><?php esc_html_e( 'Volgende stappen', 'zw-ttvgpt' ); ?></h2>
-			<p><?php esc_html_e( 'Nadat je het trainingsdatabestand hebt geëxporteerd, kun je het uploaden naar OpenAI en een finetuningjob aanmaken:', 'zw-ttvgpt' ); ?></p>
+			<p><?php esc_html_e( 'Nadat je het training data bestand hebt geëxporteerd, kun je het uploaden naar OpenAI en een fine-tuning job aanmaken:', 'zw-ttvgpt' ); ?></p>
 			
 			<ol>
 				<li>
@@ -253,17 +253,17 @@ class TTVGPTFineTuningPage {
 					<p><?php esc_html_e( 'Ga naar het', 'zw-ttvgpt' ); ?> <a href="https://platform.openai.com/finetune" target="_blank">OpenAI-platform</a> <?php esc_html_e( 'en upload het geëxporteerde JSONL-bestand.', 'zw-ttvgpt' ); ?></p>
 				</li>
 				<li>
-					<strong><?php esc_html_e( 'Maak een finetuningjob aan:', 'zw-ttvgpt' ); ?></strong>
-					<p><?php esc_html_e( 'Selecteer DPO (Direct Preference Optimization) als trainingsmethode en kies een basismodel (aanbevolen: gpt-4.1-mini).', 'zw-ttvgpt' ); ?></p>
+					<strong><?php esc_html_e( 'Maak een fine-tuning job aan:', 'zw-ttvgpt' ); ?></strong>
+					<p><?php esc_html_e( 'Selecteer DPO (Direct Preference Optimization) als trainingsmethode en kies een basismodel (aanbevolen: gpt-4o-mini).', 'zw-ttvgpt' ); ?></p>
 				</li>
 				<li>
-					<strong><?php esc_html_e( 'Gebruik het gefinetuunde model:', 'zw-ttvgpt' ); ?></strong>
-					<p><?php esc_html_e( 'Wanneer de training is voltooid, kun je het gefinetuunde model gebruiken door de modelnaam bij te werken in de plugin-instellingen.', 'zw-ttvgpt' ); ?></p>
+					<strong><?php esc_html_e( 'Gebruik het fine-tuned model:', 'zw-ttvgpt' ); ?></strong>
+					<p><?php esc_html_e( 'Wanneer de training is voltooid, kun je het fine-tuned model gebruiken door de modelnaam bij te werken in de plugin-instellingen.', 'zw-ttvgpt' ); ?></p>
 				</li>
 			</ol>
 			
 			<div class="notice notice-info inline">
-				<p><strong><?php esc_html_e( 'Let op:', 'zw-ttvgpt' ); ?></strong> <?php esc_html_e( 'DPO-finetuning vereist zowel "preferred" als "non-preferred" responses. Alleen berichten waar AI-output door mensen is bewerkt komen in aanmerking voor export.', 'zw-ttvgpt' ); ?></p>
+				<p><strong><?php esc_html_e( 'Let op:', 'zw-ttvgpt' ); ?></strong> <?php esc_html_e( 'DPO fine-tuning vereist zowel "preferred" als "non-preferred" responses. Alleen berichten waar AI-output door mensen is bewerkt komen in aanmerking voor export.', 'zw-ttvgpt' ); ?></p>
 			</div>
 		</div>
 		<?php
