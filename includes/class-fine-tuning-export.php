@@ -112,7 +112,6 @@ class TTVGPTFineTuningExport {
 		$this->logger->debug( 'Training data generation completed. Stats: ' . wp_json_encode( $stats ) );
 
 		return array(
-			'success' => true,
 			'message' => sprintf(
 				/* translators: %1$d: number of processed posts, %2$d: number of suitable posts for training */
 				__( '%1$d berichten verwerkt, %2$d geschikt voor training', 'zw-ttvgpt' ),
@@ -245,13 +244,13 @@ class TTVGPTFineTuningExport {
 			'preferred_output'     => array(
 				array(
 					'role'    => 'assistant',
-					'content' => $human_clean, // Use cleaned version without region prefix
+					'content' => $human_clean, // Cleaned version without region prefix
 				),
 			),
 			'non_preferred_output' => array(
 				array(
 					'role'    => 'assistant',
-					'content' => $ai_clean, // Use cleaned version without region prefix
+					'content' => $ai_clean, // Cleaned version without region prefix
 				),
 			),
 		);

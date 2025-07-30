@@ -58,7 +58,7 @@ class TTVGPTAuditHelper {
 			return null;
 		}
 
-		// Ultra-fast PHP date extraction using substr
+		// Extract year and month from date string
 		$year  = (int) substr( $result, 0, 4 );
 		$month = (int) substr( $result, 5, 2 );
 
@@ -76,8 +76,8 @@ class TTVGPTAuditHelper {
 	public static function get_months(): array {
 		global $wpdb;
 
-		// REVOLUTIONARY: Direct GROUP BY month buckets in SQL - eliminates PHP processing!
-		// Shows ALL years for complete audit history access
+		// For performance, we use direct SQL here as WP_Query doesn't support
+		// GROUP BY efficiently. This is a case where direct SQL is justified.
 		$results = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT YEAR(p.post_date) as year, MONTH(p.post_date) as month
@@ -109,7 +109,7 @@ class TTVGPTAuditHelper {
 			)
 		);
 
-		// Ultra-fast: Direct database results, no PHP processing needed!
+		// Convert database results to array format
 		$unique_months = array();
 		foreach ( $results as $row ) {
 			$unique_months[] = array(
@@ -123,81 +123,47 @@ class TTVGPTAuditHelper {
 
 	/**
 	 * Retrieve all posts for audit analysis from specific month and year
-	 * Uses optimized EXISTS subqueries for best performance
 	 *
 	 * @param int $year Target year
 	 * @param int $month Target month (1-12)
 	 * @return array Array of WP_Post objects
 	 */
 	public static function get_posts( int $year, int $month ): array {
-		global $wpdb;
-
-		$start_date = sprintf( '%04d-%02d-01 00:00:00', $year, $month );
-		$end_date   = sprintf( '%04d-%02d-01 00:00:00', $year, $month + 1 );
-
-		if ( 12 === $month ) {
-			$end_date = sprintf( '%04d-01-01 00:00:00', $year + 1 );
-		}
-
-		$posts = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT p.ID, p.post_author, p.post_date, p.post_title, p.post_content
-				FROM {$wpdb->posts} p
-				WHERE p.post_status = %s
-				  AND p.post_type = %s
-				  AND p.post_date >= %s
-				  AND p.post_date < %s
-				  AND EXISTS (
-					  SELECT 1 FROM {$wpdb->postmeta} pm1
-					  WHERE pm1.post_id = p.ID
-					    AND pm1.meta_key = %s
-					    AND pm1.meta_value = %s
-				  )
-				  AND EXISTS (
-					  SELECT 1 FROM {$wpdb->postmeta} pm2
-					  WHERE pm2.post_id = p.ID
-					    AND pm2.meta_key = %s
-					  LIMIT 1
-				  )
-				  AND EXISTS (
-					  SELECT 1 FROM {$wpdb->postmeta} pm3
-					  WHERE pm3.post_id = p.ID
-					    AND pm3.meta_key = %s
-					  LIMIT 1
-				  )
-				ORDER BY p.post_date DESC",
-				'publish',
-				'post',
-				$start_date,
-				$end_date,
-				TTVGPTConstants::ACF_FIELD_IN_KABELKRANT,
-				'1',
-				TTVGPTConstants::ACF_FIELD_AI_CONTENT,
-				TTVGPTConstants::ACF_FIELD_HUMAN_CONTENT
-			)
+		$args = array(
+			'post_type'      => 'post',
+			'post_status'    => 'publish',
+			'posts_per_page' => -1,
+			'orderby'        => 'date',
+			'order'          => 'DESC',
+			'date_query'     => array(
+				array(
+					'year'  => $year,
+					'month' => $month,
+				),
+			),
+			'meta_query'     => array(
+				'relation' => 'AND',
+				array(
+					'key'     => TTVGPTConstants::ACF_FIELD_IN_KABELKRANT,
+					'value'   => '1',
+					'compare' => '=',
+				),
+				array(
+					'key'     => TTVGPTConstants::ACF_FIELD_AI_CONTENT,
+					'compare' => 'EXISTS',
+				),
+				array(
+					'key'     => TTVGPTConstants::ACF_FIELD_HUMAN_CONTENT,
+					'compare' => 'EXISTS',
+				),
+			),
 		);
 
-		return self::convert_to_wp_posts( $posts );
+		$query = new \WP_Query( $args );
+
+		return $query->posts;
 	}
 
-	/**
-	 * Convert raw database results to WP_Post objects
-	 *
-	 * @param array $posts Array of post data from database
-	 * @return array Array of WP_Post objects
-	 */
-	private static function convert_to_wp_posts( array $posts ): array {
-		if ( empty( $posts ) ) {
-			return array();
-		}
-
-		$wp_posts = array();
-		foreach ( $posts as $post_data ) {
-			$wp_posts[] = new \WP_Post( $post_data );
-		}
-
-		return $wp_posts;
-	}
 
 	/**
 	 * Get bulk meta data for multiple posts to avoid N+1 queries
@@ -412,7 +378,7 @@ class TTVGPTAuditHelper {
 		$matching_words = 0;
 		$max_words      = max( $ai_word_count, $human_word_count );
 
-		// Use array_intersect to find common words
+		// Find words that appear in both versions
 		$common_words   = array_intersect( $ai_words, $human_words );
 		$matching_words = count( $common_words );
 

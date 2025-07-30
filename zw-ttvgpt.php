@@ -86,12 +86,12 @@ add_action( 'init', 'zw_ttvgpt_init' );
 function zw_ttvgpt_activate() {
 	if ( version_compare( PHP_VERSION, '8.2', '<' ) ) {
 		deactivate_plugins( plugin_basename( __FILE__ ) );
-		wp_die( 'Deze plugin vereist PHP 8.2 of hoger.' );
+		wp_die( 'Deze plugin vereist minimaal PHP versie 8.2.' );
 	}
 
 	if ( ! function_exists( 'get_field' ) && ! defined( 'WP_CLI' ) && ! getenv( 'CI' ) ) {
 		deactivate_plugins( plugin_basename( __FILE__ ) );
-		wp_die( 'Deze plugin vereist Advanced Custom Fields om geïnstalleerd en geactiveerd te zijn.' );
+		wp_die( 'Deze plugin vereist de Advanced Custom Fields plugin.' );
 	}
 
 	if ( ! get_option( ZW_TTVGPT_Core\TTVGPTConstants::SETTINGS_OPTION_NAME ) ) {

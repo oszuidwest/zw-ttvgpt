@@ -13,52 +13,27 @@ namespace ZW_TTVGPT_Core;
  * Common utility functions for the plugin
  */
 class TTVGPTHelper {
-	/**
-	 * Create standardized response arrays
-	 *
-	 * @param string $error_message Error message to include
-	 * @return array Error response array
-	 */
-	public static function error_response( string $error_message ): array {
-		return array(
-			'success' => false,
-			'error'   => $error_message,
-		);
-	}
-
-	/**
-	 * Create success response array
-	 *
-	 * @param mixed $data Response data
-	 * @return array Success response array
-	 */
-	public static function success_response( $data ): array {
-		return array(
-			'success' => true,
-			'data'    => $data,
-		);
-	}
 
 	/**
 	 * Remove all plugin-related transients from database
 	 *
-	 * @global \wpdb $wpdb WordPress database object
 	 * @return void
 	 */
 	public static function cleanup_transients(): void {
-		global $wpdb;
+		// Get all users to clean their rate limit transients
+		$users = get_users( array( 'fields' => 'ID' ) );
 
+		foreach ( $users as $user_id ) {
+			$transient_key = TTVGPTConstants::get_rate_limit_key( $user_id );
+			delete_transient( $transient_key );
+		}
+
+		// Clean up orphaned transients from deleted users using direct query
+		global $wpdb;
 		$wpdb->query(
 			$wpdb->prepare(
 				"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
 				'_transient_' . TTVGPTConstants::RATE_LIMIT_PREFIX . '%'
-			)
-		);
-
-		$wpdb->query(
-			$wpdb->prepare(
-				"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
-				'_transient_timeout_' . TTVGPTConstants::RATE_LIMIT_PREFIX . '%'
 			)
 		);
 	}

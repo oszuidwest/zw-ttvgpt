@@ -48,24 +48,24 @@ class TTVGPTAdminMenu {
 	 */
 	public function add_admin_menu(): void {
 		add_options_page(
-			__( 'ZW Tekst TV GPT-instellingen', 'zw-ttvgpt' ),
-			__( 'ZW Tekst TV GPT', 'zw-ttvgpt' ),
+			__( 'Tekst TV GPT Instellingen', 'zw-ttvgpt' ),
+			__( 'Tekst TV GPT', 'zw-ttvgpt' ),
 			TTVGPTConstants::REQUIRED_CAPABILITY,
 			TTVGPTConstants::SETTINGS_PAGE_SLUG,
 			array( new TTVGPTSettingsPage( $this->logger ), 'render' )
 		);
 
 		add_management_page(
-			__( 'Tekst TV GPT-audit', 'zw-ttvgpt' ),
-			__( 'Tekst TV GPT-audit', 'zw-ttvgpt' ),
+			__( 'Tekst TV Audit', 'zw-ttvgpt' ),
+			__( 'Tekst TV Audit', 'zw-ttvgpt' ),
 			TTVGPTConstants::REQUIRED_CAPABILITY,
 			'zw-ttvgpt-audit',
 			array( new TTVGPTAuditPage(), 'render' )
 		);
 
 		add_management_page(
-			__( 'Trainingsdata-export', 'zw-ttvgpt' ),
-			__( 'Trainingsdata', 'zw-ttvgpt' ),
+			__( 'Tekst TV Training Data', 'zw-ttvgpt' ),
+			__( 'Tekst TV Training', 'zw-ttvgpt' ),
 			TTVGPTConstants::REQUIRED_CAPABILITY,
 			'zw-ttvgpt-fine-tuning',
 			array( $this->fine_tuning_page, 'render' )
@@ -121,10 +121,10 @@ class TTVGPTAdminMenu {
 				),
 				'timeouts'       => array( 'successMessage' => 3000 ),
 				'strings'        => array(
-					'generating'      => __( 'Bezig met genereren', 'zw-ttvgpt' ),
-					'error'           => __( 'Er is een fout opgetreden', 'zw-ttvgpt' ),
-					'success'         => __( 'Samenvatting gegenereerd', 'zw-ttvgpt' ),
-					'buttonText'      => __( 'Genereer samenvatting', 'zw-ttvgpt' ),
+					'generating'      => __( 'Genereren...', 'zw-ttvgpt' ),
+					'error'           => __( 'Fout opgetreden', 'zw-ttvgpt' ),
+					'success'         => __( 'Klaar!', 'zw-ttvgpt' ),
+					'buttonText'      => __( 'Genereer', 'zw-ttvgpt' ),
 					'loadingMessages' => array(
 						__( '🤔 Even nadenken...', 'zw-ttvgpt' ),
 						__( '📰 Artikel aan het lezen...', 'zw-ttvgpt' ),

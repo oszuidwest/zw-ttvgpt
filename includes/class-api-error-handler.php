@@ -21,13 +21,13 @@ class TTVGPTApiErrorHandler {
 	 */
 	public static function get_error_message( int $status_code ): string {
 		$messages = array(
-			400 => __( 'Ongeldige aanvraag', 'zw-ttvgpt' ),
-			401 => __( 'Ongeldige API key', 'zw-ttvgpt' ),
-			403 => __( 'Toegang geweigerd', 'zw-ttvgpt' ),
-			404 => __( 'Model niet gevonden', 'zw-ttvgpt' ),
-			429 => __( 'Te veel aanvragen, probeer later opnieuw', 'zw-ttvgpt' ),
-			500 => __( 'OpenAI server fout', 'zw-ttvgpt' ),
-			503 => __( 'OpenAI service tijdelijk niet beschikbaar', 'zw-ttvgpt' ),
+			400 => __( 'Ongeldige aanvraag - check je instellingen', 'zw-ttvgpt' ),
+			401 => __( 'API-sleutel klopt niet', 'zw-ttvgpt' ),
+			403 => __( 'Geen toegang - check API-rechten', 'zw-ttvgpt' ),
+			404 => __( 'AI-model bestaat niet', 'zw-ttvgpt' ),
+			429 => __( 'API-limiet bereikt - wacht even', 'zw-ttvgpt' ),
+			500 => __( 'OpenAI heeft problemen - probeer later', 'zw-ttvgpt' ),
+			503 => __( 'OpenAI offline - probeer later', 'zw-ttvgpt' ),
 		);
 
 		return $messages[ $status_code ] ?? sprintf(

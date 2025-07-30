@@ -14,11 +14,18 @@ namespace ZW_TTVGPT_Core;
  */
 class TTVGPTSettingsManager {
 	/**
-	 * Settings cache
+	 * Cache key for settings
 	 *
-	 * @var array|null
+	 * @var string
 	 */
-	private static ?array $settings_cache = null;
+	private const CACHE_KEY = 'zw_ttvgpt_settings';
+
+	/**
+	 * Cache group for settings
+	 *
+	 * @var string
+	 */
+	private const CACHE_GROUP = 'zw_ttvgpt';
 
 	/**
 	 * Retrieve all plugin settings with caching
@@ -26,15 +33,18 @@ class TTVGPTSettingsManager {
 	 * @return array Complete settings array with defaults applied
 	 */
 	public static function get_settings(): array {
-		if ( null === self::$settings_cache ) {
-			$settings             = get_option(
+		$settings = wp_cache_get( self::CACHE_KEY, self::CACHE_GROUP );
+
+		if ( false === $settings ) {
+			$settings = get_option(
 				TTVGPTConstants::SETTINGS_OPTION_NAME,
 				TTVGPTConstants::get_default_settings()
 			);
-			self::$settings_cache = is_array( $settings ) ? $settings : TTVGPTConstants::get_default_settings();
+			$settings = is_array( $settings ) ? $settings : TTVGPTConstants::get_default_settings();
+			wp_cache_set( self::CACHE_KEY, $settings, self::CACHE_GROUP );
 		}
 
-		return self::$settings_cache;
+		return is_array( $settings ) ? $settings : TTVGPTConstants::get_default_settings();
 	}
 
 	/**
@@ -62,7 +72,7 @@ class TTVGPTSettingsManager {
 		$result = update_option( TTVGPTConstants::SETTINGS_OPTION_NAME, $settings );
 
 		if ( $result ) {
-			self::$settings_cache = $settings;
+			wp_cache_set( self::CACHE_KEY, $settings, self::CACHE_GROUP );
 		}
 
 		return $result;
@@ -80,7 +90,7 @@ class TTVGPTSettingsManager {
 		);
 
 		if ( $result ) {
-			self::$settings_cache = null;
+			wp_cache_delete( self::CACHE_KEY, self::CACHE_GROUP );
 		}
 
 		return $result;
@@ -92,7 +102,7 @@ class TTVGPTSettingsManager {
 	 * @return bool True if settings were successfully deleted
 	 */
 	public static function delete_settings(): bool {
-		self::$settings_cache = null;
+		wp_cache_delete( self::CACHE_KEY, self::CACHE_GROUP );
 		return delete_option( TTVGPTConstants::SETTINGS_OPTION_NAME );
 	}
 

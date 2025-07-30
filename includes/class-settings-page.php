@@ -47,14 +47,14 @@ class TTVGPTSettingsPage {
 
 		add_settings_section(
 			'zw_ttvgpt_api_section',
-			__( 'API-instellingen', 'zw-ttvgpt' ),
+			__( 'API-configuratie', 'zw-ttvgpt' ),
 			array( $this, 'render_api_section' ),
 			TTVGPTConstants::SETTINGS_PAGE_SLUG
 		);
 
 		add_settings_field(
 			'api_key',
-			__( 'OpenAI API Key', 'zw-ttvgpt' ),
+			__( 'OpenAI API-sleutel', 'zw-ttvgpt' ),
 			array( $this, 'render_api_key_field' ),
 			TTVGPTConstants::SETTINGS_PAGE_SLUG,
 			'zw_ttvgpt_api_section'
@@ -70,7 +70,7 @@ class TTVGPTSettingsPage {
 
 		add_settings_section(
 			'zw_ttvgpt_summary_section',
-			__( 'Samenvatting Instellingen', 'zw-ttvgpt' ),
+			__( 'Samenvatting-instellingen', 'zw-ttvgpt' ),
 			array( $this, 'render_summary_section' ),
 			TTVGPTConstants::SETTINGS_PAGE_SLUG
 		);
@@ -85,14 +85,14 @@ class TTVGPTSettingsPage {
 
 		add_settings_section(
 			'zw_ttvgpt_debug_section',
-			__( 'Debug Instellingen', 'zw-ttvgpt' ),
+			__( 'Debug-opties', 'zw-ttvgpt' ),
 			array( $this, 'render_debug_section' ),
 			TTVGPTConstants::SETTINGS_PAGE_SLUG
 		);
 
 		add_settings_field(
 			'debug_mode',
-			__( 'Debug Modus', 'zw-ttvgpt' ),
+			__( 'Debug-modus', 'zw-ttvgpt' ),
 			array( $this, 'render_debug_mode_field' ),
 			TTVGPTConstants::SETTINGS_PAGE_SLUG,
 			'zw_ttvgpt_debug_section'
@@ -124,7 +124,7 @@ class TTVGPTSettingsPage {
 	 * Render section descriptions
 	 */
 	public function render_api_section(): void {
-		echo '<p>' . esc_html__( 'Configureer de OpenAI API instellingen.', 'zw-ttvgpt' ) . '</p>';
+		echo '<p>' . esc_html__( 'Vul je OpenAI gegevens in om te beginnen.', 'zw-ttvgpt' ) . '</p>';
 	}
 
 	/**
@@ -133,7 +133,7 @@ class TTVGPTSettingsPage {
 	 * @return void
 	 */
 	public function render_summary_section(): void {
-		echo '<p>' . esc_html__( 'Pas de instellingen voor samenvattingen aan.', 'zw-ttvgpt' ) . '</p>';
+		echo '<p>' . esc_html__( 'Bepaal hoe je samenvattingen eruit zien.', 'zw-ttvgpt' ) . '</p>';
 	}
 
 	/**
@@ -142,7 +142,7 @@ class TTVGPTSettingsPage {
 	 * @return void
 	 */
 	public function render_debug_section(): void {
-		echo '<p>' . esc_html__( 'Debug opties voor probleemoplossing.', 'zw-ttvgpt' ) . '</p>';
+		echo '<p>' . esc_html__( 'Voor ontwikkelaars en probleemoplossing.', 'zw-ttvgpt' ) . '</p>';
 	}
 
 	/**
@@ -160,7 +160,7 @@ class TTVGPTSettingsPage {
 				class="regular-text" 
 				autocomplete="off" />
 		<p class="description">
-			<?php esc_html_e( 'Je OpenAI API key. Deze begint met "sk-".', 'zw-ttvgpt' ); ?>
+			<?php esc_html_e( 'Begint met "sk-" (te vinden op platform.openai.com)', 'zw-ttvgpt' ); ?>
 		</p>
 		<?php
 	}
@@ -180,7 +180,7 @@ class TTVGPTSettingsPage {
 				class="regular-text"
 				placeholder="gpt-4.1-mini" />
 		<p class="description">
-			<?php esc_html_e( 'Voer de naam van het OpenAI model in (bijv. gpt-4.1-mini, gpt-4.1-nano, gpt-4o, gpt-4o-mini).', 'zw-ttvgpt' ); ?>
+			<?php esc_html_e( 'Aanbevolen: gpt-4.1-mini (snel & goedkoop)', 'zw-ttvgpt' ); ?>
 		</p>
 		<?php
 	}
@@ -201,7 +201,7 @@ class TTVGPTSettingsPage {
 				max="<?php echo esc_attr( (string) TTVGPTConstants::MAX_WORD_LIMIT ); ?>" 
 				step="<?php echo esc_attr( (string) TTVGPTConstants::WORD_LIMIT_STEP ); ?>" />
 		<p class="description">
-			<?php esc_html_e( 'Maximum aantal woorden voor de samenvatting. Let op: GPT modellen zijn niet altijd precies met woordlimieten.', 'zw-ttvgpt' ); ?>
+			<?php esc_html_e( 'Streef naar dit aantal woorden (50-500)', 'zw-ttvgpt' ); ?>
 		</p>
 		<?php
 	}
@@ -220,13 +220,13 @@ class TTVGPTSettingsPage {
 					name="<?php echo esc_attr( TTVGPTConstants::SETTINGS_OPTION_NAME ); ?>[debug_mode]" 
 					value="1" 
 					<?php checked( $debug_mode ); ?> />
-			<?php esc_html_e( 'Schakel debug logging in', 'zw-ttvgpt' ); ?>
+			<?php esc_html_e( 'Debug-logging inschakelen', 'zw-ttvgpt' ); ?>
 		</label>
 		<p class="description">
-			<?php esc_html_e( 'Schakel debug logging in. Debug berichten worden naar de PHP error log geschreven.', 'zw-ttvgpt' ); ?>
+			<?php esc_html_e( 'Logt technische details naar PHP error log', 'zw-ttvgpt' ); ?>
 			<br>
 			<small style="color: #666;">
-			<?php esc_html_e( 'Errors worden altijd gelogd, debug berichten alleen met deze optie aan.', 'zw-ttvgpt' ); ?>
+			<?php esc_html_e( 'Alleen nodig bij problemen', 'zw-ttvgpt' ); ?>
 			</small>
 		</p>
 		<?php
@@ -248,7 +248,7 @@ class TTVGPTSettingsPage {
 				add_settings_error(
 					TTVGPTConstants::SETTINGS_OPTION_NAME,
 					'invalid_api_key',
-					__( 'API key moet beginnen met "sk-"', 'zw-ttvgpt' )
+					__( 'API-sleutel moet beginnen met "sk-"', 'zw-ttvgpt' )
 				);
 			}
 			$sanitized['api_key'] = $api_key;
