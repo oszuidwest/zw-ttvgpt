@@ -15,7 +15,7 @@
     "@eslint/eslintrc": "^3.3.1",
     "@typescript-eslint/eslint-plugin": "^8.37.0",
     "@typescript-eslint/parser": "^8.37.0",
-    "@wordpress/eslint-plugin": "^22.12.0",
+    "@wordpress/eslint-plugin": "^22.13.0",
     "@wordpress/stylelint-config": "^23.18.0",
     "eslint": "^9.31.0",
     "eslint-plugin-jsx-a11y": "^6.10.2",
