@@ -56,6 +56,9 @@
 
 		$cachedAcfField.parent().append($button);
 		$button.on('click', handleGenerateClick);
+
+		// Add version history UI
+		injectVersionHistory();
 	}
 
 	/**
@@ -271,6 +274,8 @@
 				// Update ACF fields with animation
 				animateText($cachedAcfField, data.summary, $button);
 				$cachedGptField.val(data.summary);
+				// Reload version history after new generation
+				loadVersions();
 			}, waitTime);
 		} else {
 			/*
@@ -280,6 +285,8 @@
 			setTimeout(function () {
 				animateText($cachedAcfField, data.summary, $button);
 				$cachedGptField.val(data.summary);
+				// Reload version history after new generation
+				loadVersions();
 			}, 500);
 		}
 	}
@@ -504,6 +511,143 @@
 		$cachedAcfField.data('message-interval', messageInterval);
 		$cachedAcfField.data('active-transition', () => activeTransition);
 		$cachedAcfField.data('message-count', () => messageCount);
+	}
+
+	/**
+	 * Inject version history UI
+	 */
+	function injectVersionHistory() {
+		const postId = $('#post_ID').val();
+		if (!postId) return;
+
+		const $container = $('<div class="zw-ttvgpt-version-history">');
+		const $header = $('<div class="zw-ttvgpt-version-header">')
+			.html('<span>Versie geschiedenis</span><span class="zw-ttvgpt-version-count">...</span>')
+			.on('click', toggleVersionList);
+
+		const $list = $('<div class="zw-ttvgpt-version-list">');
+
+		$container.append($header).append($list);
+		$cachedAcfField.parent().append($container);
+
+		// Load versions
+		loadVersions();
+	}
+
+	/**
+	 * Toggle version list visibility
+	 */
+	function toggleVersionList() {
+		const $list = $(this).siblings('.zw-ttvgpt-version-list');
+		$list.toggleClass('active');
+	}
+
+	/**
+	 * Load version history
+	 */
+	function loadVersions() {
+		const postId = $('#post_ID').val();
+
+		$.ajax({
+			url: zwTTVGPT.ajaxUrl,
+			type: 'POST',
+			data: {
+				action: 'zw_ttvgpt_get_versions',
+				nonce: zwTTVGPT.nonce,
+				post_id: postId,
+			},
+			success: function (response) {
+				if (response.success && response.data.versions) {
+					displayVersions(response.data.versions);
+				}
+			},
+		});
+	}
+
+	/**
+	 * Display version list
+	 * @param {Array} versions Version history array
+	 */
+	function displayVersions(versions) {
+		const $list = $('.zw-ttvgpt-version-list');
+		const $count = $('.zw-ttvgpt-version-count');
+
+		$count.text(versions.length);
+		$list.empty();
+
+		if (versions.length === 0) {
+			$list.html('<div style="padding: 10px; text-align: center; color: #999;">Nog geen versies</div>');
+			return;
+		}
+
+		versions.forEach(function (version, index) {
+			const $item = $('<div class="zw-ttvgpt-version-item">');
+			if (version.is_active) {
+				$item.addClass('active');
+			}
+
+			const date = new Date(version.created_at);
+			const dateStr = date.toLocaleDateString('nl-NL', {
+				day: 'numeric',
+				month: 'short',
+				hour: '2-digit',
+				minute: '2-digit',
+			});
+
+			const $info = $('<div class="zw-ttvgpt-version-info">')
+				.html(
+					`<div class="zw-ttvgpt-version-summary">${version.summary}</div>
+					<div class="zw-ttvgpt-version-meta">
+						${dateStr} • ${version.model}
+						${version.is_active ? '<span class="zw-ttvgpt-version-badge">Actief</span>' : ''}
+					</div>`
+				);
+
+			const $actions = $('<div class="zw-ttvgpt-version-actions">');
+
+			if (!version.is_active) {
+				$('<button class="button button-small">')
+					.text('Activeer')
+					.on('click', function () {
+						activateVersion(version.id);
+					})
+					.appendTo($actions);
+			}
+
+			$item.append($info).append($actions);
+			$list.append($item);
+		});
+	}
+
+	/**
+	 * Activate a specific version
+	 * @param {string} versionId Version ID to activate
+	 */
+	function activateVersion(versionId) {
+		const postId = $('#post_ID').val();
+
+		$.ajax({
+			url: zwTTVGPT.ajaxUrl,
+			type: 'POST',
+			data: {
+				action: 'zw_ttvgpt_set_version',
+				nonce: zwTTVGPT.nonce,
+				post_id: postId,
+				version_id: versionId,
+			},
+			success: function (response) {
+				if (response.success) {
+					// Reload versions to update UI
+					loadVersions();
+					showStatus('success', response.data);
+				} else {
+					showStatus('error', response.data);
+				}
+			},
+			error: function () {
+				showStatus('error', 'Er is een fout opgetreden');
+			},
+		});
 	}
 
 	// Initialize when ready

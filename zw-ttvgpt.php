@@ -31,6 +31,7 @@ require_once ZW_TTVGPT_DIR . 'includes/class-helper.php';
 require_once ZW_TTVGPT_DIR . 'includes/trait-ajax-security.php';
 require_once ZW_TTVGPT_DIR . 'includes/class-logger.php';
 require_once ZW_TTVGPT_DIR . 'includes/class-api-handler.php';
+require_once ZW_TTVGPT_DIR . 'includes/class-version-manager.php';
 require_once ZW_TTVGPT_DIR . 'includes/class-summary-generator.php';
 require_once ZW_TTVGPT_DIR . 'includes/class-fine-tuning-export.php';
 require_once ZW_TTVGPT_DIR . 'includes/class-fine-tuning-page.php';
@@ -55,10 +56,13 @@ function zw_ttvgpt_init() {
 		$logger
 	);
 
+	$version_manager = new ZW_TTVGPT_Core\TTVGPTVersionManager( $logger );
+
 	$generator = new ZW_TTVGPT_Core\TTVGPTSummaryGenerator(
 		$api_handler,
 		ZW_TTVGPT_Core\TTVGPTSettingsManager::get_word_limit(),
-		$logger
+		$logger,
+		$version_manager
 	);
 
 	if ( is_admin() ) {

@@ -185,3 +185,93 @@
 .export-stats-value.success {
     color: #00a32a;
 }
+
+/* Version History Styles */
+.zw-ttvgpt-version-history {
+	margin-top: 10px;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	background: #f9f9f9;
+}
+
+.zw-ttvgpt-version-header {
+	padding: 10px 15px;
+	border-bottom: 1px solid #ddd;
+	background: #f1f1f1;
+	cursor: pointer;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.zw-ttvgpt-version-header:hover {
+	background: #e8e8e8;
+}
+
+.zw-ttvgpt-version-count {
+	background: #007cba;
+	color: white;
+	padding: 2px 8px;
+	border-radius: 12px;
+	font-size: 12px;
+}
+
+.zw-ttvgpt-version-list {
+	display: none;
+	max-height: 300px;
+	overflow-y: auto;
+}
+
+.zw-ttvgpt-version-list.active {
+	display: block;
+}
+
+.zw-ttvgpt-version-item {
+	padding: 10px 15px;
+	border-bottom: 1px solid #eee;
+	display: flex;
+	justify-content: space-between;
+	align-items: start;
+}
+
+.zw-ttvgpt-version-item:last-child {
+	border-bottom: none;
+}
+
+.zw-ttvgpt-version-item.active {
+	background: #e7f3ff;
+}
+
+.zw-ttvgpt-version-info {
+	flex: 1;
+}
+
+.zw-ttvgpt-version-summary {
+	margin: 5px 0;
+	color: #555;
+	font-size: 13px;
+	line-height: 1.4;
+}
+
+.zw-ttvgpt-version-meta {
+	font-size: 12px;
+	color: #999;
+}
+
+.zw-ttvgpt-version-actions {
+	margin-left: 10px;
+}
+
+.zw-ttvgpt-version-actions button {
+	margin-left: 5px;
+}
+
+.zw-ttvgpt-version-badge {
+	display: inline-block;
+	background: #28a745;
+	color: white;
+	padding: 2px 6px;
+	border-radius: 3px;
+	font-size: 11px;
+	margin-left: 5px;
+}
