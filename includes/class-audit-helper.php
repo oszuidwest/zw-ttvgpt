@@ -292,12 +292,12 @@ class TTVGPTAuditHelper {
 			require_once ABSPATH . 'wp-admin/includes/revision.php';
 		}
 
-		// Load WordPress diff renderer for inline display
+		// Use WordPress built-in diff with inline renderer
 		if ( ! class_exists( 'WP_Text_Diff_Renderer_inline' ) ) {
 			require_once ABSPATH . 'wp-includes/wp-diff.php';
 		}
 
-		// Split text into sentences for better diff granularity
+		// Split into lines for WordPress diff (works better with sentences)
 		$old_lines      = preg_split( '/([.!?]\s+)/', $old_clean, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY );
 		$modified_lines = preg_split( '/([.!?]\s+)/', $modified_clean, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY );
 
@@ -306,7 +306,15 @@ class TTVGPTAuditHelper {
 		$renderer  = new \WP_Text_Diff_Renderer_inline();
 		$diff_html = $renderer->render( $text_diff );
 
-		// Replace WordPress diff tags with our CSS classes
+		// Handle null case
+		if ( null === $diff_html ) {
+			return array(
+				'before' => $old_clean,
+				'after'  => $modified_clean,
+			);
+		}
+
+		// WordPress uses <ins> and <del>, convert to our classes
 		$diff_html = str_replace(
 			array( '<ins>', '</ins>', '<del>', '</del>' ),
 			array(
@@ -318,21 +326,21 @@ class TTVGPTAuditHelper {
 			$diff_html
 		);
 
-		// Create separate before/after versions by removing diff markers
+		// Split the diff into before/after by removing the opposite tags
 		$before = preg_replace( '/<span class="zw-diff-added">.*?<\/span>/s', '', $diff_html );
 		$after  = preg_replace( '/<span class="zw-diff-removed">.*?<\/span>/s', '', $diff_html );
 
-		// Remove duplicate spaces
-		$before = is_string( $before ) ? preg_replace( '/\s+/', ' ', $before ) : '';
-		$after  = is_string( $after ) ? preg_replace( '/\s+/', ' ', $after ) : '';
+		// Clean up any double spaces - handle potential null from preg_replace
+		$before = is_string( $before ) ? preg_replace( '/\s+/', ' ', $before ) : $diff_html;
+		$after  = is_string( $after ) ? preg_replace( '/\s+/', ' ', $after ) : $diff_html;
 
-		// Trim whitespace from results
-		$before = is_string( $before ) ? trim( $before ) : '';
-		$after  = is_string( $after ) ? trim( $after ) : '';
+		// Ensure before and after are strings before trimming
+		$before = is_string( $before ) ? $before : '';
+		$after  = is_string( $after ) ? $after : '';
 
 		return array(
-			'before' => $before,
-			'after'  => $after,
+			'before' => trim( $before ),
+			'after'  => trim( $after ),
 		);
 	}
 
