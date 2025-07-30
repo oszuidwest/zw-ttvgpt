@@ -121,9 +121,9 @@ class TTVGPTAdminMenu {
 				),
 				'timeouts'       => array( 'successMessage' => 3000 ),
 				'strings'        => array(
-					'generating'      => __( '🤖 Genereren...', 'zw-ttvgpt' ),
-					'error'           => __( '❌ Fout opgetreden', 'zw-ttvgpt' ),
-					'success'         => __( '✅ Klaar!', 'zw-ttvgpt' ),
+					'generating'      => __( 'Genereren...', 'zw-ttvgpt' ),
+					'error'           => __( 'Fout opgetreden', 'zw-ttvgpt' ),
+					'success'         => __( 'Klaar!', 'zw-ttvgpt' ),
 					'buttonText'      => __( 'Genereer samenvatting', 'zw-ttvgpt' ),
 					'loadingMessages' => array(
 						__( '🤔 Analyseren...', 'zw-ttvgpt' ),
