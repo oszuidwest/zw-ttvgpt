@@ -124,7 +124,7 @@ class TTVGPTAdminMenu {
 					'generating'      => __( 'Genereren...', 'zw-ttvgpt' ),
 					'error'           => __( 'Fout opgetreden', 'zw-ttvgpt' ),
 					'success'         => __( 'Klaar!', 'zw-ttvgpt' ),
-					'buttonText'      => __( 'Genereer samenvatting', 'zw-ttvgpt' ),
+					'buttonText'      => __( 'Genereer', 'zw-ttvgpt' ),
 					'loadingMessages' => array(
 						__( '🤔 Even nadenken...', 'zw-ttvgpt' ),
 						__( '📰 Artikel aan het lezen...', 'zw-ttvgpt' ),
