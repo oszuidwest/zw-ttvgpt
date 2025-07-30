@@ -3,7 +3,7 @@
  * Plugin Name: ZuidWest TV Tekst TV GPT
  * Plugin URI: https://github.com/oszuidwest/zw-ttvgpt
  * Description: Genereert automatisch samenvattingen voor Tekst TV met behulp van OpenAI GPT-modellen
- * Version: 0.11.2
+ * Version: 0.11.3
  * Author: Streekomroep ZuidWest
  * Author URI: https://www.zuidwesttv.nl
  * License: GPL v3 or later
