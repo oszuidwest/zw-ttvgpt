@@ -14,7 +14,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@typescript-eslint/eslint-plugin": "^8.41.0",
-    "@typescript-eslint/parser": "^8.41.0",
+    "@typescript-eslint/parser": "^8.43.0",
     "@wordpress/eslint-plugin": "^22.15.0",
     "@wordpress/stylelint-config": "^23.21.0",
     "eslint": "^9.34.0",
