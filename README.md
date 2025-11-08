@@ -22,10 +22,11 @@ WordPress plugin die OpenAI's GPT-modellen gebruikt om automatisch korte versies
 
 ### Vereisten
 - WordPress 6.0 of hoger
-- PHP 8.2 of hoger  
+- PHP 8.2 of hoger
 - Advanced Custom Fields (ACF) plugin
-- Classic Editor (Block Editor wordt niet ondersteund)
 - OpenAI API-sleutel
+
+**Editor-ondersteuning**: Werkt met zowel de Block Editor (Gutenberg) als de Classic Editor.
 
 ### Installatie
 1. Upload de pluginbestanden naar de `/wp-content/plugins/zw-ttvgpt/` directory

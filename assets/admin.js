@@ -140,13 +140,33 @@
 	}
 
 	/**
-	 * Extract content from active editor (TinyMCE or textarea fallback)
+	 * Extract content from active editor (Block Editor, TinyMCE, or textarea)
 	 * @return {string} Editor content as plain text
 	 */
 	function getEditorContent() {
 		let content = '';
 
-		// Try TinyMCE first, but check if it actually has content
+		// Try Block Editor (Gutenberg) first
+		if (
+			typeof wp !== 'undefined' &&
+			wp.data &&
+			wp.data.select('core/editor')
+		) {
+			const editor = wp.data.select('core/editor');
+			const blocks = editor.getBlocks();
+
+			if (blocks && blocks.length > 0) {
+				blocks.forEach(function (block) {
+					content += extractBlockText(block) + '\n';
+				});
+
+				if (content.trim().length > 0) {
+					return content.trim();
+				}
+			}
+		}
+
+		// Try TinyMCE (Classic Editor)
 		if (
 			typeof tinyMCE !== 'undefined' &&
 			tinyMCE.activeEditor &&
@@ -154,13 +174,12 @@
 			tinyMCE.activeEditor.initialized
 		) {
 			content = tinyMCE.activeEditor.getContent({ format: 'text' });
-			// If TinyMCE returns content, use it
 			if (content && content.trim().length > 0) {
 				return content;
 			}
 		}
 
-		// Fallback to textarea (always available)
+		// Fallback to textarea
 		const $textarea = $(SELECTORS.contentEditor);
 		if ($textarea.length > 0) {
 			content = $textarea.val();
@@ -170,6 +189,38 @@
 		}
 
 		return '';
+	}
+
+	/**
+	 * Extract text from a block and its inner blocks
+	 * @param {Object} block Block object
+	 * @return {string} Extracted text
+	 */
+	function extractBlockText(block) {
+		let text = '';
+
+		// Extract content from block attributes
+		if (block.attributes && block.attributes.content) {
+			text += block.attributes.content.replace(/<[^>]+>/g, '') + '\n';
+		}
+
+		// Handle other common block types
+		if (block.attributes && block.attributes.text) {
+			text += block.attributes.text.replace(/<[^>]+>/g, '') + '\n';
+		}
+
+		if (block.attributes && block.attributes.citation) {
+			text += block.attributes.citation.replace(/<[^>]+>/g, '') + '\n';
+		}
+
+		// Process inner blocks recursively
+		if (block.innerBlocks && block.innerBlocks.length > 0) {
+			block.innerBlocks.forEach(function (innerBlock) {
+				text += extractBlockText(innerBlock);
+			});
+		}
+
+		return text;
 	}
 
 	/**

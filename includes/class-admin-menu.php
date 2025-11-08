@@ -104,6 +104,7 @@ class TTVGPTAdminMenu {
 			return;
 		}
 
+		// Enqueue assets (same for both Block Editor and Classic Editor)
 		wp_enqueue_style( 'zw-ttvgpt-admin', ZW_TTVGPT_URL . 'assets/admin.css', array(), $version );
 		wp_enqueue_script( 'zw-ttvgpt-admin', ZW_TTVGPT_URL . 'assets/admin.js', array( 'jquery' ), $version, true );
 
