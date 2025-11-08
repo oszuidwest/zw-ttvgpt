@@ -162,9 +162,9 @@
 	 * @return {string} Plain text content
 	 */
 	function getBlockText(block) {
-		// Get inner HTML from block and strip tags
+		// Get inner HTML from block and strip tags using WordPress built-in
 		const html = wp.blocks.getBlockContent(block);
-		const text = stripHtmlTags(html);
+		const text = wp.sanitize.stripTags(html);
 
 		// Process inner blocks recursively
 		if (block.innerBlocks && block.innerBlocks.length > 0) {
@@ -200,7 +200,7 @@
 				content = textParts.join('\n\n');
 
 				if (content.trim().length > 0) {
-					return content.trim();
+					return cleanupWhitespace(content);
 				}
 			}
 		}
@@ -223,7 +223,7 @@
 		if ($textarea.length > 0) {
 			content = $textarea.val();
 			if (content && content.trim().length > 0) {
-				return stripHtmlTags(content);
+				return cleanupWhitespace(wp.sanitize.stripTags(content));
 			}
 		}
 
@@ -231,36 +231,19 @@
 	}
 
 	/**
-	 * Safely strip HTML tags from text
-	 * Prevents HTML injection by handling incomplete tags
-	 * @param {string} html HTML string to strip
-	 * @return {string} Plain text without HTML
+	 * Clean up excessive whitespace in text
+	 * @param {string} text Text to clean
+	 * @return {string} Text with normalized whitespace
 	 */
-	function stripHtmlTags(html) {
-		if (!html || typeof html !== 'string') {
+	function cleanupWhitespace(text) {
+		if (!text || typeof text !== 'string') {
 			return '';
 		}
 
-		let text = html;
-		let prevText = '';
-
-		// Repeatedly remove tags until no more tags are found
-		// This handles nested and incomplete tags
-		while (text !== prevText) {
-			prevText = text;
-			text = text.replace(/<[^>]*>/g, '');
-		}
-
-		// Remove any remaining < or > characters
-		text = text.replace(/[<>]/g, '');
-
-		// Clean up whitespace
-		text = text
+		return text
 			.replace(/\n{3,}/g, '\n\n') // Max 2 consecutive newlines
 			.replace(/[ \t]+/g, ' ') // Multiple spaces/tabs to single space
 			.trim(); // Remove leading/trailing whitespace
-
-		return text;
 	}
 
 	/**
