@@ -1,8 +1,9 @@
 /**
  * ZW TTVGPT Admin JavaScript
  *
- * Manages summary generation interface with typing animations and loading states
- * @param $ jQuery object
+ * Manages summary generation interface with typing animations and loading states.
+ *
+ * @param {jQuery} $ jQuery object.
  */
 (function ($) {
 	'use strict';
@@ -26,7 +27,9 @@
 		$cachedGptField = null;
 
 	/**
-	 * Initialize plugin components and cache DOM elements
+	 * Initialize plugin components and cache DOM elements.
+	 *
+	 * @return {void}
 	 */
 	function init() {
 		$(document).ready(function () {
@@ -38,7 +41,9 @@
 	}
 
 	/**
-	 * Create and inject generate button below ACF summary field
+	 * Create and inject generate button below ACF summary field.
+	 *
+	 * @return {void}
 	 */
 	function injectGenerateButton() {
 		if (!$cachedAcfField || $cachedAcfField.length === 0) {
@@ -59,8 +64,10 @@
 	}
 
 	/**
-	 * Process generate button click and initiate summary generation
-	 * @param {Event} e Click event
+	 * Process generate button click and initiate summary generation.
+	 *
+	 * @param {Event} e Click event.
+	 * @return {void}
 	 */
 	function handleGenerateClick(e) {
 		e.preventDefault();
@@ -157,9 +164,10 @@
 	}
 
 	/**
-	 * Extract plain text from a Gutenberg block
-	 * @param {Object} block Block object
-	 * @return {string} Plain text content
+	 * Extract plain text from a Gutenberg block.
+	 *
+	 * @param {Object} block Block object.
+	 * @return {string} Plain text content.
 	 */
 	function getBlockText(block) {
 		// Get inner HTML from block and strip tags using WordPress built-in
@@ -179,8 +187,9 @@
 	}
 
 	/**
-	 * Extract content from active editor (Block Editor, TinyMCE, or textarea)
-	 * @return {string} Editor content as plain text
+	 * Extract content from active editor (Block Editor, TinyMCE, or textarea).
+	 *
+	 * @return {string} Editor content as plain text.
 	 */
 	function getEditorContent() {
 		let content = '';
@@ -231,9 +240,10 @@
 	}
 
 	/**
-	 * Clean up excessive whitespace in text
-	 * @param {string} text Text to clean
-	 * @return {string} Text with normalized whitespace
+	 * Clean up excessive whitespace in text.
+	 *
+	 * @param {string} text Text to clean.
+	 * @return {string} Text with normalized whitespace.
 	 */
 	function cleanupWhitespace(text) {
 		if (!text || typeof text !== 'string') {
@@ -247,8 +257,9 @@
 	}
 
 	/**
-	 * Extract selected region names from taxonomy checkboxes
-	 * @return {Array<string>} Array of selected region names
+	 * Extract selected region names from taxonomy checkboxes.
+	 *
+	 * @return {Array<string>} Array of selected region names.
 	 */
 	function getSelectedRegions() {
 		const regions = [];
@@ -274,10 +285,11 @@
 	}
 
 	/**
-	 * Start animated thinking indicator with cycling characters
-	 * @param {jQuery|HTMLElement} element Element to animate
-	 * @param {string}             text    Optional text to append after spinner
-	 * @return {number} Interval ID for cleanup
+	 * Start animated thinking indicator with cycling characters.
+	 *
+	 * @param {jQuery|HTMLElement} element Element to animate.
+	 * @param {string}             text    Optional text to append after spinner.
+	 * @return {number} Interval ID for cleanup.
 	 */
 	function startThinkingAnimation(element, text = '') {
 		let index = 0;
@@ -296,9 +308,11 @@
 	}
 
 	/**
-	 * Handle successful response
-	 * @param data
-	 * @param $button
+	 * Handle successful API response and update UI.
+	 *
+	 * @param {Object} data    Response data containing summary.
+	 * @param {jQuery} $button Generate button element.
+	 * @return {void}
 	 */
 	function handleSuccess(data, $button) {
 		// Get current message count
@@ -345,10 +359,12 @@
 	}
 
 	/**
-	 * Animate text typing effect - ChatGPT style
-	 * @param $element
-	 * @param text
-	 * @param $button
+	 * Animate text typing effect with ChatGPT-style character animation.
+	 *
+	 * @param {jQuery} $element Target element to type into.
+	 * @param {string} text     Text to animate.
+	 * @param {jQuery} $button  Generate button to re-enable after completion.
+	 * @return {void}
 	 */
 	function animateText($element, text, $button) {
 		let index = 0;
@@ -406,9 +422,11 @@
 	}
 
 	/**
-	 * Set loading state for button
-	 * @param $button
-	 * @param isLoading
+	 * Set loading state for generate button.
+	 *
+	 * @param {jQuery}  $button   Button element.
+	 * @param {boolean} isLoading True to enable loading state, false to disable.
+	 * @return {void}
 	 */
 	function setLoadingState($button, isLoading) {
 		if (isLoading) {
@@ -436,9 +454,11 @@
 	}
 
 	/**
-	 * Show status message
-	 * @param type
-	 * @param message
+	 * Show status message to user.
+	 *
+	 * @param {string} type    Message type ('error' or 'success').
+	 * @param {string} message Message text to display.
+	 * @return {void}
 	 */
 	function showStatus(type, message) {
 		// Create a temporary notice above the ACF field
@@ -468,7 +488,9 @@
 	}
 
 	/**
-	 * Clear loading messages and restore ACF field
+	 * Clear loading messages and restore ACF field.
+	 *
+	 * @return {void}
 	 */
 	function clearLoadingMessages() {
 		const messageInterval = $cachedAcfField.data('message-interval');
@@ -497,7 +519,9 @@
 	}
 
 	/**
-	 * Show loading messages in ACF field while generating
+	 * Show loading messages in ACF field while generating.
+	 *
+	 * @return {void}
 	 */
 	function showLoadingMessages() {
 		if (

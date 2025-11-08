@@ -11,6 +11,8 @@ namespace ZW_TTVGPT_Core;
  * Helper class
  *
  * Common utility functions for the plugin
+ *
+ * @package ZW_TTVGPT
  */
 class TTVGPTHelper {
 
@@ -51,7 +53,7 @@ class TTVGPTHelper {
 	/**
 	 * Generate ACF field selectors for JavaScript usage
 	 *
-	 * @return array Field selector mappings for client-side access
+	 * @return array Field selector mappings for client-side access.
 	 */
 	public static function get_acf_field_ids(): array {
 		return array(
@@ -63,8 +65,8 @@ class TTVGPTHelper {
 	/**
 	 * Validate OpenAI API key format
 	 *
-	 * @param string $api_key API key to validate
-	 * @return bool True if key format is valid (starts with 'sk-')
+	 * @param string $api_key API key to validate.
+	 * @return bool True if key format is valid (starts with 'sk-'), false otherwise.
 	 */
 	public static function is_valid_api_key( string $api_key ): bool {
 		return ! empty( $api_key ) && str_starts_with( $api_key, 'sk-' );

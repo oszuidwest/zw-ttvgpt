@@ -11,6 +11,8 @@ namespace ZW_TTVGPT_Core;
  * Admin Menu class
  *
  * Handles WordPress admin menu registration and asset loading
+ *
+ * @package ZW_TTVGPT
  */
 class TTVGPTAdminMenu {
 	/**
@@ -30,8 +32,8 @@ class TTVGPTAdminMenu {
 	/**
 	 * Initialize admin menu and register WordPress hooks
 	 *
-	 * @param TTVGPTLogger         $logger            Logger instance for debugging
-	 * @param TTVGPTFineTuningPage $fine_tuning_page  Fine tuning page instance
+	 * @param TTVGPTLogger         $logger           Logger instance for debugging.
+	 * @param TTVGPTFineTuningPage $fine_tuning_page Fine tuning page instance.
 	 */
 	public function __construct( TTVGPTLogger $logger, TTVGPTFineTuningPage $fine_tuning_page ) {
 		$this->logger           = $logger;
@@ -75,7 +77,7 @@ class TTVGPTAdminMenu {
 	/**
 	 * Load CSS and JavaScript assets on post edit screens and audit page
 	 *
-	 * @param string $hook Current admin page hook
+	 * @param string $hook Current admin page hook.
 	 * @return void
 	 */
 	public function enqueue_admin_assets( string $hook ): void {

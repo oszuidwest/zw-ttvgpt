@@ -11,6 +11,8 @@ namespace ZW_TTVGPT_Core;
  * Audit Page class
  *
  * Handles audit page rendering and analysis
+ *
+ * @package ZW_TTVGPT
  */
 class TTVGPTAuditPage {
 	/**
@@ -23,7 +25,7 @@ class TTVGPTAuditPage {
 	/**
 	 * Get validated filter parameters from GET request
 	 *
-	 * @return array Validated parameters
+	 * @return array Validated parameters including year, month, status_filter, and change_filter.
 	 */
 	private function get_filter_params(): array {
 		// Read-only page - nonce verification not required for display filters
@@ -150,10 +152,10 @@ class TTVGPTAuditPage {
 	/**
 	 * Render WordPress-style status filter links
 	 *
-	 * @param int    $year Current year
-	 * @param int    $month Current month
-	 * @param string $status_filter Current status filter
-	 * @param array  $counts Statistics counts
+	 * @param int    $year          Current year for filtering.
+	 * @param int    $month         Current month for filtering.
+	 * @param string $status_filter Current status filter value.
+	 * @param array  $counts        Statistics counts for each category.
 	 * @return void
 	 */
 	private function render_status_links( int $year, int $month, string $status_filter, array $counts ): void {
@@ -193,13 +195,13 @@ class TTVGPTAuditPage {
 	/**
 	 * Render WordPress-style table navigation
 	 *
-	 * @param int    $year Current year
-	 * @param int    $month Current month
-	 * @param array  $available_months All available months
-	 * @param string $status_filter Current status filter
-	 * @param string $change_filter Current change filter
-	 * @param array  $counts Statistics counts
-	 * @param string $which Top or bottom
+	 * @param int    $year             Current year for filtering.
+	 * @param int    $month            Current month for filtering.
+	 * @param array  $available_months All available months with data.
+	 * @param string $status_filter    Current status filter value.
+	 * @param string $change_filter    Current change percentage filter value.
+	 * @param array  $counts           Statistics counts for each category.
+	 * @param string $which            Position of navigation ('top' or 'bottom').
 	 * @return void
 	 */
 	private function render_tablenav( int $year, int $month, array $available_months, string $status_filter, string $change_filter, array $counts, string $which ): void {
@@ -265,10 +267,10 @@ class TTVGPTAuditPage {
 	}
 
 	/**
-	 * Render WordPress-style table
+	 * Render WordPress-style table with audit data
 	 *
-	 * @param array $categorized_posts Array of categorized posts
-	 * @param array $meta_cache Meta data cache to avoid N+1 queries
+	 * @param array $categorized_posts Array of categorized posts with analysis data.
+	 * @param array $meta_cache        Meta data cache to avoid N+1 queries.
 	 * @return void
 	 */
 	private function render_audit_table( array $categorized_posts, array $meta_cache ): void {

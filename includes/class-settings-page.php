@@ -121,7 +121,9 @@ class TTVGPTSettingsPage {
 	}
 
 	/**
-	 * Render section descriptions
+	 * Render API section description
+	 *
+	 * @return void
 	 */
 	public function render_api_section(): void {
 		echo '<p>' . esc_html__( 'Vul je OpenAI gegevens in om te beginnen.', 'zw-ttvgpt' ) . '</p>';
@@ -233,10 +235,10 @@ class TTVGPTSettingsPage {
 	}
 
 	/**
-	 * Sanitize settings
+	 * Sanitize and validate all plugin settings before saving
 	 *
-	 * @param array $input Raw input data
-	 * @return array Sanitized settings
+	 * @param array $input Raw input data from settings form.
+	 * @return array Sanitized settings array.
 	 */
 	public function sanitize_settings( array $input ): array {
 		$sanitized = array();

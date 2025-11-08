@@ -11,6 +11,8 @@ namespace ZW_TTVGPT_Core;
  * Fine Tuning Export class
  *
  * Exports AI+human training data in JSONL format for OpenAI fine-tuning
+ *
+ * @package ZW_TTVGPT
  */
 class TTVGPTFineTuningExport {
 	/**
@@ -37,9 +39,9 @@ class TTVGPTFineTuningExport {
 	/**
 	 * Initialize fine tuning export with dependencies
 	 *
-	 * @param TTVGPTLogger     $logger      Logger instance for debugging
-	 * @param TTVGPTApiHandler $api_handler API handler for reusing production logic
-	 * @param int              $word_limit  Word limit matching production settings
+	 * @param TTVGPTLogger     $logger      Logger instance for debugging.
+	 * @param TTVGPTApiHandler $api_handler API handler for reusing production logic.
+	 * @param int              $word_limit  Word limit matching production settings.
 	 */
 	public function __construct( TTVGPTLogger $logger, TTVGPTApiHandler $api_handler, int $word_limit ) {
 		$this->logger      = $logger;
@@ -50,8 +52,8 @@ class TTVGPTFineTuningExport {
 	/**
 	 * Generate JSONL training data for DPO fine-tuning
 	 *
-	 * @param array $filters Optional filters for date range and post count
-	 * @return array Array containing training data and metadata
+	 * @param array $filters Optional filters for date range and post count.
+	 * @return array Array containing success status, training data, and statistics.
 	 */
 	public function generate_training_data( array $filters = array() ): array {
 		$this->logger->debug( 'Starting DPO training data generation with filters: ' . wp_json_encode( $filters ) );
@@ -126,8 +128,8 @@ class TTVGPTFineTuningExport {
 	/**
 	 * Get posts suitable for DPO training (AI generated + human edited)
 	 *
-	 * @param array $filters Filters for date range and limits
-	 * @return array Array of post objects
+	 * @param array $filters Filters for date range and limits.
+	 * @return array Array of post objects with AI and human content.
 	 */
 	private function get_suitable_posts( array $filters ): array {
 		global $wpdb;
@@ -206,8 +208,8 @@ class TTVGPTFineTuningExport {
 	/**
 	 * Create a single training entry in DPO format
 	 *
-	 * @param \stdClass $post Post object with ID, ai_content, human_content, and post_content properties
-	 * @return array|null Training entry or null if invalid
+	 * @param \stdClass $post Post object with ID, ai_content, human_content, and post_content properties.
+	 * @return array|null Training entry array or null if content is invalid.
 	 */
 	private function create_training_entry( \stdClass $post ): ?array {
 		// Validate required properties exist
@@ -263,9 +265,9 @@ class TTVGPTFineTuningExport {
 	/**
 	 * Export training data as JSONL file
 	 *
-	 * @param array  $training_data Array of training entries
-	 * @param string $filename Optional filename
-	 * @return array Result with file path and stats
+	 * @param array  $training_data Array of training entries.
+	 * @param string $filename      Optional filename (defaults to timestamped name).
+	 * @return array Result array with success status, file path, and statistics.
 	 * @throws \Exception If upload directory cannot be created or file cannot be written.
 	 */
 	public function export_to_jsonl( array $training_data, string $filename = '' ): array {
@@ -343,9 +345,9 @@ class TTVGPTFineTuningExport {
 	/**
 	 * Validate JSONL file format
 	 *
-	 * @param string $file_path Path to JSONL file
-	 * @param int    $max_lines Maximum lines to validate (0 = all)
-	 * @return array Validation result
+	 * @param string $file_path Path to JSONL file.
+	 * @param int    $max_lines Maximum lines to validate (0 = all).
+	 * @return array Validation result with validity status and error details.
 	 */
 	public function validate_jsonl( string $file_path, int $max_lines = 100 ): array {
 		// Initialize WP_Filesystem for reading
@@ -423,8 +425,8 @@ class TTVGPTFineTuningExport {
 	/**
 	 * Validate single DPO entry structure
 	 *
-	 * @param array $entry DPO entry to validate
-	 * @return bool True if valid
+	 * @param array $entry DPO entry to validate.
+	 * @return bool True if entry has valid DPO structure, false otherwise.
 	 */
 	private function validate_dpo_entry( array $entry ): bool {
 		// Check required top-level keys

@@ -11,6 +11,8 @@ namespace ZW_TTVGPT_Core;
  * Settings Manager class
  *
  * Handles all settings operations for the plugin
+ *
+ * @package ZW_TTVGPT
  */
 class TTVGPTSettingsManager {
 	/**
@@ -30,7 +32,7 @@ class TTVGPTSettingsManager {
 	/**
 	 * Retrieve all plugin settings with caching
 	 *
-	 * @return array Complete settings array with defaults applied
+	 * @return array Complete settings array with defaults applied.
 	 */
 	public static function get_settings(): array {
 		$settings = wp_cache_get( self::CACHE_KEY, self::CACHE_GROUP );
@@ -50,9 +52,9 @@ class TTVGPTSettingsManager {
 	/**
 	 * Retrieve specific setting value with fallback
 	 *
-	 * @param string $key           Setting key to retrieve
-	 * @param mixed  $default_value Default value if setting not found
-	 * @return mixed Setting value or default
+	 * @param string $key           Setting key to retrieve.
+	 * @param mixed  $default_value Default value if setting not found.
+	 * @return mixed Setting value or default.
 	 */
 	public static function get_setting( string $key, $default_value = null ) {
 		$settings = self::get_settings();
@@ -62,8 +64,8 @@ class TTVGPTSettingsManager {
 	/**
 	 * Update plugin settings and refresh cache
 	 *
-	 * @param array $new_settings Settings to merge with existing values
-	 * @return bool True if settings were successfully updated
+	 * @param array $new_settings Settings to merge with existing values.
+	 * @return bool True if settings were successfully updated.
 	 */
 	public static function update_settings( array $new_settings ): bool {
 		$settings = self::get_settings();
@@ -81,7 +83,7 @@ class TTVGPTSettingsManager {
 	/**
 	 * Reset all settings to default values and clear cache
 	 *
-	 * @return bool True if settings were successfully reset
+	 * @return bool True if settings were successfully reset.
 	 */
 	public static function reset_settings(): bool {
 		$result = update_option(
@@ -99,7 +101,7 @@ class TTVGPTSettingsManager {
 	/**
 	 * Completely remove plugin settings and clear cache
 	 *
-	 * @return bool True if settings were successfully deleted
+	 * @return bool True if settings were successfully deleted.
 	 */
 	public static function delete_settings(): bool {
 		wp_cache_delete( self::CACHE_KEY, self::CACHE_GROUP );
@@ -107,9 +109,9 @@ class TTVGPTSettingsManager {
 	}
 
 	/**
-	 * Get typed setting values
+	 * Get API key from settings
 	 *
-	 * @return string API key
+	 * @return string API key value.
 	 */
 	public static function get_api_key(): string {
 		$api_key = self::get_setting( 'api_key', '' );
@@ -117,9 +119,9 @@ class TTVGPTSettingsManager {
 	}
 
 	/**
-	 * Get model name
+	 * Get configured OpenAI model name
 	 *
-	 * @return string Model name
+	 * @return string Model identifier.
 	 */
 	public static function get_model(): string {
 		$model = self::get_setting( 'model', TTVGPTConstants::DEFAULT_MODEL );
@@ -127,9 +129,9 @@ class TTVGPTSettingsManager {
 	}
 
 	/**
-	 * Get word limit
+	 * Get configured word limit for summaries
 	 *
-	 * @return int Word limit
+	 * @return int Word limit value.
 	 */
 	public static function get_word_limit(): int {
 		$word_limit = self::get_setting( 'word_limit', TTVGPTConstants::DEFAULT_WORD_LIMIT );
@@ -139,7 +141,7 @@ class TTVGPTSettingsManager {
 	/**
 	 * Check if debug mode is enabled
 	 *
-	 * @return bool Debug mode status
+	 * @return bool True if debug mode is enabled, false otherwise.
 	 */
 	public static function is_debug_mode(): bool {
 		return (bool) self::get_setting( 'debug_mode', false );

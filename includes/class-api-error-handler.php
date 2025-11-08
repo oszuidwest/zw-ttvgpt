@@ -11,13 +11,15 @@ namespace ZW_TTVGPT_Core;
  * API Error Handler class
  *
  * Centralized handling of API error messages
+ *
+ * @package ZW_TTVGPT
  */
 class TTVGPTApiErrorHandler {
 	/**
 	 * Convert HTTP status codes to localized error messages
 	 *
-	 * @param int $status_code HTTP status code from API response
-	 * @return string Localized error message for end users
+	 * @param int $status_code HTTP status code from API response.
+	 * @return string Localized error message for end users.
 	 */
 	public static function get_error_message( int $status_code ): string {
 		$messages = array(

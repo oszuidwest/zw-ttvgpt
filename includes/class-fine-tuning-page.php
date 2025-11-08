@@ -11,6 +11,8 @@ namespace ZW_TTVGPT_Core;
  * Fine Tuning Page class
  *
  * Admin interface for managing OpenAI fine tuning jobs and training data export
+ *
+ * @package ZW_TTVGPT
  */
 class TTVGPTFineTuningPage {
 	use TTVGPTAjaxSecurity;
@@ -32,8 +34,8 @@ class TTVGPTFineTuningPage {
 	/**
 	 * Initialize fine tuning page with dependencies
 	 *
-	 * @param TTVGPTFineTuningExport $export Export functionality
-	 * @param TTVGPTLogger           $logger Logger instance
+	 * @param TTVGPTFineTuningExport $export Export functionality instance.
+	 * @param TTVGPTLogger           $logger Logger instance for debugging.
 	 */
 	public function __construct( TTVGPTFineTuningExport $export, TTVGPTLogger $logger ) {
 		$this->export = $export;

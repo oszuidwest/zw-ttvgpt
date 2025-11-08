@@ -11,72 +11,183 @@ namespace ZW_TTVGPT_Core;
  * Constants class
  *
  * Centralizes all plugin constants and provides default configuration values
+ *
+ * @package ZW_TTVGPT
  */
 class TTVGPTConstants {
 	/**
-	 * Plugin settings
+	 * WordPress option name for plugin settings.
+	 *
+	 * @var string
 	 */
 	const SETTINGS_OPTION_NAME = 'zw_ttvgpt_settings';
-	const SETTINGS_GROUP       = 'zw_ttvgpt_settings_group';
-	const SETTINGS_PAGE_SLUG   = 'zw-ttvgpt-settings';
 
 	/**
-	 * Capabilities
+	 * Settings group identifier for WordPress Settings API.
+	 *
+	 * @var string
+	 */
+	const SETTINGS_GROUP = 'zw_ttvgpt_settings_group';
+
+	/**
+	 * Page slug for plugin settings page.
+	 *
+	 * @var string
+	 */
+	const SETTINGS_PAGE_SLUG = 'zw-ttvgpt-settings';
+
+	/**
+	 * Capability required to access plugin settings.
+	 *
+	 * @var string
 	 */
 	const REQUIRED_CAPABILITY = 'manage_options';
-	const EDIT_CAPABILITY     = 'edit_posts';
 
 	/**
-	 * Post types
+	 * Capability required to generate summaries.
+	 *
+	 * @var string
+	 */
+	const EDIT_CAPABILITY = 'edit_posts';
+
+	/**
+	 * Supported post type for summary generation.
+	 *
+	 * @var string
 	 */
 	const SUPPORTED_POST_TYPE = 'post';
 
 	/**
-	 * ACF field keys
+	 * ACF field key for summary field.
+	 *
+	 * @var string
 	 */
-	const ACF_SUMMARY_FIELD    = 'field_5f21a06d22c58';
+	const ACF_SUMMARY_FIELD = 'field_5f21a06d22c58';
+
+	/**
+	 * ACF field key for GPT marker field.
+	 *
+	 * @var string
+	 */
 	const ACF_GPT_MARKER_FIELD = 'field_66ad2a3105371';
 
 	/**
-	 * ACF field names (meta keys)
+	 * Meta key for AI-generated content.
+	 *
+	 * @var string
 	 */
-	const ACF_FIELD_AI_CONTENT    = 'post_kabelkrant_content_gpt';
+	const ACF_FIELD_AI_CONTENT = 'post_kabelkrant_content_gpt';
+
+	/**
+	 * Meta key for human-edited content.
+	 *
+	 * @var string
+	 */
 	const ACF_FIELD_HUMAN_CONTENT = 'post_kabelkrant_content';
+
+	/**
+	 * Meta key for Kabelkrant inclusion flag.
+	 *
+	 * @var string
+	 */
 	const ACF_FIELD_IN_KABELKRANT = 'post_in_kabelkrant';
 
 	/**
-	 * OpenAI models
+	 * Default OpenAI model for summary generation.
+	 *
+	 * @var string
 	 */
 	const DEFAULT_MODEL = 'gpt-4.1-mini';
 
-
 	/**
-	 * Rate limiting
+	 * Maximum requests allowed per user in rate limit window.
+	 *
+	 * @var int
 	 */
 	const RATE_LIMIT_MAX_REQUESTS = 10;
-	const RATE_LIMIT_WINDOW       = 60; // seconds
-	const RATE_LIMIT_PREFIX       = 'zw_ttvgpt_rate_';
 
 	/**
-	 * Word limits
+	 * Rate limit time window in seconds.
+	 *
+	 * @var int
 	 */
-	const MIN_WORD_COUNT     = 100;
+	const RATE_LIMIT_WINDOW = 60;
+
+	/**
+	 * Transient key prefix for rate limiting.
+	 *
+	 * @var string
+	 */
+	const RATE_LIMIT_PREFIX = 'zw_ttvgpt_rate_';
+
+	/**
+	 * Minimum word count required in content to generate summary.
+	 *
+	 * @var int
+	 */
+	const MIN_WORD_COUNT = 100;
+
+	/**
+	 * Default word limit for generated summaries.
+	 *
+	 * @var int
+	 */
 	const DEFAULT_WORD_LIMIT = 100;
-	const MIN_WORD_LIMIT     = 50;
-	const MAX_WORD_LIMIT     = 500;
-	const WORD_LIMIT_STEP    = 10;
 
 	/**
-	 * Timeouts
+	 * Minimum allowed word limit for summaries.
+	 *
+	 * @var int
 	 */
-	const API_TIMEOUT             = 30; // seconds
-	const SUCCESS_MESSAGE_TIMEOUT = 3000; // milliseconds
+	const MIN_WORD_LIMIT = 50;
 
 	/**
-	 * Animation delays (milliseconds)
+	 * Maximum allowed word limit for summaries.
+	 *
+	 * @var int
 	 */
-	const ANIMATION_DELAY_MIN   = 20;
-	const ANIMATION_DELAY_MAX   = 50;
+	const MAX_WORD_LIMIT = 500;
+
+	/**
+	 * Step value for word limit adjustment.
+	 *
+	 * @var int
+	 */
+	const WORD_LIMIT_STEP = 10;
+
+	/**
+	 * API request timeout in seconds.
+	 *
+	 * @var int
+	 */
+	const API_TIMEOUT = 30;
+
+	/**
+	 * Success message display duration in milliseconds.
+	 *
+	 * @var int
+	 */
+	const SUCCESS_MESSAGE_TIMEOUT = 3000;
+
+	/**
+	 * Minimum typing animation delay in milliseconds.
+	 *
+	 * @var int
+	 */
+	const ANIMATION_DELAY_MIN = 20;
+
+	/**
+	 * Maximum typing animation delay in milliseconds.
+	 *
+	 * @var int
+	 */
+	const ANIMATION_DELAY_MAX = 50;
+
+	/**
+	 * Space character typing delay in milliseconds.
+	 *
+	 * @var int
+	 */
 	const ANIMATION_DELAY_SPACE = 30;
 
 	/**
