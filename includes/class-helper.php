@@ -67,6 +67,6 @@ class TTVGPTHelper {
 	 * @return bool True if key format is valid (starts with 'sk-')
 	 */
 	public static function is_valid_api_key( string $api_key ): bool {
-		return ! empty( $api_key ) && strpos( $api_key, 'sk-' ) === 0;
+		return ! empty( $api_key ) && str_starts_with( $api_key, 'sk-' );
 	}
 }

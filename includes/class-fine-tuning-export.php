@@ -311,7 +311,7 @@ class TTVGPTFineTuningExport {
 				throw new \Exception( 'Could not create file: ' . $file_path );
 			}
 
-			$file_size = filesize( $file_path );
+			$file_size = $wp_filesystem->size( $file_path );
 
 			$this->logger->debug( "JSONL export completed: {$filename} ({$line_count} lines, {$file_size} bytes)" );
 
@@ -348,7 +348,14 @@ class TTVGPTFineTuningExport {
 	 * @return array Validation result
 	 */
 	public function validate_jsonl( string $file_path, int $max_lines = 100 ): array {
-		if ( ! file_exists( $file_path ) ) {
+		// Initialize WP_Filesystem for reading
+		global $wp_filesystem;
+		if ( ! function_exists( 'WP_Filesystem' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+		}
+		WP_Filesystem();
+
+		if ( ! $wp_filesystem->exists( $file_path ) ) {
 			return array(
 				'valid'   => false,
 				'message' => __( 'Bestand niet gevonden', 'zw-ttvgpt' ),
@@ -358,13 +365,6 @@ class TTVGPTFineTuningExport {
 		$errors        = array();
 		$line_count    = 0;
 		$valid_entries = 0;
-
-		// Initialize WP_Filesystem for reading
-		global $wp_filesystem;
-		if ( ! function_exists( 'WP_Filesystem' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/file.php';
-		}
-		WP_Filesystem();
 
 		$file_contents = $wp_filesystem->get_contents( $file_path );
 		if ( false === $file_contents ) {

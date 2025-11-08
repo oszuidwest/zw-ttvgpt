@@ -274,20 +274,6 @@
 	}
 
 	/**
-	 * Randomize array order using Fisher-Yates shuffle algorithm
-	 * @param {Array} array Array to shuffle
-	 * @return {Array} New shuffled array
-	 */
-	function shuffleArray(array) {
-		const shuffled = [...array];
-		for (let i = shuffled.length - 1; i > 0; i--) {
-			const j = Math.floor(Math.random() * (i + 1));
-			[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-		}
-		return shuffled;
-	}
-
-	/**
 	 * Start animated thinking indicator with cycling characters
 	 * @param {jQuery|HTMLElement} element Element to animate
 	 * @param {string}             text    Optional text to append after spinner
@@ -523,7 +509,7 @@
 		}
 
 		// Create a shuffled copy of messages
-		let messages = shuffleArray(zwTTVGPT.strings.loadingMessages),
+		let messages = _.shuffle(zwTTVGPT.strings.loadingMessages),
 			messageIndex = 0,
 			messageCount = 0,
 			activeTransition = null;
@@ -540,7 +526,7 @@
 		function showNextMessage() {
 			if (messageIndex >= messages.length) {
 				// Reshuffle when we've shown all messages
-				messages = shuffleArray(messages);
+				messages = _.shuffle(messages);
 				messageIndex = 0;
 			}
 
