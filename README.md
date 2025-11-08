@@ -76,7 +76,7 @@ Schakel debugmodus in via **Instellingen** → **Tekst TV GPT** om gedetailleerd
 - Generated summary metadata (word count)
 - Error messages met context
 
-Open de browser console (F12) en check je PHP error log om de debug output te zien.
+Open de browser console en check je PHP error log om de debug output te zien.
 
 ## Ontwikkelaars
 
