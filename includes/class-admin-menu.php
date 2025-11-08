@@ -115,6 +115,7 @@ class TTVGPTAdminMenu {
 				'ajaxUrl'        => admin_url( 'admin-ajax.php' ),
 				'nonce'          => wp_create_nonce( 'zw_ttvgpt_nonce' ),
 				'acfFields'      => TTVGPTHelper::get_acf_field_ids(),
+				'debugMode'      => TTVGPTSettingsManager::is_debug_mode(),
 				'animationDelay' => array(
 					'min'   => 20,
 					'max'   => 50,

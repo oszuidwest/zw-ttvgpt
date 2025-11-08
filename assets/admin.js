@@ -84,6 +84,17 @@
 
 		const regions = getSelectedRegions();
 
+		// Debug: log content being sent to API
+		if (zwTTVGPT.debugMode) {
+			/* eslint-disable no-console */
+			console.log('ZW TTVGPT Debug - Content wordt verstuurd naar API:');
+			console.log('Post ID:', postId);
+			console.log('Content lengte:', content.length, 'tekens');
+			console.log("Regio's:", regions);
+			console.log('Content:', content);
+			/* eslint-enable no-console */
+		}
+
 		setLoadingState($button, true);
 		$button.data('is-generating', true);
 		showLoadingMessages();
@@ -99,6 +110,12 @@
 				regions,
 			},
 			success(response) {
+				// Debug: log API response
+				if (zwTTVGPT.debugMode) {
+					/* eslint-disable-next-line no-console */
+					console.log('ZW TTVGPT Debug - API Response:', response);
+				}
+
 				if (response.success) {
 					clearLoadingMessages();
 					handleSuccess(response.data, $button);
@@ -140,6 +157,15 @@
 	}
 
 	/**
+	 * Extract plain text from a Gutenberg block
+	 * @param {Object} block Block object
+	 * @return {string} Plain text content
+	 */
+	function getBlockText(block) {
+		return wp.blocks.getTextContent(block);
+	}
+
+	/**
 	 * Extract content from active editor (Block Editor, TinyMCE, or textarea)
 	 * @return {string} Editor content as plain text
 	 */
@@ -156,9 +182,9 @@
 			const blocks = editor.getBlocks();
 
 			if (blocks && blocks.length > 0) {
-				blocks.forEach(function (block) {
-					content += extractBlockText(block) + '\n';
-				});
+				// Extract text from each block
+				const textParts = blocks.map(getBlockText).filter(Boolean);
+				content = textParts.join('\n\n');
 
 				if (content.trim().length > 0) {
 					return content.trim();
@@ -166,7 +192,7 @@
 			}
 		}
 
-		// Try TinyMCE (Classic Editor)
+		// Try TinyMCE (Classic Editor) - already returns plain text
 		if (
 			typeof tinyMCE !== 'undefined' &&
 			tinyMCE.activeEditor &&
@@ -179,12 +205,12 @@
 			}
 		}
 
-		// Fallback to textarea
+		// Fallback to textarea - strip HTML for safety
 		const $textarea = $(SELECTORS.contentEditor);
 		if ($textarea.length > 0) {
 			content = $textarea.val();
 			if (content && content.trim().length > 0) {
-				return content;
+				return stripHtmlTags(content);
 			}
 		}
 
@@ -192,33 +218,34 @@
 	}
 
 	/**
-	 * Extract text from a block and its inner blocks
-	 * @param {Object} block Block object
-	 * @return {string} Extracted text
+	 * Safely strip HTML tags from text
+	 * Prevents HTML injection by handling incomplete tags
+	 * @param {string} html HTML string to strip
+	 * @return {string} Plain text without HTML
 	 */
-	function extractBlockText(block) {
-		let text = '';
-
-		// Extract content from block attributes
-		if (block.attributes && block.attributes.content) {
-			text += block.attributes.content.replace(/<[^>]+>/g, '') + '\n';
+	function stripHtmlTags(html) {
+		if (!html || typeof html !== 'string') {
+			return '';
 		}
 
-		// Handle other common block types
-		if (block.attributes && block.attributes.text) {
-			text += block.attributes.text.replace(/<[^>]+>/g, '') + '\n';
+		let text = html;
+		let prevText = '';
+
+		// Repeatedly remove tags until no more tags are found
+		// This handles nested and incomplete tags
+		while (text !== prevText) {
+			prevText = text;
+			text = text.replace(/<[^>]*>/g, '');
 		}
 
-		if (block.attributes && block.attributes.citation) {
-			text += block.attributes.citation.replace(/<[^>]+>/g, '') + '\n';
-		}
+		// Remove any remaining < or > characters
+		text = text.replace(/[<>]/g, '');
 
-		// Process inner blocks recursively
-		if (block.innerBlocks && block.innerBlocks.length > 0) {
-			block.innerBlocks.forEach(function (innerBlock) {
-				text += extractBlockText(innerBlock);
-			});
-		}
+		// Clean up whitespace
+		text = text
+			.replace(/\n{3,}/g, '\n\n') // Max 2 consecutive newlines
+			.replace(/[ \t]+/g, ' ') // Multiple spaces/tabs to single space
+			.trim(); // Remove leading/trailing whitespace
 
 		return text;
 	}
