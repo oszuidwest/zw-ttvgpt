@@ -162,7 +162,20 @@
 	 * @return {string} Plain text content
 	 */
 	function getBlockText(block) {
-		return wp.blocks.getTextContent(block);
+		// Get inner HTML from block and strip tags
+		const html = wp.blocks.getBlockContent(block);
+		const text = stripHtmlTags(html);
+
+		// Process inner blocks recursively
+		if (block.innerBlocks && block.innerBlocks.length > 0) {
+			const innerText = block.innerBlocks
+				.map(getBlockText)
+				.filter(Boolean)
+				.join('\n');
+			return text + (text && innerText ? '\n' : '') + innerText;
+		}
+
+		return text;
 	}
 
 	/**
@@ -176,9 +189,9 @@
 		if (
 			typeof wp !== 'undefined' &&
 			wp.data &&
-			wp.data.select('core/editor')
+			wp.data.select('core/block-editor')
 		) {
-			const editor = wp.data.select('core/editor');
+			const editor = wp.data.select('core/block-editor');
 			const blocks = editor.getBlocks();
 
 			if (blocks && blocks.length > 0) {

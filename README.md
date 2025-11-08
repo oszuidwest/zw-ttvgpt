@@ -62,6 +62,22 @@ De **2025-modellen** bieden tot 1 miljoen tokens context, 26-83% lagere kosten e
 - Filter op wijzigingspercentage: Laag (≤20%), Gemiddeld (21-50%) of Hoog (>50%)
 - Bekijk de diff-weergave door op **Bekijk diff** te klikken
 
+### Debuggen
+Schakel debugmodus in via **Instellingen** → **Tekst TV GPT** om gedetailleerde informatie te loggen:
+
+**Browser Console** (JavaScript):
+- Post ID en geselecteerde regio's
+- Exacte content die naar de API wordt gestuurd
+- Content lengte in tekens
+- Volledige API response
+
+**Server Logs** (PHP):
+- API request details (model, word limit)
+- Generated summary metadata (word count)
+- Error messages met context
+
+Open de browser console (F12) en check je PHP error log om de debug output te zien.
+
 ## Ontwikkelaars
 
 ### Lokale ontwikkeling
