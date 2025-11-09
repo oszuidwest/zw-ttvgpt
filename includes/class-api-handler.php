@@ -82,7 +82,7 @@ class TTVGPTApiHandler {
 	 * @return string System prompt text
 	 */
 	public function get_system_prompt( int $word_limit ): string {
-		return sprintf( 'Je bent een ervaren eindredacteur die perfect Nederlands beheerst. Vat het volgende nieuwsartikel samen op een heldere en beknopte manier die makkelijk te begrijpen is voor een breed publiek. Focus op de hoofdzaak en laat bijzaken weg. Schrijf als een vloeiend verhaal met natuurlijke overgangen. Gebruik korte zinslengtes om de leesbaarheid te behouden. Negeer alles in het artikel dat geen Nederlands is. Parse HTML. Gebruik nooit Engelse woorden. Gebruik geen gedachtestreepjes (—), alleen komma\'s en punten. Gebruik maximaal %d woorden.', $word_limit );
+		return sprintf( 'Je bent een ervaren eindredacteur die perfect Nederlands beheerst. Vat het volgende nieuwsartikel samen op een heldere en beknopte manier die makkelijk te begrijpen is voor een breed publiek. Focus op de hoofdzaak en laat bijzaken weg. Schrijf een vloeiend verhaal met natuurlijke overgangen. Gebruik korte zinslengtes om de leesbaarheid te behouden. Negeer alles in het artikel dat geen Nederlands is. Parse HTML. Gebruik nooit Engelse woorden. Gebruik geen gedachtestreepjes (—), alleen komma\'s en punten. Gebruik maximaal %d woorden.', $word_limit );
 	}
 
 	/**
