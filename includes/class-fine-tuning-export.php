@@ -50,6 +50,22 @@ class TTVGPTFineTuningExport {
 	}
 
 	/**
+	 * Initialize WordPress filesystem API
+	 *
+	 * @return \WP_Filesystem_Base WordPress filesystem instance.
+	 */
+	private function init_filesystem() {
+		global $wp_filesystem;
+
+		if ( ! function_exists( 'WP_Filesystem' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+		}
+		WP_Filesystem();
+
+		return $wp_filesystem;
+	}
+
+	/**
 	 * Generate JSONL training data for DPO fine-tuning
 	 *
 	 * @param array $filters Optional filters for date range and post count.
@@ -134,19 +150,11 @@ class TTVGPTFineTuningExport {
 	private function get_suitable_posts( array $filters ): array {
 		global $wpdb;
 
-		$date_filter  = '';
+		$date_filter  = TTVGPTHelper::build_date_filter_clause(
+			$filters['start_date'] ?? '',
+			$filters['end_date'] ?? ''
+		);
 		$limit_clause = '';
-
-		// Apply date filter
-		if ( ! empty( $filters['start_date'] ) && ! empty( $filters['end_date'] ) ) {
-			$start_date  = sanitize_text_field( $filters['start_date'] );
-			$end_date    = sanitize_text_field( $filters['end_date'] );
-			$date_filter = $wpdb->prepare(
-				'AND p.post_date >= %s AND p.post_date <= %s',
-				$start_date . ' 00:00:00',
-				$end_date . ' 23:59:59'
-			);
-		}
 
 		// Apply limit
 		if ( ! empty( $filters['limit'] ) && is_numeric( $filters['limit'] ) ) {
@@ -293,12 +301,7 @@ class TTVGPTFineTuningExport {
 		$file_path  = $upload_dir['path'] . '/' . $filename;
 
 		try {
-			// Initialize WP_Filesystem
-			global $wp_filesystem;
-			if ( ! function_exists( 'WP_Filesystem' ) ) {
-				require_once ABSPATH . 'wp-admin/includes/file.php';
-			}
-			WP_Filesystem();
+			$wp_filesystem = $this->init_filesystem();
 
 			// Build JSONL content
 			$jsonl_content = '';
@@ -350,12 +353,7 @@ class TTVGPTFineTuningExport {
 	 * @return array Validation result with validity status and error details.
 	 */
 	public function validate_jsonl( string $file_path, int $max_lines = 100 ): array {
-		// Initialize WP_Filesystem for reading
-		global $wp_filesystem;
-		if ( ! function_exists( 'WP_Filesystem' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/file.php';
-		}
-		WP_Filesystem();
+		$wp_filesystem = $this->init_filesystem();
 
 		if ( ! $wp_filesystem->exists( $file_path ) ) {
 			return array(

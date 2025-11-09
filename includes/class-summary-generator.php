@@ -57,21 +57,8 @@ class TTVGPTSummaryGenerator {
 	 * @return void
 	 */
 	public function handle_ajax_request(): void {
-		// Verify nonce first
-		if ( ! check_ajax_referer( 'zw_ttvgpt_nonce', 'nonce', false ) ) {
-			wp_send_json_error(
-				array( 'message' => __( 'Sessie verlopen - ververs de pagina', 'zw-ttvgpt' ) ),
-				403
-			);
-		}
-
-		// Check capability
-		if ( ! current_user_can( TTVGPTConstants::EDIT_CAPABILITY ) ) {
-			wp_send_json_error(
-				array( 'message' => __( 'Je hebt geen rechten om samenvattingen te maken', 'zw-ttvgpt' ) ),
-				403
-			);
-		}
+		// Nonce is verified in validate_ajax_request() method
+		$this->validate_ajax_request( 'zw_ttvgpt_nonce', TTVGPTConstants::EDIT_CAPABILITY );
 
 		if ( empty( TTVGPTSettingsManager::get_api_key() ) ) {
 			wp_send_json_error(
@@ -80,8 +67,9 @@ class TTVGPTSummaryGenerator {
 			);
 		}
 
-		// Get content and post ID from request
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified in validate_ajax_request()
 		$content = isset( $_POST['content'] ) ? wp_unslash( $_POST['content'] ) : '';
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified in validate_ajax_request()
 		$post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
 
 		if ( empty( $content ) || ! $post_id || ! get_post( $post_id ) ) {
@@ -113,6 +101,7 @@ class TTVGPTSummaryGenerator {
 			wp_send_json_error( $result->get_error_message(), 500 );
 		}
 
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified in validate_ajax_request()
 		$regions = isset( $_POST['regions'] ) ? array_map( 'sanitize_text_field', (array) $_POST['regions'] ) : array();
 		$summary = $result;
 

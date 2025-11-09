@@ -71,4 +71,27 @@ class TTVGPTHelper {
 	public static function is_valid_api_key( string $api_key ): bool {
 		return ! empty( $api_key ) && str_starts_with( $api_key, 'sk-' );
 	}
+
+	/**
+	 * Build SQL date filter clause for post queries
+	 *
+	 * @param string $start_date Start date in Y-m-d format.
+	 * @param string $end_date   End date in Y-m-d format.
+	 * @return string SQL WHERE clause or empty string if dates invalid.
+	 */
+	public static function build_date_filter_clause( string $start_date = '', string $end_date = '' ): string {
+		if ( empty( $start_date ) || empty( $end_date ) ) {
+			return '';
+		}
+
+		global $wpdb;
+		$start_date = sanitize_text_field( $start_date );
+		$end_date   = sanitize_text_field( $end_date );
+
+		return $wpdb->prepare(
+			'AND p.post_date >= %s AND p.post_date <= %s',
+			$start_date . ' 00:00:00',
+			$end_date . ' 23:59:59'
+		);
+	}
 }

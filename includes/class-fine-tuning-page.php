@@ -277,23 +277,11 @@ class TTVGPTFineTuningPage {
 	 * @return void
 	 */
 	public function handle_export_ajax(): void {
-		// Verify nonce first
-		if ( ! check_ajax_referer( 'zw_ttvgpt_fine_tuning_nonce', 'nonce', false ) ) {
-			wp_send_json_error(
-				array( 'message' => __( 'Beveiligingscontrole mislukt', 'zw-ttvgpt' ) ),
-				403
-			);
-		}
-
-		// Check capability
-		if ( ! current_user_can( TTVGPTConstants::REQUIRED_CAPABILITY ) ) {
-			wp_send_json_error(
-				array( 'message' => __( 'Onvoldoende rechten', 'zw-ttvgpt' ) ),
-				403
-			);
-		}
+		// Nonce is verified in validate_ajax_request() method
+		$this->validate_ajax_request( 'zw_ttvgpt_fine_tuning_nonce', TTVGPTConstants::REQUIRED_CAPABILITY );
 
 		// Get filters from POST data
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce verified in validate_ajax_request()
 		$filters = array();
 		if ( ! empty( $_POST['start_date'] ) ) {
 			$filters['start_date'] = sanitize_text_field( $_POST['start_date'] );
@@ -304,6 +292,7 @@ class TTVGPTFineTuningPage {
 		if ( ! empty( $_POST['limit'] ) ) {
 			$filters['limit'] = absint( $_POST['limit'] );
 		}
+		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
 		// Generate training data
 		$this->logger->debug( 'Export training data requested with filters: ' . wp_json_encode( $filters ) );
