@@ -123,7 +123,7 @@ class TTVGPTAuditPage {
 		$available_months = TTVGPTAuditHelper::get_months();
 
 		// Load audit CSS for improved card spacing
-		$version = ZW_TTVGPT_VERSION . ( TTVGPTSettingsManager::is_debug_mode() ? '.' . time() : '' );
+		$version = TTVGPTHelper::get_asset_version();
 		wp_enqueue_style( 'zw-ttvgpt-audit', ZW_TTVGPT_URL . 'assets/audit.css', array(), $version );
 		wp_print_styles( array( 'zw-ttvgpt-audit' ) );
 

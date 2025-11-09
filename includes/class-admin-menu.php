@@ -81,7 +81,7 @@ class TTVGPTAdminMenu {
 	 * @return void
 	 */
 	public function enqueue_admin_assets( string $hook ): void {
-		$version = ZW_TTVGPT_VERSION . ( TTVGPTSettingsManager::is_debug_mode() ? '.' . time() : '' );
+		$version = TTVGPTHelper::get_asset_version();
 
 		// Enqueue audit CSS on audit page
 		if ( 'tools_page_zw-ttvgpt-audit' === $hook ) {

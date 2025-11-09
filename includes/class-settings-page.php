@@ -32,6 +32,16 @@ class TTVGPTSettingsPage {
 	}
 
 	/**
+	 * Generate settings field name attribute
+	 *
+	 * @param string $field_key Field key within settings array.
+	 * @return string Escaped name attribute value.
+	 */
+	private function get_field_name( string $field_key ): string {
+		return esc_attr( TTVGPTConstants::SETTINGS_OPTION_NAME . '[' . $field_key . ']' );
+	}
+
+	/**
 	 * Register all plugin settings, sections, and fields with WordPress
 	 *
 	 * @return void
@@ -157,7 +167,7 @@ class TTVGPTSettingsPage {
 		?>
 		<input type="password" 
 				id="zw_ttvgpt_api_key" 
-				name="<?php echo esc_attr( TTVGPTConstants::SETTINGS_OPTION_NAME ); ?>[api_key]" 
+				name="<?php echo $this->get_field_name( 'api_key' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in get_field_name() ?>" 
 				value="<?php echo esc_attr( $api_key ); ?>" 
 				class="regular-text" 
 				autocomplete="off" />
@@ -177,7 +187,7 @@ class TTVGPTSettingsPage {
 		?>
 		<input type="text" 
 				id="zw_ttvgpt_model" 
-				name="<?php echo esc_attr( TTVGPTConstants::SETTINGS_OPTION_NAME ); ?>[model]" 
+				name="<?php echo $this->get_field_name( 'model' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in get_field_name() ?>" 
 				value="<?php echo esc_attr( $current_model ); ?>"
 				class="regular-text"
 				placeholder="gpt-4.1-mini" />
@@ -197,7 +207,7 @@ class TTVGPTSettingsPage {
 		?>
 		<input type="number" 
 				id="zw_ttvgpt_word_limit" 
-				name="<?php echo esc_attr( TTVGPTConstants::SETTINGS_OPTION_NAME ); ?>[word_limit]" 
+				name="<?php echo $this->get_field_name( 'word_limit' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in get_field_name() ?>" 
 				value="<?php echo esc_attr( (string) $word_limit ); ?>" 
 				min="<?php echo esc_attr( (string) TTVGPTConstants::MIN_WORD_LIMIT ); ?>" 
 				max="<?php echo esc_attr( (string) TTVGPTConstants::MAX_WORD_LIMIT ); ?>" 
@@ -219,7 +229,7 @@ class TTVGPTSettingsPage {
 		<label for="zw_ttvgpt_debug_mode">
 			<input type="checkbox" 
 					id="zw_ttvgpt_debug_mode" 
-					name="<?php echo esc_attr( TTVGPTConstants::SETTINGS_OPTION_NAME ); ?>[debug_mode]" 
+					name="<?php echo $this->get_field_name( 'debug_mode' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in get_field_name() ?>" 
 					value="1" 
 					<?php checked( $debug_mode ); ?> />
 			<?php esc_html_e( 'Debug-logging inschakelen', 'zw-ttvgpt' ); ?>

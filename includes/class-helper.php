@@ -94,4 +94,13 @@ class TTVGPTHelper {
 			$end_date . ' 23:59:59'
 		);
 	}
+
+	/**
+	 * Get asset version string with cache busting in debug mode
+	 *
+	 * @return string Version string for asset enqueuing.
+	 */
+	public static function get_asset_version(): string {
+		return ZW_TTVGPT_VERSION . ( TTVGPTSettingsManager::is_debug_mode() ? '.' . time() : '' );
+	}
 }
