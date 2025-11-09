@@ -82,7 +82,7 @@ class TTVGPTApiHandler {
 	 * @return string System prompt text
 	 */
 	public function get_system_prompt( int $word_limit ): string {
-		return sprintf( 'Please summarize the following news article in a clear and concise manner that is easy to understand for a general audience. Use short sentences. Do it in Dutch. Ignore everything in the article that\'s not a Dutch word. Parse HTML. Never output English words. Use maximal %d words.', $word_limit );
+		return sprintf( 'Please summarize the following news article in a clear and concise manner that is easy to understand for a general audience. Write flowing, natural sentences that connect ideas smoothly. Do it in Dutch. Ignore everything in the article that\'s not a Dutch word. Parse HTML. Never output English words. Use maximal %d words.', $word_limit );
 	}
 
 	/**
@@ -160,6 +160,9 @@ class TTVGPTApiHandler {
 			'max_output_tokens' => self::MAX_TOKENS,
 			'reasoning'         => array(
 				'effort' => 'minimal',
+			),
+			'text'              => array(
+				'verbosity' => 'high',
 			),
 			'store'             => false,
 		);
