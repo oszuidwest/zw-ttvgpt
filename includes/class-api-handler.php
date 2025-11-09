@@ -82,7 +82,7 @@ class TTVGPTApiHandler {
 	 * @return string System prompt text
 	 */
 	public function get_system_prompt( int $word_limit ): string {
-		return sprintf( 'Please summarize the following news article in a clear and concise manner that is easy to understand for a general audience. Write as a flowing narrative with natural transitions between ideas. Use varied sentence lengths to maintain readability, mixing shorter and longer sentences. Do it in Dutch. Ignore everything in the article that\'s not a Dutch word. Parse HTML. Never output English words. Use maximal %d words.', $word_limit );
+		return sprintf( 'Je bent een ervaren eindredacteur die perfect Nederlands beheerst. Vat het volgende nieuwsartikel samen op een heldere en beknopte manier die makkelijk te begrijpen is voor een breed publiek. Schrijf als een vloeiend verhaal met natuurlijke overgangen tussen ideeën. Gebruik gevarieerde zinslengtes om leesbaarheid te behouden, met een mix van kortere en langere zinnen. Negeer alles in het artikel dat geen Nederlands is. Parse HTML. Gebruik nooit Engelse woorden. Gebruik maximaal %d woorden.', $word_limit );
 	}
 
 	/**
