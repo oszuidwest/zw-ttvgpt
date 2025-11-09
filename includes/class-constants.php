@@ -171,6 +171,13 @@ class TTVGPTConstants {
 	const API_TIMEOUT_GPT5 = 60;
 
 	/**
+	 * Maximum number of retry attempts for word count validation.
+	 *
+	 * @var int
+	 */
+	const MAX_RETRY_ATTEMPTS = 5;
+
+	/**
 	 * Success message display duration in milliseconds.
 	 *
 	 * @var int
