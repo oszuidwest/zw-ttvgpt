@@ -159,7 +159,7 @@ class TTVGPTApiHandler {
 			'input'             => $this->build_messages( $content, $word_limit ),
 			'max_output_tokens' => self::MAX_TOKENS,
 			'reasoning'         => array(
-				'effort' => 'medium',
+				'effort' => 'minimal',
 			),
 			'store'             => false,
 		);
@@ -190,8 +190,6 @@ class TTVGPTApiHandler {
 	 * @return string|\WP_Error Summary text or WP_Error if invalid
 	 */
 	private function extract_responses_summary( array $data ) {
-		$this->logger->debug( 'Responses API data structure', array( 'keys' => array_keys( $data ) ) );
-
 		// Check if output_text helper is available
 		if ( isset( $data['output_text'] ) && is_string( $data['output_text'] ) ) {
 			return trim( $data['output_text'] );
@@ -199,37 +197,23 @@ class TTVGPTApiHandler {
 
 		// Parse output array to find message items
 		if ( isset( $data['output'] ) && is_array( $data['output'] ) ) {
-			$this->logger->debug( 'Processing output array', array( 'count' => count( $data['output'] ) ) );
-
-			foreach ( $data['output'] as $index => $item ) {
+			foreach ( $data['output'] as $item ) {
 				if ( ! isset( $item['type'] ) ) {
-					$this->logger->debug( "Output item $index has no type" );
 					continue;
 				}
 
-				$this->logger->debug( "Output item $index type: {$item['type']}" );
-
 				// Look for message items
 				if ( 'message' === $item['type'] && isset( $item['content'] ) && is_array( $item['content'] ) ) {
-					$this->logger->debug( 'Found message item', array( 'content_count' => count( $item['content'] ) ) );
-
-					foreach ( $item['content'] as $content_index => $content_item ) {
-						if ( isset( $content_item['type'] ) ) {
-							$this->logger->debug( "Content item $content_index type: {$content_item['type']}" );
-						}
-
+					foreach ( $item['content'] as $content_item ) {
 						if ( isset( $content_item['type'] ) && 'output_text' === $content_item['type'] && isset( $content_item['text'] ) ) {
-							$this->logger->debug( 'Found output_text in content' );
 							return trim( (string) $content_item['text'] );
 						}
 					}
 				}
 			}
-		} else {
-			$this->logger->debug( 'No output array found or not an array' );
 		}
 
-		$this->logger->error( 'Invalid Responses API response structure', array( 'data' => wp_json_encode( $data ) ) );
+		$this->logger->error( 'Invalid Responses API response structure' );
 		return new \WP_Error(
 			'invalid_response',
 			__( 'Ongeldig antwoord van de API', 'zw-ttvgpt' )
