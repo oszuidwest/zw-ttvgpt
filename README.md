@@ -113,7 +113,7 @@ npm run lint:fix
 includes/
 ├── class-admin.php              # WordPress-beheerinterface
 ├── class-api-handler.php        # OpenAI API-communicatie (Chat + Responses)
-├── class-audit-page.php         # Auditfunctionaliteit
+├── class-audit-page.php         # Auditfuncties
 ├── class-settings-manager.php   # Plugin-instellingen
 ├── class-logger.php             # Debug-logging
 ├── class-helper.php             # Hulpfuncties (incl. GPT-5-detectie)
@@ -121,15 +121,15 @@ includes/
 
 assets/
 ├── admin.js                     # AJAX-interface + typanimaties
-├── admin.css                    # Beheerstyling
-└── audit.css                    # Auditpaginastyling
+├── admin.css                    # Styling voor admin pagina's
+└── audit.css                    # Styling voor audit pagina's
 ```
 
 **API-ondersteuning:**
 - GPT-4-modellen: Chat Completions API (`/v1/chat/completions`)
-- GPT-5-modellen: Responses API (`/v1/responses`)
+- GPT-5-modellen: Responses API (`/v1/responses`) - Experimenteel
 - Automatische endpoint-detectie op basis van modelnaam
-- Adaptieve request/response-parsing per API-type
+- Adaptieve request/response-parsing per modeltype
 
 ## Licentie
 
