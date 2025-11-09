@@ -95,7 +95,7 @@ class TTVGPTSettingsPage {
 
 		add_settings_field(
 			'system_prompt',
-			__( 'Systeem prompt', 'zw-ttvgpt' ),
+			__( 'Prompt', 'zw-ttvgpt' ),
 			array( $this, 'render_system_prompt_field' ),
 			TTVGPTConstants::SETTINGS_PAGE_SLUG,
 			'zw_ttvgpt_summary_section'
@@ -260,18 +260,18 @@ class TTVGPTSettingsPage {
 		$debug_mode = TTVGPTSettingsManager::is_debug_mode();
 		?>
 		<label for="zw_ttvgpt_debug_mode">
-			<input type="checkbox" 
-					id="zw_ttvgpt_debug_mode" 
-					name="<?php echo $this->get_field_name( 'debug_mode' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in get_field_name() ?>" 
-					value="1" 
+			<input type="checkbox"
+					id="zw_ttvgpt_debug_mode"
+					name="<?php echo $this->get_field_name( 'debug_mode' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in get_field_name() ?>"
+					value="1"
 					<?php checked( $debug_mode ); ?> />
 			<?php esc_html_e( 'Debug-logging inschakelen', 'zw-ttvgpt' ); ?>
 		</label>
 		<p class="description">
-			<?php esc_html_e( 'Logt technische details naar PHP error log', 'zw-ttvgpt' ); ?>
+			<?php esc_html_e( 'Logt uitgebreide technische details en API-verzoeken naar de PHP error log en browser console', 'zw-ttvgpt' ); ?>
 			<br>
 			<small style="color: #666;">
-			<?php esc_html_e( 'Alleen nodig bij problemen', 'zw-ttvgpt' ); ?>
+			<?php esc_html_e( 'Alleen nodig bij problemen. Schakel uit in productie.', 'zw-ttvgpt' ); ?>
 			</small>
 		</p>
 		<?php
