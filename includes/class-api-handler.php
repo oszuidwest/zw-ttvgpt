@@ -152,15 +152,16 @@ class TTVGPTApiHandler {
 	 * @return array Request body array
 	 */
 	private function build_responses_request( string $content, int $word_limit ): array {
-		// Build input with system and user messages
-		$input = $this->get_system_prompt( $word_limit ) . "\n\n" . $content;
-
+		// The Responses API accepts messages array in the input parameter
+		// Note: GPT-5 does not support temperature parameter
 		return array(
 			'model'             => $this->model,
-			'input'             => $input,
+			'input'             => $this->build_messages( $content, $word_limit ),
 			'max_output_tokens' => self::MAX_TOKENS,
-			'temperature'       => self::TEMPERATURE,
-			'reasoning_effort'  => 'medium',
+			'reasoning'         => array(
+				'effort' => 'medium',
+			),
+			'store'             => false,
 		);
 	}
 
@@ -189,18 +190,27 @@ class TTVGPTApiHandler {
 	 * @return string|\WP_Error Summary text or WP_Error if invalid
 	 */
 	private function extract_responses_summary( array $data ) {
-		// Try modern response format first (output.content or output.text)
-		if ( isset( $data['output']['content'] ) ) {
-			return trim( (string) $data['output']['content'] );
+		// Check if output_text helper is available
+		if ( isset( $data['output_text'] ) && is_string( $data['output_text'] ) ) {
+			return trim( $data['output_text'] );
 		}
 
-		if ( isset( $data['output']['text'] ) ) {
-			return trim( (string) $data['output']['text'] );
-		}
+		// Parse output array to find message items
+		if ( isset( $data['output'] ) && is_array( $data['output'] ) ) {
+			foreach ( $data['output'] as $item ) {
+				if ( ! isset( $item['type'] ) ) {
+					continue;
+				}
 
-		// Fallback to message format if available
-		if ( isset( $data['output']['message']['content'] ) ) {
-			return trim( (string) $data['output']['message']['content'] );
+				// Look for message items
+				if ( 'message' === $item['type'] && isset( $item['content'] ) && is_array( $item['content'] ) ) {
+					foreach ( $item['content'] as $content_item ) {
+						if ( isset( $content_item['type'] ) && 'output_text' === $content_item['type'] && isset( $content_item['text'] ) ) {
+							return trim( (string) $content_item['text'] );
+						}
+					}
+				}
+			}
 		}
 
 		$this->logger->error( 'Invalid Responses API response structure' );
