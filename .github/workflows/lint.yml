@@ -39,10 +39,16 @@ jobs:
 
       - run: ./vendor/bin/phpstan analyse --error-format=checkstyle | cs2pr
 
+  plugin-check:
+    name: Plugin Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
       - name: Run wp-plugin-check
         uses: wordpress/plugin-check-action@v1
         with:
-          artifact-name: 'plugin-check-results-php-${{ matrix.php }}'
           exclude-checks: |
             late_escaping
             plugin_review_phpcs
