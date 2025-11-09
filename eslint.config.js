@@ -37,6 +37,7 @@ module.exports = [
 				tinyMCE: 'readonly',
 				jQuery: 'readonly',
 				$: 'readonly',
+				_: 'readonly',
 				document: 'readonly',
 				console: 'readonly',
 				setTimeout: 'readonly',

@@ -11,13 +11,15 @@ namespace ZW_TTVGPT_Core;
  * Admin class
  *
  * Main admin interface coordinator
+ *
+ * @package ZW_TTVGPT
  */
 class TTVGPTAdmin {
 	/**
 	 * Initialize admin interface
 	 *
-	 * @param TTVGPTLogger         $logger            Logger instance for debugging
-	 * @param TTVGPTFineTuningPage $fine_tuning_page  Fine tuning page instance
+	 * @param TTVGPTLogger         $logger           Logger instance for debugging.
+	 * @param TTVGPTFineTuningPage $fine_tuning_page Fine tuning page instance.
 	 */
 	public function __construct( TTVGPTLogger $logger, TTVGPTFineTuningPage $fine_tuning_page ) {
 		// Initialize admin components

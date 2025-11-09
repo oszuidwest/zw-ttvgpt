@@ -1,8 +1,9 @@
 /**
  * ZW TTVGPT Admin JavaScript
  *
- * Manages summary generation interface with typing animations and loading states
- * @param $ jQuery object
+ * Manages summary generation interface with typing animations and loading states.
+ *
+ * @param {jQuery} $ jQuery object.
  */
 (function ($) {
 	'use strict';
@@ -26,7 +27,9 @@
 		$cachedGptField = null;
 
 	/**
-	 * Initialize plugin components and cache DOM elements
+	 * Initialize plugin components and cache DOM elements.
+	 *
+	 * @return {void}
 	 */
 	function init() {
 		$(document).ready(function () {
@@ -38,7 +41,9 @@
 	}
 
 	/**
-	 * Create and inject generate button below ACF summary field
+	 * Create and inject generate button below ACF summary field.
+	 *
+	 * @return {void}
 	 */
 	function injectGenerateButton() {
 		if (!$cachedAcfField || $cachedAcfField.length === 0) {
@@ -59,8 +64,10 @@
 	}
 
 	/**
-	 * Process generate button click and initiate summary generation
-	 * @param {Event} e Click event
+	 * Process generate button click and initiate summary generation.
+	 *
+	 * @param {Event} e Click event.
+	 * @return {void}
 	 */
 	function handleGenerateClick(e) {
 		e.preventDefault();
@@ -84,6 +91,17 @@
 
 		const regions = getSelectedRegions();
 
+		// Debug: log content being sent to API
+		if (zwTTVGPT.debugMode) {
+			/* eslint-disable no-console */
+			console.log('ZW TTVGPT Debug - Content wordt verstuurd naar API:');
+			console.log('Post ID:', postId);
+			console.log('Content lengte:', content.length, 'tekens');
+			console.log("Regio's:", regions);
+			console.log('Content:', content);
+			/* eslint-enable no-console */
+		}
+
 		setLoadingState($button, true);
 		$button.data('is-generating', true);
 		showLoadingMessages();
@@ -99,6 +117,12 @@
 				regions,
 			},
 			success(response) {
+				// Debug: log API response
+				if (zwTTVGPT.debugMode) {
+					/* eslint-disable-next-line no-console */
+					console.log('ZW TTVGPT Debug - API Response:', response);
+				}
+
 				if (response.success) {
 					clearLoadingMessages();
 					handleSuccess(response.data, $button);
@@ -140,13 +164,57 @@
 	}
 
 	/**
-	 * Extract content from active editor (TinyMCE or textarea fallback)
-	 * @return {string} Editor content as plain text
+	 * Extract plain text from a Gutenberg block.
+	 *
+	 * @param {Object} block Block object.
+	 * @return {string} Plain text content.
+	 */
+	function getBlockText(block) {
+		// Get inner HTML from block and strip tags using WordPress built-in
+		const html = wp.blocks.getBlockContent(block);
+		const text = wp.sanitize.stripTags(html);
+
+		// Process inner blocks recursively
+		if (block.innerBlocks && block.innerBlocks.length > 0) {
+			const innerText = block.innerBlocks
+				.map(getBlockText)
+				.filter(Boolean)
+				.join('\n');
+			return text + (text && innerText ? '\n' : '') + innerText;
+		}
+
+		return text;
+	}
+
+	/**
+	 * Extract content from active editor (Block Editor, TinyMCE, or textarea).
+	 *
+	 * @return {string} Editor content as plain text.
 	 */
 	function getEditorContent() {
 		let content = '';
 
-		// Try TinyMCE first, but check if it actually has content
+		// Try Block Editor (Gutenberg) first
+		if (
+			typeof wp !== 'undefined' &&
+			wp.data &&
+			wp.data.select('core/block-editor')
+		) {
+			const editor = wp.data.select('core/block-editor');
+			const blocks = editor.getBlocks();
+
+			if (blocks && blocks.length > 0) {
+				// Extract text from each block
+				const textParts = blocks.map(getBlockText).filter(Boolean);
+				content = textParts.join('\n\n');
+
+				if (content.trim().length > 0) {
+					return cleanupWhitespace(content);
+				}
+			}
+		}
+
+		// Try TinyMCE (Classic Editor) - already returns plain text
 		if (
 			typeof tinyMCE !== 'undefined' &&
 			tinyMCE.activeEditor &&
@@ -154,18 +222,17 @@
 			tinyMCE.activeEditor.initialized
 		) {
 			content = tinyMCE.activeEditor.getContent({ format: 'text' });
-			// If TinyMCE returns content, use it
 			if (content && content.trim().length > 0) {
 				return content;
 			}
 		}
 
-		// Fallback to textarea (always available)
+		// Fallback to textarea - strip HTML for safety
 		const $textarea = $(SELECTORS.contentEditor);
 		if ($textarea.length > 0) {
 			content = $textarea.val();
 			if (content && content.trim().length > 0) {
-				return content;
+				return cleanupWhitespace(wp.sanitize.stripTags(content));
 			}
 		}
 
@@ -173,51 +240,110 @@
 	}
 
 	/**
-	 * Extract selected region names from taxonomy checkboxes
-	 * @return {Array<string>} Array of selected region names
+	 * Clean up excessive whitespace in text.
+	 *
+	 * @param {string} text Text to clean.
+	 * @return {string} Text with normalized whitespace.
+	 */
+	function cleanupWhitespace(text) {
+		if (!text || typeof text !== 'string') {
+			return '';
+		}
+
+		return text
+			.replace(/\n{3,}/g, '\n\n') // Max 2 consecutive newlines
+			.replace(/[ \t]+/g, ' ') // Multiple spaces/tabs to single space
+			.trim(); // Remove leading/trailing whitespace
+	}
+
+	/**
+	 * Check if checkbox is from Block Editor.
+	 *
+	 * @param {jQuery} $checkbox Checkbox element.
+	 * @return {boolean} True if Block Editor checkbox.
+	 */
+	function isBlockEditorCheckbox($checkbox) {
+		const id = $checkbox.attr('id');
+		return id && id.startsWith('inspector-checkbox-control');
+	}
+
+	/**
+	 * Get label text for Block Editor checkbox.
+	 *
+	 * @param {jQuery} $checkbox Checkbox element.
+	 * @return {string} Label text.
+	 */
+	function getBlockEditorLabel($checkbox) {
+		const $label = $('label[for="' + $checkbox.attr('id') + '"]');
+		return $label.text().trim();
+	}
+
+	/**
+	 * Get label text for Classic Editor checkbox.
+	 *
+	 * @param {jQuery} $checkbox Checkbox element.
+	 * @return {string} Label text.
+	 */
+	function getClassicEditorLabel($checkbox) {
+		return $checkbox
+			.parent()
+			.contents()
+			.filter(function () {
+				return this.nodeType === 3; // Text nodes only
+			})
+			.text()
+			.trim();
+	}
+
+	/**
+	 * Extract selected region names from taxonomy checkboxes.
+	 * Supports both Block Editor and Classic Editor.
+	 *
+	 * @return {Array<string>} Array of selected region names.
 	 */
 	function getSelectedRegions() {
+		// Try Block Editor first, fallback to Classic Editor
+		const $checkboxes =
+			$(
+				'.editor-post-taxonomies__hierarchical-terms-list input[type="checkbox"]:checked'
+			).length > 0
+				? $(
+						'.editor-post-taxonomies__hierarchical-terms-list input[type="checkbox"]:checked'
+					)
+				: $(SELECTORS.regionCheckboxes);
+
+		if (zwTTVGPT.debugMode) {
+			/* eslint-disable no-console */
+			console.log('ZW TTVGPT Debug - Region detection:', {
+				editor: isBlockEditorCheckbox($checkboxes.first())
+					? 'Block Editor'
+					: 'Classic Editor',
+				checkedCount: $checkboxes.length,
+			});
+			/* eslint-enable no-console */
+		}
+
 		const regions = [];
-		$(SELECTORS.regionCheckboxes).each(function () {
-			const $label = $(this).parent();
-			/*
-			 * Get only the direct text content, not from child elements
-			 * This excludes text from Yoast's screen-reader-text spans
-			 */
-			const labelText = $label
-				.contents()
-				.filter(function () {
-					return this.nodeType === 3; // Text nodes only
-				})
-				.text()
-				.trim();
+		$checkboxes.each(function () {
+			const $checkbox = $(this);
+			const labelText = isBlockEditorCheckbox($checkbox)
+				? getBlockEditorLabel($checkbox)
+				: getClassicEditorLabel($checkbox);
 
 			if (labelText) {
 				regions.push(labelText);
 			}
 		});
+
 		return regions;
 	}
 
 	/**
-	 * Randomize array order using Fisher-Yates shuffle algorithm
-	 * @param {Array} array Array to shuffle
-	 * @return {Array} New shuffled array
-	 */
-	function shuffleArray(array) {
-		const shuffled = [...array];
-		for (let i = shuffled.length - 1; i > 0; i--) {
-			const j = Math.floor(Math.random() * (i + 1));
-			[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-		}
-		return shuffled;
-	}
-
-	/**
-	 * Start animated thinking indicator with cycling characters
-	 * @param {jQuery|HTMLElement} element Element to animate
-	 * @param {string}             text    Optional text to append after spinner
-	 * @return {number} Interval ID for cleanup
+	 * Start animated thinking indicator with cycling characters.
+	 *
+	 * @param {jQuery|HTMLElement} element Element to animate.
+	 * @param {string}             text    Optional text to append after spinner.
+	 * @return {number} Interval ID for cleanup.
 	 */
 	function startThinkingAnimation(element, text = '') {
 		let index = 0;
@@ -236,9 +362,11 @@
 	}
 
 	/**
-	 * Handle successful response
-	 * @param data
-	 * @param $button
+	 * Handle successful API response and update UI.
+	 *
+	 * @param {Object} data    Response data containing summary.
+	 * @param {jQuery} $button Generate button element.
+	 * @return {void}
 	 */
 	function handleSuccess(data, $button) {
 		// Get current message count
@@ -285,10 +413,12 @@
 	}
 
 	/**
-	 * Animate text typing effect - ChatGPT style
-	 * @param $element
-	 * @param text
-	 * @param $button
+	 * Animate text typing effect with ChatGPT-style character animation.
+	 *
+	 * @param {jQuery} $element Target element to type into.
+	 * @param {string} text     Text to animate.
+	 * @param {jQuery} $button  Generate button to re-enable after completion.
+	 * @return {void}
 	 */
 	function animateText($element, text, $button) {
 		let index = 0;
@@ -346,9 +476,11 @@
 	}
 
 	/**
-	 * Set loading state for button
-	 * @param $button
-	 * @param isLoading
+	 * Set loading state for generate button.
+	 *
+	 * @param {jQuery}  $button   Button element.
+	 * @param {boolean} isLoading True to enable loading state, false to disable.
+	 * @return {void}
 	 */
 	function setLoadingState($button, isLoading) {
 		if (isLoading) {
@@ -376,9 +508,11 @@
 	}
 
 	/**
-	 * Show status message
-	 * @param type
-	 * @param message
+	 * Show status message to user.
+	 *
+	 * @param {string} type    Message type ('error' or 'success').
+	 * @param {string} message Message text to display.
+	 * @return {void}
 	 */
 	function showStatus(type, message) {
 		// Create a temporary notice above the ACF field
@@ -408,7 +542,9 @@
 	}
 
 	/**
-	 * Clear loading messages and restore ACF field
+	 * Clear loading messages and restore ACF field.
+	 *
+	 * @return {void}
 	 */
 	function clearLoadingMessages() {
 		const messageInterval = $cachedAcfField.data('message-interval');
@@ -437,7 +573,9 @@
 	}
 
 	/**
-	 * Show loading messages in ACF field while generating
+	 * Show loading messages in ACF field while generating.
+	 *
+	 * @return {void}
 	 */
 	function showLoadingMessages() {
 		if (
@@ -449,7 +587,7 @@
 		}
 
 		// Create a shuffled copy of messages
-		let messages = shuffleArray(zwTTVGPT.strings.loadingMessages),
+		let messages = _.shuffle(zwTTVGPT.strings.loadingMessages),
 			messageIndex = 0,
 			messageCount = 0,
 			activeTransition = null;
@@ -466,7 +604,7 @@
 		function showNextMessage() {
 			if (messageIndex >= messages.length) {
 				// Reshuffle when we've shown all messages
-				messages = shuffleArray(messages);
+				messages = _.shuffle(messages);
 				messageIndex = 0;
 			}
 

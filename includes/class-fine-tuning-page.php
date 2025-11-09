@@ -11,6 +11,8 @@ namespace ZW_TTVGPT_Core;
  * Fine Tuning Page class
  *
  * Admin interface for managing OpenAI fine tuning jobs and training data export
+ *
+ * @package ZW_TTVGPT
  */
 class TTVGPTFineTuningPage {
 	use TTVGPTAjaxSecurity;
@@ -32,8 +34,8 @@ class TTVGPTFineTuningPage {
 	/**
 	 * Initialize fine tuning page with dependencies
 	 *
-	 * @param TTVGPTFineTuningExport $export Export functionality
-	 * @param TTVGPTLogger           $logger Logger instance
+	 * @param TTVGPTFineTuningExport $export Export functionality instance.
+	 * @param TTVGPTLogger           $logger Logger instance for debugging.
 	 */
 	public function __construct( TTVGPTFineTuningExport $export, TTVGPTLogger $logger ) {
 		$this->export = $export;
@@ -275,23 +277,11 @@ class TTVGPTFineTuningPage {
 	 * @return void
 	 */
 	public function handle_export_ajax(): void {
-		// Verify nonce first
-		if ( ! check_ajax_referer( 'zw_ttvgpt_fine_tuning_nonce', 'nonce', false ) ) {
-			wp_send_json_error(
-				array( 'message' => __( 'Beveiligingscontrole mislukt', 'zw-ttvgpt' ) ),
-				403
-			);
-		}
-
-		// Check capability
-		if ( ! current_user_can( TTVGPTConstants::REQUIRED_CAPABILITY ) ) {
-			wp_send_json_error(
-				array( 'message' => __( 'Onvoldoende rechten', 'zw-ttvgpt' ) ),
-				403
-			);
-		}
+		// Nonce is verified in validate_ajax_request() method
+		$this->validate_ajax_request( 'zw_ttvgpt_fine_tuning_nonce', TTVGPTConstants::REQUIRED_CAPABILITY );
 
 		// Get filters from POST data
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce verified in validate_ajax_request()
 		$filters = array();
 		if ( ! empty( $_POST['start_date'] ) ) {
 			$filters['start_date'] = sanitize_text_field( $_POST['start_date'] );
@@ -302,6 +292,7 @@ class TTVGPTFineTuningPage {
 		if ( ! empty( $_POST['limit'] ) ) {
 			$filters['limit'] = absint( $_POST['limit'] );
 		}
+		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
 		// Generate training data
 		$this->logger->debug( 'Export training data requested with filters: ' . wp_json_encode( $filters ) );

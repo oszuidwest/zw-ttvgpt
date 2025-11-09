@@ -11,6 +11,8 @@ namespace ZW_TTVGPT_Core;
  * Fine Tuning Export class
  *
  * Exports AI+human training data in JSONL format for OpenAI fine-tuning
+ *
+ * @package ZW_TTVGPT
  */
 class TTVGPTFineTuningExport {
 	/**
@@ -37,9 +39,9 @@ class TTVGPTFineTuningExport {
 	/**
 	 * Initialize fine tuning export with dependencies
 	 *
-	 * @param TTVGPTLogger     $logger      Logger instance for debugging
-	 * @param TTVGPTApiHandler $api_handler API handler for reusing production logic
-	 * @param int              $word_limit  Word limit matching production settings
+	 * @param TTVGPTLogger     $logger      Logger instance for debugging.
+	 * @param TTVGPTApiHandler $api_handler API handler for reusing production logic.
+	 * @param int              $word_limit  Word limit matching production settings.
 	 */
 	public function __construct( TTVGPTLogger $logger, TTVGPTApiHandler $api_handler, int $word_limit ) {
 		$this->logger      = $logger;
@@ -48,10 +50,26 @@ class TTVGPTFineTuningExport {
 	}
 
 	/**
+	 * Initialize WordPress filesystem API
+	 *
+	 * @return \WP_Filesystem_Base WordPress filesystem instance.
+	 */
+	private function init_filesystem() {
+		global $wp_filesystem;
+
+		if ( ! function_exists( 'WP_Filesystem' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+		}
+		WP_Filesystem();
+
+		return $wp_filesystem;
+	}
+
+	/**
 	 * Generate JSONL training data for DPO fine-tuning
 	 *
-	 * @param array $filters Optional filters for date range and post count
-	 * @return array Array containing training data and metadata
+	 * @param array $filters Optional filters for date range and post count.
+	 * @return array Array containing success status, training data, and statistics.
 	 */
 	public function generate_training_data( array $filters = array() ): array {
 		$this->logger->debug( 'Starting DPO training data generation with filters: ' . wp_json_encode( $filters ) );
@@ -126,25 +144,17 @@ class TTVGPTFineTuningExport {
 	/**
 	 * Get posts suitable for DPO training (AI generated + human edited)
 	 *
-	 * @param array $filters Filters for date range and limits
-	 * @return array Array of post objects
+	 * @param array $filters Filters for date range and limits.
+	 * @return array Array of post objects with AI and human content.
 	 */
 	private function get_suitable_posts( array $filters ): array {
 		global $wpdb;
 
-		$date_filter  = '';
+		$date_filter  = TTVGPTHelper::build_date_filter_clause(
+			$filters['start_date'] ?? '',
+			$filters['end_date'] ?? ''
+		);
 		$limit_clause = '';
-
-		// Apply date filter
-		if ( ! empty( $filters['start_date'] ) && ! empty( $filters['end_date'] ) ) {
-			$start_date  = sanitize_text_field( $filters['start_date'] );
-			$end_date    = sanitize_text_field( $filters['end_date'] );
-			$date_filter = $wpdb->prepare(
-				'AND p.post_date >= %s AND p.post_date <= %s',
-				$start_date . ' 00:00:00',
-				$end_date . ' 23:59:59'
-			);
-		}
 
 		// Apply limit
 		if ( ! empty( $filters['limit'] ) && is_numeric( $filters['limit'] ) ) {
@@ -206,8 +216,8 @@ class TTVGPTFineTuningExport {
 	/**
 	 * Create a single training entry in DPO format
 	 *
-	 * @param \stdClass $post Post object with ID, ai_content, human_content, and post_content properties
-	 * @return array|null Training entry or null if invalid
+	 * @param \stdClass $post Post object with ID, ai_content, human_content, and post_content properties.
+	 * @return array|null Training entry array or null if content is invalid.
 	 */
 	private function create_training_entry( \stdClass $post ): ?array {
 		// Validate required properties exist
@@ -263,9 +273,9 @@ class TTVGPTFineTuningExport {
 	/**
 	 * Export training data as JSONL file
 	 *
-	 * @param array  $training_data Array of training entries
-	 * @param string $filename Optional filename
-	 * @return array Result with file path and stats
+	 * @param array  $training_data Array of training entries.
+	 * @param string $filename      Optional filename (defaults to timestamped name).
+	 * @return array Result array with success status, file path, and statistics.
 	 * @throws \Exception If upload directory cannot be created or file cannot be written.
 	 */
 	public function export_to_jsonl( array $training_data, string $filename = '' ): array {
@@ -291,12 +301,7 @@ class TTVGPTFineTuningExport {
 		$file_path  = $upload_dir['path'] . '/' . $filename;
 
 		try {
-			// Initialize WP_Filesystem
-			global $wp_filesystem;
-			if ( ! function_exists( 'WP_Filesystem' ) ) {
-				require_once ABSPATH . 'wp-admin/includes/file.php';
-			}
-			WP_Filesystem();
+			$wp_filesystem = $this->init_filesystem();
 
 			// Build JSONL content
 			$jsonl_content = '';
@@ -311,7 +316,7 @@ class TTVGPTFineTuningExport {
 				throw new \Exception( 'Could not create file: ' . $file_path );
 			}
 
-			$file_size = filesize( $file_path );
+			$file_size = $wp_filesystem->size( $file_path );
 
 			$this->logger->debug( "JSONL export completed: {$filename} ({$line_count} lines, {$file_size} bytes)" );
 
@@ -343,12 +348,14 @@ class TTVGPTFineTuningExport {
 	/**
 	 * Validate JSONL file format
 	 *
-	 * @param string $file_path Path to JSONL file
-	 * @param int    $max_lines Maximum lines to validate (0 = all)
-	 * @return array Validation result
+	 * @param string $file_path Path to JSONL file.
+	 * @param int    $max_lines Maximum lines to validate (0 = all).
+	 * @return array Validation result with validity status and error details.
 	 */
 	public function validate_jsonl( string $file_path, int $max_lines = 100 ): array {
-		if ( ! file_exists( $file_path ) ) {
+		$wp_filesystem = $this->init_filesystem();
+
+		if ( ! $wp_filesystem->exists( $file_path ) ) {
 			return array(
 				'valid'   => false,
 				'message' => __( 'Bestand niet gevonden', 'zw-ttvgpt' ),
@@ -358,13 +365,6 @@ class TTVGPTFineTuningExport {
 		$errors        = array();
 		$line_count    = 0;
 		$valid_entries = 0;
-
-		// Initialize WP_Filesystem for reading
-		global $wp_filesystem;
-		if ( ! function_exists( 'WP_Filesystem' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/file.php';
-		}
-		WP_Filesystem();
 
 		$file_contents = $wp_filesystem->get_contents( $file_path );
 		if ( false === $file_contents ) {
@@ -423,8 +423,8 @@ class TTVGPTFineTuningExport {
 	/**
 	 * Validate single DPO entry structure
 	 *
-	 * @param array $entry DPO entry to validate
-	 * @return bool True if valid
+	 * @param array $entry DPO entry to validate.
+	 * @return bool True if entry has valid DPO structure, false otherwise.
 	 */
 	private function validate_dpo_entry( array $entry ): bool {
 		// Check required top-level keys

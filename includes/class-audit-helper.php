@@ -11,12 +11,14 @@ namespace ZW_TTVGPT_Core;
  * Audit Helper class
  *
  * Handles audit-specific functionality
+ *
+ * @package ZW_TTVGPT
  */
 class TTVGPTAuditHelper {
 	/**
 	 * Get the most recent month that has relevant posts for audit analysis
 	 *
-	 * @return array|null Array with 'year' and 'month' keys or null if no posts found
+	 * @return array|null Array with 'year' and 'month' keys or null if no posts found.
 	 */
 	public static function get_most_recent_month(): ?array {
 		global $wpdb;
@@ -71,7 +73,7 @@ class TTVGPTAuditHelper {
 	/**
 	 * Get all months with audit data for navigation
 	 *
-	 * @return array Array of arrays with 'year' and 'month' keys
+	 * @return array Array of arrays with 'year' and 'month' keys.
 	 */
 	public static function get_months(): array {
 		global $wpdb;
@@ -124,9 +126,9 @@ class TTVGPTAuditHelper {
 	/**
 	 * Retrieve all posts for audit analysis from specific month and year
 	 *
-	 * @param int $year Target year
-	 * @param int $month Target month (1-12)
-	 * @return array Array of WP_Post objects
+	 * @param int $year  Target year.
+	 * @param int $month Target month (1-12).
+	 * @return array Array of WP_Post objects.
 	 */
 	public static function get_posts( int $year, int $month ): array {
 		$args = array(
@@ -168,8 +170,8 @@ class TTVGPTAuditHelper {
 	/**
 	 * Get bulk meta data for multiple posts to avoid N+1 queries
 	 *
-	 * @param array $post_ids Array of post IDs
-	 * @return array Associative array with post_id as key and meta_data as value
+	 * @param array $post_ids Array of post IDs.
+	 * @return array Associative array with post_id as key and meta_data as value.
 	 */
 	public static function get_bulk_meta_data( array $post_ids ): array {
 		if ( empty( $post_ids ) ) {
@@ -227,8 +229,8 @@ class TTVGPTAuditHelper {
 	/**
 	 * Strip region prefix from content for comparison
 	 *
-	 * @param string $content Content to clean
-	 * @return string Cleaned content
+	 * @param string $content Content to clean.
+	 * @return string Cleaned content without region prefix.
 	 */
 	public static function strip_region_prefix( string $content ): string {
 		// Remove region prefixes like "LEIDEN - ", "DEN HAAG - ", "ROOSENDAAL/OUDENBOSCH - ", "ETTEN-LEUR - "
@@ -240,9 +242,9 @@ class TTVGPTAuditHelper {
 	/**
 	 * Categorize a post based on its AI and human content
 	 *
-	 * @param \WP_Post $post Post object to categorize
-	 * @param array    $meta_cache Meta data cache to avoid N+1 queries
-	 * @return array Analysis result with status, ai_content, and human_content
+	 * @param \WP_Post $post       Post object to categorize.
+	 * @param array    $meta_cache Meta data cache to avoid N+1 queries.
+	 * @return array Analysis result with status, ai_content, human_content, and change_percentage.
 	 */
 	public static function categorize_post( \WP_Post $post, array $meta_cache = array() ): array {
 		$ai_content    = $meta_cache[ $post->ID ][ TTVGPTConstants::ACF_FIELD_AI_CONTENT ] ?? get_post_meta( $post->ID, TTVGPTConstants::ACF_FIELD_AI_CONTENT, true );
@@ -278,9 +280,9 @@ class TTVGPTAuditHelper {
 	/**
 	 * Generate word-level diff highlighting for content comparison
 	 *
-	 * @param string $old Original text
-	 * @param string $modified Modified text
-	 * @return array Array with 'before' and 'after' highlighted versions
+	 * @param string $old      Original text.
+	 * @param string $modified Modified text.
+	 * @return array Array with 'before' and 'after' highlighted versions.
 	 */
 	public static function generate_word_diff( string $old, string $modified ): array {
 		// Strip region prefixes for comparison
@@ -347,9 +349,9 @@ class TTVGPTAuditHelper {
 	/**
 	 * Calculate percentage of change between AI and human content
 	 *
-	 * @param string $ai_content Original AI content
-	 * @param string $human_content Edited human content
-	 * @return float Percentage of change (0-100)
+	 * @param string $ai_content    Original AI content.
+	 * @param string $human_content Edited human content.
+	 * @return float Percentage of change (0-100).
 	 */
 	public static function calculate_change_percentage( string $ai_content, string $human_content ): float {
 		if ( empty( $ai_content ) && empty( $human_content ) ) {

@@ -11,6 +11,8 @@ namespace ZW_TTVGPT_Core;
  * Admin Menu class
  *
  * Handles WordPress admin menu registration and asset loading
+ *
+ * @package ZW_TTVGPT
  */
 class TTVGPTAdminMenu {
 	/**
@@ -30,8 +32,8 @@ class TTVGPTAdminMenu {
 	/**
 	 * Initialize admin menu and register WordPress hooks
 	 *
-	 * @param TTVGPTLogger         $logger            Logger instance for debugging
-	 * @param TTVGPTFineTuningPage $fine_tuning_page  Fine tuning page instance
+	 * @param TTVGPTLogger         $logger           Logger instance for debugging.
+	 * @param TTVGPTFineTuningPage $fine_tuning_page Fine tuning page instance.
 	 */
 	public function __construct( TTVGPTLogger $logger, TTVGPTFineTuningPage $fine_tuning_page ) {
 		$this->logger           = $logger;
@@ -75,11 +77,11 @@ class TTVGPTAdminMenu {
 	/**
 	 * Load CSS and JavaScript assets on post edit screens and audit page
 	 *
-	 * @param string $hook Current admin page hook
+	 * @param string $hook Current admin page hook.
 	 * @return void
 	 */
 	public function enqueue_admin_assets( string $hook ): void {
-		$version = ZW_TTVGPT_VERSION . ( TTVGPTSettingsManager::is_debug_mode() ? '.' . time() : '' );
+		$version = TTVGPTHelper::get_asset_version();
 
 		// Enqueue audit CSS on audit page
 		if ( 'tools_page_zw-ttvgpt-audit' === $hook ) {
@@ -104,6 +106,7 @@ class TTVGPTAdminMenu {
 			return;
 		}
 
+		// Enqueue assets (same for both Block Editor and Classic Editor)
 		wp_enqueue_style( 'zw-ttvgpt-admin', ZW_TTVGPT_URL . 'assets/admin.css', array(), $version );
 		wp_enqueue_script( 'zw-ttvgpt-admin', ZW_TTVGPT_URL . 'assets/admin.js', array( 'jquery' ), $version, true );
 
@@ -114,6 +117,7 @@ class TTVGPTAdminMenu {
 				'ajaxUrl'        => admin_url( 'admin-ajax.php' ),
 				'nonce'          => wp_create_nonce( 'zw_ttvgpt_nonce' ),
 				'acfFields'      => TTVGPTHelper::get_acf_field_ids(),
+				'debugMode'      => TTVGPTSettingsManager::is_debug_mode(),
 				'animationDelay' => array(
 					'min'   => 20,
 					'max'   => 50,
