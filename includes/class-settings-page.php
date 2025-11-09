@@ -93,6 +93,14 @@ class TTVGPTSettingsPage {
 			'zw_ttvgpt_summary_section'
 		);
 
+		add_settings_field(
+			'system_prompt',
+			__( 'Systeem prompt', 'zw-ttvgpt' ),
+			array( $this, 'render_system_prompt_field' ),
+			TTVGPTConstants::SETTINGS_PAGE_SLUG,
+			'zw_ttvgpt_summary_section'
+		);
+
 		add_settings_section(
 			'zw_ttvgpt_debug_section',
 			__( 'Debug-opties', 'zw-ttvgpt' ),
@@ -205,15 +213,40 @@ class TTVGPTSettingsPage {
 	public function render_word_limit_field(): void {
 		$word_limit = TTVGPTSettingsManager::get_word_limit();
 		?>
-		<input type="number" 
-				id="zw_ttvgpt_word_limit" 
-				name="<?php echo $this->get_field_name( 'word_limit' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in get_field_name() ?>" 
-				value="<?php echo esc_attr( (string) $word_limit ); ?>" 
-				min="<?php echo esc_attr( (string) TTVGPTConstants::MIN_WORD_LIMIT ); ?>" 
-				max="<?php echo esc_attr( (string) TTVGPTConstants::MAX_WORD_LIMIT ); ?>" 
+		<input type="number"
+				id="zw_ttvgpt_word_limit"
+				name="<?php echo $this->get_field_name( 'word_limit' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in get_field_name() ?>"
+				value="<?php echo esc_attr( (string) $word_limit ); ?>"
+				min="<?php echo esc_attr( (string) TTVGPTConstants::MIN_WORD_LIMIT ); ?>"
+				max="<?php echo esc_attr( (string) TTVGPTConstants::MAX_WORD_LIMIT ); ?>"
 				step="<?php echo esc_attr( (string) TTVGPTConstants::WORD_LIMIT_STEP ); ?>" />
 		<p class="description">
 			<?php esc_html_e( 'Streef naar dit aantal woorden (50-500)', 'zw-ttvgpt' ); ?>
+		</p>
+		<?php
+	}
+
+	/**
+	 * Render system prompt field
+	 *
+	 * @return void
+	 */
+	public function render_system_prompt_field(): void {
+		$system_prompt = TTVGPTSettingsManager::get_system_prompt();
+		?>
+		<textarea id="zw_ttvgpt_system_prompt"
+				name="<?php echo $this->get_field_name( 'system_prompt' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in get_field_name() ?>"
+				rows="6"
+				class="large-text code"><?php echo esc_textarea( $system_prompt ); ?></textarea>
+		<p class="description">
+			<?php
+			/* translators: %d is a placeholder for the word limit value */
+			esc_html_e( 'De instructies voor het AI-model. Gebruik %d als placeholder voor de woordlimiet.', 'zw-ttvgpt' );
+			?>
+			<br>
+			<small style="color: #666;">
+			<?php esc_html_e( 'Wijzig alleen als je weet wat je doet. Standaard is geoptimaliseerd voor Nederlandse samenvattingen.', 'zw-ttvgpt' ); ?>
+			</small>
 		</p>
 		<?php
 	}
@@ -276,6 +309,21 @@ class TTVGPTSettingsPage {
 		if ( isset( $input['word_limit'] ) ) {
 			$word_limit              = absint( $input['word_limit'] );
 			$sanitized['word_limit'] = $word_limit;
+		}
+
+		// System prompt
+		if ( isset( $input['system_prompt'] ) ) {
+			$system_prompt = sanitize_textarea_field( $input['system_prompt'] );
+			if ( empty( $system_prompt ) ) {
+				$system_prompt = TTVGPTConstants::DEFAULT_SYSTEM_PROMPT;
+				add_settings_error(
+					TTVGPTConstants::SETTINGS_OPTION_NAME,
+					'empty_system_prompt',
+					__( 'Systeem prompt mag niet leeg zijn. Standaard waarde hersteld.', 'zw-ttvgpt' ),
+					'warning'
+				);
+			}
+			$sanitized['system_prompt'] = $system_prompt;
 		}
 
 		// Debug mode

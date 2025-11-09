@@ -199,16 +199,25 @@ class TTVGPTConstants {
 	const ANIMATION_DELAY_SPACE = 30;
 
 	/**
+	 * Default system prompt for AI summary generation.
+	 * Use %d as placeholder for word limit.
+	 *
+	 * @var string
+	 */
+	const DEFAULT_SYSTEM_PROMPT = 'Je bent een ervaren eindredacteur die perfect Nederlands beheerst. Vat het volgende nieuwsartikel samen op een heldere en beknopte manier die makkelijk te begrijpen is voor een breed publiek. Focus op de hoofdzaak en laat bijzaken weg. Schrijf een vloeiend verhaal met natuurlijke overgangen. Gebruik korte zinslengtes om de leesbaarheid te behouden. Negeer alles in het artikel dat geen Nederlands is. Parse HTML. Gebruik nooit Engelse woorden. Gebruik geen gedachtestreepjes (—), alleen komma\'s en punten. Gebruik maximaal %d woorden.';
+
+	/**
 	 * Get default plugin settings
 	 *
 	 * @return array Default settings configuration
 	 */
 	public static function get_default_settings(): array {
 		return array(
-			'api_key'    => '',
-			'model'      => self::DEFAULT_MODEL,
-			'word_limit' => self::DEFAULT_WORD_LIMIT,
-			'debug_mode' => false,
+			'api_key'       => '',
+			'model'         => self::DEFAULT_MODEL,
+			'word_limit'    => self::DEFAULT_WORD_LIMIT,
+			'system_prompt' => self::DEFAULT_SYSTEM_PROMPT,
+			'debug_mode'    => false,
 		);
 	}
 
