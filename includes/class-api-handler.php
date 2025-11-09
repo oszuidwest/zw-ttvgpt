@@ -82,7 +82,7 @@ class TTVGPTApiHandler {
 	 * @return string System prompt text
 	 */
 	public function get_system_prompt( int $word_limit ): string {
-		return sprintf( 'Please summarize the following news article in a clear and concise manner that is easy to understand for a general audience. Write flowing, natural sentences that connect ideas smoothly. Do it in Dutch. Ignore everything in the article that\'s not a Dutch word. Parse HTML. Never output English words. Use maximal %d words.', $word_limit );
+		return sprintf( 'Please summarize the following news article in a clear and concise manner that is easy to understand for a general audience. Write in short to medium-length sentences (10-20 words each) that flow naturally. Connect related ideas within sentences, but keep each sentence focused on one main point. Do it in Dutch. Ignore everything in the article that\'s not a Dutch word. Parse HTML. Never output English words. Use maximal %d words.', $word_limit );
 	}
 
 	/**
