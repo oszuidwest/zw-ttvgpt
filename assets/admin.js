@@ -258,29 +258,64 @@
 
 	/**
 	 * Extract selected region names from taxonomy checkboxes.
+	 * Supports both Block Editor and Classic Editor.
 	 *
 	 * @return {Array<string>} Array of selected region names.
 	 */
 	function getSelectedRegions() {
 		const regions = [];
-		$(SELECTORS.regionCheckboxes).each(function () {
-			const $label = $(this).parent();
-			/*
-			 * Get only the direct text content, not from child elements
-			 * This excludes text from Yoast's screen-reader-text spans
-			 */
-			const labelText = $label
-				.contents()
-				.filter(function () {
-					return this.nodeType === 3; // Text nodes only
-				})
-				.text()
-				.trim();
+
+		// Try Block Editor first (Gutenberg)
+		let $checkboxes = $(
+			'.editor-post-taxonomies__hierarchical-terms-list input[type="checkbox"]:checked'
+		);
+
+		// Fallback to Classic Editor
+		if ($checkboxes.length === 0) {
+			$checkboxes = $(SELECTORS.regionCheckboxes);
+		}
+
+		// Debug: Show detection info
+		if (zwTTVGPT.debugMode) {
+			/* eslint-disable no-console */
+			const isBlockEditor =
+				$('.editor-post-taxonomies__hierarchical-terms-list').length >
+				0;
+			console.log('ZW TTVGPT Debug - Region detection:', {
+				editor: isBlockEditor ? 'Block Editor' : 'Classic Editor',
+				checkedCheckboxes: $checkboxes.length,
+			});
+			/* eslint-enable no-console */
+		}
+
+		$checkboxes.each(function () {
+			const $checkbox = $(this);
+			let labelText = '';
+
+			// Block Editor: label is a sibling with matching 'for' attribute
+			if (
+				$checkbox.attr('id') &&
+				$checkbox.attr('id').startsWith('inspector-checkbox-control')
+			) {
+				const $label = $('label[for="' + $checkbox.attr('id') + '"]');
+				labelText = $label.text().trim();
+			} else {
+				// Classic Editor: label is parent, extract text nodes only
+				const $label = $checkbox.parent();
+				labelText = $label
+					.contents()
+					.filter(function () {
+						return this.nodeType === 3; // Text nodes only
+					})
+					.text()
+					.trim();
+			}
 
 			if (labelText) {
 				regions.push(labelText);
 			}
 		});
+
 		return regions;
 	}
 
