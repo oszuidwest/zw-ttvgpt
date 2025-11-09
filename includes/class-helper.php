@@ -103,4 +103,17 @@ class TTVGPTHelper {
 	public static function get_asset_version(): string {
 		return ZW_TTVGPT_VERSION . ( TTVGPTSettingsManager::is_debug_mode() ? '.' . time() : '' );
 	}
+
+	/**
+	 * Check if a model is a GPT-5 model that requires the Responses API
+	 *
+	 * @param string $model Model identifier to check.
+	 * @return bool True if model uses Responses API (GPT-5), false otherwise.
+	 */
+	public static function is_gpt5_model( string $model ): bool {
+		$model_lower = strtolower( $model );
+
+		// Check for GPT-5 family models
+		return str_starts_with( $model_lower, 'gpt-5' );
+	}
 }

@@ -14,11 +14,18 @@ namespace ZW_TTVGPT_Core;
  */
 class TTVGPTApiHandler {
 	/**
-	 * OpenAI API endpoint
+	 * OpenAI Chat Completions API endpoint (GPT-4 and earlier)
 	 *
 	 * @var string
 	 */
-	private const API_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
+	private const CHAT_COMPLETIONS_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
+
+	/**
+	 * OpenAI Responses API endpoint (GPT-5 and later)
+	 *
+	 * @var string
+	 */
+	private const RESPONSES_ENDPOINT = 'https://api.openai.com/v1/responses';
 
 	/**
 	 * Maximum tokens for API response
@@ -109,18 +116,120 @@ class TTVGPTApiHandler {
 	}
 
 	/**
-	 * Generate text summary using OpenAI Chat Completions API
+	 * Determine which API endpoint to use based on the model
+	 *
+	 * @return string API endpoint URL
+	 */
+	private function get_api_endpoint(): string {
+		if ( TTVGPTHelper::is_gpt5_model( $this->model ) ) {
+			return self::RESPONSES_ENDPOINT;
+		}
+
+		return self::CHAT_COMPLETIONS_ENDPOINT;
+	}
+
+	/**
+	 * Build request body for Chat Completions API (GPT-4 and earlier)
+	 *
+	 * @param string $content    Cleaned content to summarize
+	 * @param int    $word_limit Maximum words for summary
+	 * @return array Request body array
+	 */
+	private function build_chat_completions_request( string $content, int $word_limit ): array {
+		return array(
+			'model'       => $this->model,
+			'messages'    => $this->build_messages( $content, $word_limit ),
+			'max_tokens'  => self::MAX_TOKENS,
+			'temperature' => self::TEMPERATURE,
+		);
+	}
+
+	/**
+	 * Build request body for Responses API (GPT-5 and later)
+	 *
+	 * @param string $content    Cleaned content to summarize
+	 * @param int    $word_limit Maximum words for summary
+	 * @return array Request body array
+	 */
+	private function build_responses_request( string $content, int $word_limit ): array {
+		// Build input with system and user messages
+		$input = $this->get_system_prompt( $word_limit ) . "\n\n" . $content;
+
+		return array(
+			'model'             => $this->model,
+			'input'             => $input,
+			'max_output_tokens' => self::MAX_TOKENS,
+			'temperature'       => self::TEMPERATURE,
+			'reasoning_effort'  => 'medium',
+		);
+	}
+
+	/**
+	 * Extract summary text from Chat Completions API response
+	 *
+	 * @param array $data Response data from API
+	 * @return string|\WP_Error Summary text or WP_Error if invalid
+	 */
+	private function extract_chat_completions_summary( array $data ) {
+		if ( ! isset( $data['choices'][0]['message']['content'] ) ) {
+			$this->logger->error( 'Invalid Chat Completions API response structure' );
+			return new \WP_Error(
+				'invalid_response',
+				__( 'Ongeldig antwoord van de API', 'zw-ttvgpt' )
+			);
+		}
+
+		return trim( (string) $data['choices'][0]['message']['content'] );
+	}
+
+	/**
+	 * Extract summary text from Responses API response
+	 *
+	 * @param array $data Response data from API
+	 * @return string|\WP_Error Summary text or WP_Error if invalid
+	 */
+	private function extract_responses_summary( array $data ) {
+		// Try modern response format first (output.content or output.text)
+		if ( isset( $data['output']['content'] ) ) {
+			return trim( (string) $data['output']['content'] );
+		}
+
+		if ( isset( $data['output']['text'] ) ) {
+			return trim( (string) $data['output']['text'] );
+		}
+
+		// Fallback to message format if available
+		if ( isset( $data['output']['message']['content'] ) ) {
+			return trim( (string) $data['output']['message']['content'] );
+		}
+
+		$this->logger->error( 'Invalid Responses API response structure' );
+		return new \WP_Error(
+			'invalid_response',
+			__( 'Ongeldig antwoord van de API', 'zw-ttvgpt' )
+		);
+	}
+
+	/**
+	 * Generate text summary using OpenAI API (Chat Completions or Responses)
 	 *
 	 * @param string $content    Content to summarize
 	 * @param int    $word_limit Maximum words for summary
 	 * @return string|\WP_Error Summary string on success, WP_Error on failure
 	 */
 	public function generate_summary( string $content, int $word_limit ) {
+		$is_gpt5  = TTVGPTHelper::is_gpt5_model( $this->model );
+		$api_type = $is_gpt5 ? 'Responses' : 'Chat Completions';
+		$endpoint = $this->get_api_endpoint();
+		$timeout  = $is_gpt5 ? TTVGPTConstants::API_TIMEOUT_GPT5 : TTVGPTConstants::API_TIMEOUT;
+
 		$this->logger->debug(
 			'Starting API request',
 			array(
 				'model'      => $this->model,
 				'word_limit' => $word_limit,
+				'api_type'   => $api_type,
+				'endpoint'   => $endpoint,
 			)
 		);
 
@@ -132,14 +241,14 @@ class TTVGPTApiHandler {
 			);
 		}
 
-		$request_body = wp_json_encode(
-			array(
-				'model'       => $this->model,
-				'messages'    => $this->build_messages( $content, $word_limit ),
-				'max_tokens'  => self::MAX_TOKENS,
-				'temperature' => self::TEMPERATURE,
-			)
-		);
+		// Build request based on API type
+		if ( $is_gpt5 ) {
+			$request_data = $this->build_responses_request( $content, $word_limit );
+		} else {
+			$request_data = $this->build_chat_completions_request( $content, $word_limit );
+		}
+
+		$request_body = wp_json_encode( $request_data );
 
 		if ( false === $request_body ) {
 			$this->logger->error( 'Failed to encode JSON request body' );
@@ -150,9 +259,9 @@ class TTVGPTApiHandler {
 		}
 
 		$response = wp_remote_post(
-			self::API_ENDPOINT,
+			$endpoint,
 			array(
-				'timeout' => TTVGPTConstants::API_TIMEOUT,
+				'timeout' => $timeout,
 				'headers' => array(
 					'Authorization' => 'Bearer ' . $this->api_key,
 					'Content-Type'  => 'application/json',
@@ -185,15 +294,25 @@ class TTVGPTApiHandler {
 		}
 
 		$data = json_decode( wp_remote_retrieve_body( $response ), true );
-		if ( json_last_error() !== JSON_ERROR_NONE || ! is_array( $data ) || ! isset( $data['choices'][0]['message']['content'] ) ) {
-			$this->logger->error( 'Invalid API response' );
+		if ( json_last_error() !== JSON_ERROR_NONE || ! is_array( $data ) ) {
+			$this->logger->error( 'Invalid JSON response from API' );
 			return new \WP_Error(
 				'invalid_response',
 				__( 'Ongeldig antwoord van de API', 'zw-ttvgpt' )
 			);
 		}
 
-		$summary = trim( (string) $data['choices'][0]['message']['content'] );
+		// Extract summary based on API type
+		if ( $is_gpt5 ) {
+			$summary = $this->extract_responses_summary( $data );
+		} else {
+			$summary = $this->extract_chat_completions_summary( $data );
+		}
+
+		if ( is_wp_error( $summary ) ) {
+			return $summary;
+		}
+
 		$this->logger->debug( 'Summary generated', array( 'word_count' => str_word_count( $summary ) ) );
 
 		return $summary;

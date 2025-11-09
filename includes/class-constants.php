@@ -156,11 +156,19 @@ class TTVGPTConstants {
 	const WORD_LIMIT_STEP = 10;
 
 	/**
-	 * API request timeout in seconds.
+	 * API request timeout in seconds (for GPT-4 and earlier models).
 	 *
 	 * @var int
 	 */
 	const API_TIMEOUT = 30;
+
+	/**
+	 * API request timeout in seconds for GPT-5 models.
+	 * GPT-5 models with reasoning can take longer, so we use a higher timeout.
+	 *
+	 * @var int
+	 */
+	const API_TIMEOUT_GPT5 = 60;
 
 	/**
 	 * Success message display duration in milliseconds.
