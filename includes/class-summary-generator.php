@@ -96,7 +96,7 @@ class TTVGPTSummaryGenerator {
 			wp_send_json_error( __( 'Wacht even - max 10 per minuut', 'zw-ttvgpt' ), 429 );
 		}
 
-		$result = $this->api_handler->generate_summary( $clean_content, $this->word_limit );
+		$result = $this->generate_summary_with_retry( $clean_content, $this->word_limit );
 		if ( is_wp_error( $result ) ) {
 			wp_send_json_error( $result->get_error_message(), 500 );
 		}
@@ -117,6 +117,80 @@ class TTVGPTSummaryGenerator {
 			array(
 				'summary'    => $summary,
 				'word_count' => str_word_count( $summary ),
+			)
+		);
+	}
+
+	/**
+	 * Generate summary with automatic retry if word count exceeds limit
+	 *
+	 * @param string $content    Content to summarize
+	 * @param int    $word_limit Maximum words allowed
+	 * @return string|\WP_Error Summary text or error
+	 */
+	private function generate_summary_with_retry( string $content, int $word_limit ) {
+		$attempt = 0;
+
+		while ( $attempt < TTVGPTConstants::MAX_RETRY_ATTEMPTS ) {
+			++$attempt;
+
+			$this->logger->debug(
+				sprintf(
+					'Generating summary (attempt %d/%d, target: %d words)',
+					$attempt,
+					TTVGPTConstants::MAX_RETRY_ATTEMPTS,
+					$word_limit
+				)
+			);
+
+			$result = $this->api_handler->generate_summary( $content, $word_limit );
+
+			if ( is_wp_error( $result ) ) {
+				return $result;
+			}
+
+			$word_count = TTVGPTHelper::count_words( $result );
+
+			$this->logger->debug(
+				sprintf(
+					'Summary generated with %d words (limit: %d)',
+					$word_count,
+					$word_limit
+				)
+			);
+
+			// Accept if within limit
+			if ( $word_count <= $word_limit ) {
+				if ( $attempt > 1 ) {
+					$this->logger->debug( sprintf( 'Summary accepted after %d attempts', $attempt ) );
+				}
+				return $result;
+			}
+
+			// Log excessive word count
+			$this->logger->debug(
+				sprintf(
+					'Summary too long (%d words, limit: %d). Retrying...',
+					$word_count,
+					$word_limit
+				)
+			);
+		}
+
+		// All attempts exhausted
+		$this->logger->error(
+			sprintf(
+				'Failed to generate summary within word limit after %d attempts',
+				TTVGPTConstants::MAX_RETRY_ATTEMPTS
+			)
+		);
+
+		return new \WP_Error(
+			'word_limit_exceeded',
+			sprintf(
+				/* translators: %d: Maximum number of retry attempts */
+				__( 'Kon na %d pogingen geen samenvatting binnen de woordlimiet genereren. Probeer het opnieuw.', 'zw-ttvgpt' ),
+				TTVGPTConstants::MAX_RETRY_ATTEMPTS
 			)
 		);
 	}

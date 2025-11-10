@@ -5,14 +5,14 @@
 [![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-blue.svg)](https://php.net)
 [![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-blue.svg)](https://wordpress.org)
 
-WordPress-plugin die OpenAI's GPT-modellen gebruikt om automatisch korte samenvattingen van artikelen te genereren voor tekst-tv-uitzendingen ('kabelkrant') of teletekst.
+WordPress-plugin die de GPT-modellen van OpenAI gebruikt om automatisch korte samenvattingen van artikelen te genereren voor tekst-tv-uitzendingen ('kabelkrant') of teletekst.
 
 ![preview](https://github.com/oszuidwest/teksttvgpt/assets/6742496/f6c84ab1-edca-4245-bdbd-70c83d6a3e12)
 
 ## Kenmerken
 
-- AI-gestuurde samenvattingen met OpenAI GPT-modellen
-- AJAX-interface voor realtime generatie
+- AI-gemaakte samenvattingen met GPT-modellen van OpenAI (GPT-4 en GPT-5)
+- Automatische detectie en ondersteuning voor de Chat Completions API en Responses API
 - Werkt met zowel de Block Editor (Gutenberg) als de Classic Editor
 - Auditfunctionaliteit met overzicht van alle samenvattingen en diff-weergave
 - Uitgebreide foutafhandeling en validatie
@@ -24,27 +24,30 @@ WordPress-plugin die OpenAI's GPT-modellen gebruikt om automatisch korte samenva
 - WordPress 6.0 of hoger
 - PHP 8.2 of hoger
 - Advanced Custom Fields (ACF) plugin
-- OpenAI API-sleutel
+- OpenAI API key
 
 ### Installatie
 1. Upload de pluginbestanden naar de map `/wp-content/plugins/zw-ttvgpt/`
-2. Activeer de plugin via het scherm _Plugins_ in WordPress
+2. Activeer de plugin via het scherm **Plugins** in WordPress
 3. Ga naar **Instellingen** → **Tekst TV GPT** en configureer de volgende instellingen:
-   - OpenAI API-sleutel
+   - OpenAI API key
    - AI-model (aanbevolen: `gpt-4.1-mini`)
    - Maximaal aantal woorden (standaard: 100)
    - Debugmodus (optioneel)
 
 ### Modelselectie
-| Model | Kwaliteit | Snelheid | Kosten | Context | Aanbeveling |
-|-------|-----------|----------|--------|---------|-------------|
-| `gpt-4.1` | Uitstekend+ | Hoog | Laag-Gemiddeld | 1M tokens | **Nieuwste (Jan 2025)** |
-| `gpt-4.1-mini` | Uitstekend | Zeer hoog | Zeer laag | 1M tokens | **Aanbevolen** |
-| `gpt-4.1-nano` | Hoog | Zeer hoog | Zeer laag | 1M tokens | Snelste optie |
-| `gpt-4o` | Uitstekend | Hoog | Gemiddeld | 128K tokens | Stabiel |
-| `gpt-4o-mini` | Hoog | Zeer hoog | Laag | 128K tokens | Budget |
+| Model | Kwaliteit | Snelheid | Kosten | Context | API | Aanbeveling |
+|-------|-----------|----------|--------|---------|-----|-------------|
+| `gpt-4.1-mini` | Uitstekend | Zeer hoog | Zeer laag | 1M tokens | Chat | **Aanbevolen** |
+| `gpt-4.1` | Uitstekend+ | Hoog | Laag-Gemiddeld | 1M tokens | Chat | Beste kwaliteit GPT-4 |
+| `gpt-4.1-nano` | Hoog | Zeer hoog | Zeer laag | 1M tokens | Chat | Snelste optie |
+| `gpt-5` | Uitstekend+ | Gemiddeld | Gemiddeld-Hoog | 400K tokens | Responses | Nieuwste (augustus 2025) |
+| `gpt-5-mini` | Uitstekend | Hoog | Laag | 400K tokens | Responses | GPT-5 budget |
+| `gpt-5-nano` | Hoog | Zeer hoog | Zeer laag | 400K tokens | Responses | GPT-5 snelste |
 
-De **2025-modellen** bieden tot 1 miljoen tokens context, 26-83% lagere kosten en aanzienlijke kwaliteitsverbeteringen voor tekstsamenvattingen.
+**GPT-4.1-modellen** (aanbevolen) bieden tot 1 miljoen tokens context, zijn 26-83% goedkoper dan GPT-4o en leveren uitstekende kwaliteit voor tekstsamenvattingen via de Chat Completions API. `gpt-4.1-mini` biedt de beste balans tussen kwaliteit, snelheid en kosten.
+
+**GPT-5-modellen** (experimenteel) gebruiken de nieuwe Responses API met ingebouwde reasoning en verbeterde caching. De plugin detecteert automatisch GPT-5-modellen en gebruikt het juiste API-endpoint. Geschikt voor experimentele toepassingen, maar `gpt-4.1-mini` blijft de beste keuze.
 
 ## Gebruik
 
@@ -65,18 +68,18 @@ De **2025-modellen** bieden tot 1 miljoen tokens context, 26-83% lagere kosten e
 ### Debuggen
 Schakel debugmodus in via **Instellingen** → **Tekst TV GPT** om gedetailleerde informatie te loggen:
 
-**Browser Console** (JavaScript):
-- Post ID en geselecteerde regio's
+**Browserconsole** (JavaScript):
+- Post-ID en geselecteerde regio's
 - Exacte content die naar de API wordt gestuurd
-- Content lengte in tekens
-- Volledige API response
+- Lengte van de content in tekens
+- Volledige API-respons
 
-**Server Logs** (PHP):
-- API request details (model, word limit)
-- Generated summary metadata (word count)
-- Error messages met context
+**Serverlogs** (PHP):
+- API-requestdetails (model, woordlimiet)
+- Gegenereerde samenvattingsmetadata (woordenaantal)
+- Foutmeldingen met context
 
-Open de browser console en check je PHP error log om de debug output te zien.
+Open de browserconsole en controleer je PHP-foutlog om de debug-output te zien.
 
 ## Ontwikkelaars
 
@@ -108,18 +111,25 @@ npm run lint:fix
 ### Architectuur
 ```
 includes/
-├── class-admin.php              # WordPress-admininterface
-├── class-api-handler.php        # OpenAI API-communicatie
-├── class-audit-page.php         # Auditfunctionaliteit
+├── class-admin.php              # WordPress-beheerinterface
+├── class-api-handler.php        # OpenAI API-communicatie (Chat + Responses)
+├── class-audit-page.php         # Auditfuncties
 ├── class-settings-manager.php   # Plugin-instellingen
-├── class-logger.php             # Debuglogging
-└── class-helper.php             # Hulpfuncties
+├── class-logger.php             # Debug-logging
+├── class-helper.php             # Hulpfuncties (incl. GPT-5-detectie)
+└── class-constants.php          # Constanten (timeouts, limieten)
 
 assets/
 ├── admin.js                     # AJAX-interface + typanimaties
-├── admin.css                    # Adminstyling
-└── audit.css                    # Auditpagina-styling
+├── admin.css                    # Styling voor admin pagina's
+└── audit.css                    # Styling voor audit pagina's
 ```
+
+**API-ondersteuning:**
+- GPT-4-modellen: Chat Completions API (`/v1/chat/completions`)
+- GPT-5-modellen: Responses API (`/v1/responses`) - Experimenteel
+- Automatische endpoint-detectie op basis van modelnaam
+- Adaptieve request/response-parsing per modeltype
 
 ## Licentie
 

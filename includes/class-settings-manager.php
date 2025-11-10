@@ -139,6 +139,16 @@ class TTVGPTSettingsManager {
 	}
 
 	/**
+	 * Get configured system prompt template
+	 *
+	 * @return string System prompt template with %d placeholder for word limit.
+	 */
+	public static function get_system_prompt(): string {
+		$prompt = self::get_setting( 'system_prompt', TTVGPTConstants::DEFAULT_SYSTEM_PROMPT );
+		return is_string( $prompt ) && ! empty( $prompt ) ? $prompt : TTVGPTConstants::DEFAULT_SYSTEM_PROMPT;
+	}
+
+	/**
 	 * Check if debug mode is enabled
 	 *
 	 * @return bool True if debug mode is enabled, false otherwise.

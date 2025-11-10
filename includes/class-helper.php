@@ -103,4 +103,31 @@ class TTVGPTHelper {
 	public static function get_asset_version(): string {
 		return ZW_TTVGPT_VERSION . ( TTVGPTSettingsManager::is_debug_mode() ? '.' . time() : '' );
 	}
+
+	/**
+	 * Check if a model is a GPT-5 model that requires the Responses API
+	 *
+	 * @param string $model Model identifier to check.
+	 * @return bool True if model uses Responses API (GPT-5), false otherwise.
+	 */
+	public static function is_gpt5_model( string $model ): bool {
+		$model_lower = strtolower( $model );
+
+		// Check for GPT-5 family models
+		return str_starts_with( $model_lower, 'gpt-5' );
+	}
+
+	/**
+	 * Count words in a string
+	 *
+	 * @param string $text Text to count words in.
+	 * @return int Number of words.
+	 */
+	public static function count_words( string $text ): int {
+		$text = trim( $text );
+		if ( empty( $text ) ) {
+			return 0;
+		}
+		return str_word_count( $text );
+	}
 }

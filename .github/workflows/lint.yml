@@ -39,6 +39,19 @@ jobs:
 
       - run: ./vendor/bin/phpstan analyse --error-format=checkstyle | cs2pr
 
+  plugin-check:
+    name: Plugin Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: curl
+          coverage: none
+
       - name: Run wp-plugin-check
         uses: wordpress/plugin-check-action@v1
         with:
