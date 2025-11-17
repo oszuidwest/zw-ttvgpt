@@ -155,14 +155,14 @@ class TTVGPTApiHandler {
 	private function build_responses_request( string $content, int $word_limit ): array {
 		// The Responses API accepts messages array in the input parameter
 		// Note: GPT-5.1 does not support temperature parameter
-		// Using 'none' reasoning effort for fast, low-latency text summarization
+		// Using 'low' reasoning effort for quality summaries while maintaining speed
 		// Using 'medium' verbosity for balanced response length
 		return array(
 			'model'             => $this->model,
 			'input'             => $this->build_messages( $content, $word_limit ),
 			'max_output_tokens' => self::MAX_TOKENS,
 			'reasoning'         => array(
-				'effort' => 'none',
+				'effort' => 'low',
 			),
 			'text'              => array(
 				'verbosity' => 'medium',

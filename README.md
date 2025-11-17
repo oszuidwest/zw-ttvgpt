@@ -46,7 +46,7 @@ De plugin ondersteunt **GPT-5.1** en de **GPT-4.1 familie** van OpenAI:
 | `gpt-4.1-mini` | Uitstekend | Zeer hoog | Zeer laag | 1M tokens | Chat | GPT-4 budget |
 | `gpt-4.1-nano` | Hoog | Zeer hoog | Zeer laag | 1M tokens | Chat | GPT-4 snelste |
 
-**GPT-5.1** (aanbevolen): Nieuwste flagship model met `reasoning_effort='none'` voor snelle, low-latency tekstsamenvattingen. Intelligentere output dan GPT-4.1 via de Responses API.
+**GPT-5.1** (aanbevolen): Nieuwste flagship model met `reasoning_effort='low'` voor hoogwaardige tekstsamenvattingen met goede snelheid. Intelligentere output dan GPT-4.1 via de Responses API.
 
 **GPT-4.1 familie**: Bewezen betrouwbare modellen met uitstekende kwaliteit via de Chat Completions API. Keuze uit standaard, mini (budget), en nano (snelste) varianten.
 
@@ -130,7 +130,7 @@ assets/
 
 **API-ondersteuning:**
 - GPT-4.1 familie: Chat Completions API (`/v1/chat/completions`)
-- GPT-5.1: Responses API (`/v1/responses`) met `reasoning_effort='none'` voor snelle samenvattingen
+- GPT-5.1: Responses API (`/v1/responses`) met `reasoning_effort='low'` voor hoogwaardige samenvattingen
 - Automatische endpoint-detectie op basis van modelnaam
 - Adaptieve request/response-parsing per modeltype
 

@@ -200,11 +200,12 @@ class TTVGPTConstants {
 
 	/**
 	 * Default system prompt for AI summary generation.
+	 * Optimized for GPT-5.1 with reasoning_effort='none'.
 	 * Use %d as placeholder for word limit.
 	 *
 	 * @var string
 	 */
-	const DEFAULT_SYSTEM_PROMPT = 'Je bent een ervaren eindredacteur die perfect Nederlands beheerst. Vat het volgende nieuwsartikel samen op een heldere en beknopte manier die makkelijk te begrijpen is voor een breed publiek. Focus op de hoofdzaak en laat bijzaken weg. Schrijf een vloeiend verhaal met natuurlijke overgangen. Gebruik korte zinslengtes om de leesbaarheid te behouden. Negeer alles in het artikel dat geen Nederlands is. Parse HTML. Gebruik nooit Engelse woorden. Gebruik geen gedachtestreepjes (—), alleen komma\'s en punten. Gebruik maximaal %d woorden.';
+	const DEFAULT_SYSTEM_PROMPT = 'Je bent een eindredacteur voor tekst-tv. Denk eerst: wat is de kernboodschap van dit artikel? Schrijf een samenvatting in maximaal %d woorden: Focus alleen op de hoofdzaak. Schrijf voor een breed publiek. Gebruik korte, heldere zinnen. Alleen Nederlands, geen gedachtestreepjes.';
 
 	/**
 	 * Get default plugin settings
