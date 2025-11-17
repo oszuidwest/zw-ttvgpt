@@ -105,17 +105,23 @@ class TTVGPTHelper {
 	}
 
 	/**
-	 * Check if a model is GPT-5.1 that requires the Responses API
+	 * Check if a model requires the Responses API (GPT-5.1 only)
 	 *
-	 * Only supports gpt-5.1 (not gpt-5, gpt-5-mini, or gpt-5-nano)
+	 * Only gpt-5.1 is supported. The older gpt-5 model (without .1) is deprecated
+	 * and replaced by gpt-5.1.
+	 *
+	 * Note: This function accepts any model starting with 'gpt-5' for forward
+	 * compatibility with potential future GPT-5 variants, but currently only
+	 * gpt-5.1 is tested and recommended.
 	 *
 	 * @param string $model Model identifier to check.
-	 * @return bool True if model uses Responses API (GPT-5.1), false otherwise.
+	 * @return bool True if model uses Responses API (GPT-5.* family), false otherwise.
 	 */
 	public static function is_gpt5_model( string $model ): bool {
 		$model_lower = strtolower( $model );
 
-		// Only gpt-5.1 is supported from the GPT-5 family
+		// Accept any gpt-5* model for Responses API (forward compatibility)
+		// gpt-5 (without .1) is deprecated - use gpt-5.1 instead
 		return str_starts_with( $model_lower, 'gpt-5' );
 	}
 

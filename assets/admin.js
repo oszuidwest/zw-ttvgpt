@@ -3,6 +3,13 @@
  *
  * Manages summary generation interface with typing animations and loading states.
  *
+ * Dependencies:
+ * - jQuery (passed as $)
+ * - zwTTVGPT (localized script data: ajaxUrl, nonce, strings, acfFields)
+ * - wp (WordPress JavaScript API: data, blocks, sanitize)
+ * - tinyMCE (TinyMCE editor API for Classic Editor support)
+ * - _ (Underscore.js utility library for array shuffling)
+ *
  * @param {jQuery} $ jQuery object.
  */
 (function ($) {

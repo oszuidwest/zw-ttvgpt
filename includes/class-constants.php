@@ -157,7 +157,7 @@ class TTVGPTConstants {
 
 	/**
 	 * API request timeout in seconds for all models (GPT-5.1 and GPT-4.1 family).
-	 * GPT-5.1 uses reasoning_effort='none' for fast responses, similar to GPT-4.1 speed.
+	 * GPT-5.1 uses reasoning_effort='low' for quality responses with good speed.
 	 *
 	 * @var int
 	 */
