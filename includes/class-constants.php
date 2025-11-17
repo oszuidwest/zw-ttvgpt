@@ -200,7 +200,7 @@ class TTVGPTConstants {
 
 	/**
 	 * Default system prompt for AI summary generation.
-	 * Optimized for GPT-5.1 with reasoning_effort='none'.
+	 * Optimized for GPT-5.1 with reasoning_effort='low'.
 	 * Use %d as placeholder for word limit.
 	 *
 	 * @var string
