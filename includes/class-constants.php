@@ -97,7 +97,7 @@ class TTVGPTConstants {
 	 *
 	 * @var string
 	 */
-	const DEFAULT_MODEL = 'gpt-4.1-mini';
+	const DEFAULT_MODEL = 'gpt-5.1';
 
 	/**
 	 * Maximum requests allowed per user in rate limit window.
@@ -156,19 +156,12 @@ class TTVGPTConstants {
 	const WORD_LIMIT_STEP = 10;
 
 	/**
-	 * API request timeout in seconds (for GPT-4 and earlier models).
+	 * API request timeout in seconds for all models (GPT-5.1 and GPT-4.1 family).
+	 * GPT-5.1 uses reasoning_effort='none' for fast responses, similar to GPT-4.1 speed.
 	 *
 	 * @var int
 	 */
 	const API_TIMEOUT = 30;
-
-	/**
-	 * API request timeout in seconds for GPT-5 models.
-	 * GPT-5 models with reasoning can take longer, so we use a higher timeout.
-	 *
-	 * @var int
-	 */
-	const API_TIMEOUT_GPT5 = 60;
 
 	/**
 	 * Maximum number of retry attempts for word count validation.

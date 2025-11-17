@@ -14,14 +14,14 @@ namespace ZW_TTVGPT_Core;
  */
 class TTVGPTApiHandler {
 	/**
-	 * OpenAI Chat Completions API endpoint (GPT-4 and earlier)
+	 * OpenAI Chat Completions API endpoint (for GPT-4.1 family: gpt-4.1, gpt-4.1-mini, gpt-4.1-nano)
 	 *
 	 * @var string
 	 */
 	private const CHAT_COMPLETIONS_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 
 	/**
-	 * OpenAI Responses API endpoint (GPT-5 and later)
+	 * OpenAI Responses API endpoint (GPT-5.1 only)
 	 *
 	 * @var string
 	 */
@@ -130,7 +130,7 @@ class TTVGPTApiHandler {
 	}
 
 	/**
-	 * Build request body for Chat Completions API (GPT-4 and earlier)
+	 * Build request body for Chat Completions API (GPT-4.1 family: gpt-4.1, gpt-4.1-mini, gpt-4.1-nano)
 	 *
 	 * @param string $content    Cleaned content to summarize
 	 * @param int    $word_limit Maximum words for summary
@@ -146,7 +146,7 @@ class TTVGPTApiHandler {
 	}
 
 	/**
-	 * Build request body for Responses API (GPT-5 and later)
+	 * Build request body for Responses API (GPT-5.1 only)
 	 *
 	 * @param string $content    Cleaned content to summarize
 	 * @param int    $word_limit Maximum words for summary
@@ -154,16 +154,18 @@ class TTVGPTApiHandler {
 	 */
 	private function build_responses_request( string $content, int $word_limit ): array {
 		// The Responses API accepts messages array in the input parameter
-		// Note: GPT-5 does not support temperature parameter
+		// Note: GPT-5.1 does not support temperature parameter
+		// Using 'none' reasoning effort for fast, low-latency text summarization
+		// Using 'low' verbosity for concise responses
 		return array(
 			'model'             => $this->model,
 			'input'             => $this->build_messages( $content, $word_limit ),
 			'max_output_tokens' => self::MAX_TOKENS,
 			'reasoning'         => array(
-				'effort' => 'minimal',
+				'effort' => 'none',
 			),
 			'text'              => array(
-				'verbosity' => 'medium',
+				'verbosity' => 'low',
 			),
 			'store'             => false,
 		);
@@ -235,7 +237,7 @@ class TTVGPTApiHandler {
 		$is_gpt5  = TTVGPTHelper::is_gpt5_model( $this->model );
 		$api_type = $is_gpt5 ? 'Responses' : 'Chat Completions';
 		$endpoint = $this->get_api_endpoint();
-		$timeout  = $is_gpt5 ? TTVGPTConstants::API_TIMEOUT_GPT5 : TTVGPTConstants::API_TIMEOUT;
+		$timeout  = TTVGPTConstants::API_TIMEOUT;
 
 		$this->logger->debug(
 			'Starting API request',

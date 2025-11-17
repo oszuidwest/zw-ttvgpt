@@ -11,7 +11,7 @@ WordPress-plugin die de GPT-modellen van OpenAI gebruikt om automatisch korte sa
 
 ## Kenmerken
 
-- AI-gemaakte samenvattingen met GPT-modellen van OpenAI (GPT-4 en GPT-5)
+- AI-gemaakte samenvattingen met GPT-modellen van OpenAI (GPT-5.1 en GPT-4.1 familie)
 - Automatische detectie en ondersteuning voor de Chat Completions API en Responses API
 - Werkt met zowel de Block Editor (Gutenberg) als de Classic Editor
 - Auditfunctionaliteit met overzicht van alle samenvattingen en diff-weergave
@@ -31,23 +31,26 @@ WordPress-plugin die de GPT-modellen van OpenAI gebruikt om automatisch korte sa
 2. Activeer de plugin via het scherm **Plugins** in WordPress
 3. Ga naar **Instellingen** → **Tekst TV GPT** en configureer de volgende instellingen:
    - OpenAI API key
-   - AI-model (aanbevolen: `gpt-4.1-mini`)
+   - AI-model (standaard: `gpt-5.1`)
    - Maximaal aantal woorden (standaard: 100)
    - Debugmodus (optioneel)
 
 ### Modelselectie
+
+De plugin ondersteunt **GPT-5.1** en de **GPT-4.1 familie** van OpenAI:
+
 | Model | Kwaliteit | Snelheid | Kosten | Context | API | Aanbeveling |
 |-------|-----------|----------|--------|---------|-----|-------------|
-| `gpt-4.1-mini` | Uitstekend | Zeer hoog | Zeer laag | 1M tokens | Chat | **Aanbevolen** |
+| `gpt-5.1` | Uitstekend+ | Zeer hoog | Laag | 1M tokens | Responses | **Aanbevolen** |
 | `gpt-4.1` | Uitstekend+ | Hoog | Laag-Gemiddeld | 1M tokens | Chat | Beste kwaliteit GPT-4 |
-| `gpt-4.1-nano` | Hoog | Zeer hoog | Zeer laag | 1M tokens | Chat | Snelste optie |
-| `gpt-5` | Uitstekend+ | Gemiddeld | Gemiddeld-Hoog | 400K tokens | Responses | Nieuwste (augustus 2025) |
-| `gpt-5-mini` | Uitstekend | Hoog | Laag | 400K tokens | Responses | GPT-5 budget |
-| `gpt-5-nano` | Hoog | Zeer hoog | Zeer laag | 400K tokens | Responses | GPT-5 snelste |
+| `gpt-4.1-mini` | Uitstekend | Zeer hoog | Zeer laag | 1M tokens | Chat | GPT-4 budget |
+| `gpt-4.1-nano` | Hoog | Zeer hoog | Zeer laag | 1M tokens | Chat | GPT-4 snelste |
 
-**GPT-4.1-modellen** (aanbevolen) bieden tot 1 miljoen tokens context, zijn 26-83% goedkoper dan GPT-4o en leveren uitstekende kwaliteit voor tekstsamenvattingen via de Chat Completions API. `gpt-4.1-mini` biedt de beste balans tussen kwaliteit, snelheid en kosten.
+**GPT-5.1** (aanbevolen): Nieuwste flagship model met `reasoning_effort='none'` voor snelle, low-latency tekstsamenvattingen. Intelligentere output dan GPT-4.1 via de Responses API.
 
-**GPT-5-modellen** (experimenteel) gebruiken de nieuwe Responses API met ingebouwde reasoning en verbeterde caching. De plugin detecteert automatisch GPT-5-modellen en gebruikt het juiste API-endpoint. Geschikt voor experimentele toepassingen, maar `gpt-4.1-mini` blijft de beste keuze.
+**GPT-4.1 familie**: Bewezen betrouwbare modellen met uitstekende kwaliteit via de Chat Completions API. Keuze uit standaard, mini (budget), en nano (snelste) varianten.
+
+> **Let op**: Alleen bovenstaande modellen worden ondersteund. Oudere modellen zoals `gpt-5`, `gpt-4o`, en `gpt-4-turbo` werken niet.
 
 ## Gebruik
 
@@ -116,7 +119,7 @@ includes/
 ├── class-audit-page.php         # Auditfuncties
 ├── class-settings-manager.php   # Plugin-instellingen
 ├── class-logger.php             # Debug-logging
-├── class-helper.php             # Hulpfuncties (incl. GPT-5-detectie)
+├── class-helper.php             # Hulpfuncties (incl. GPT-5.1 detectie)
 └── class-constants.php          # Constanten (timeouts, limieten)
 
 assets/
@@ -126,8 +129,8 @@ assets/
 ```
 
 **API-ondersteuning:**
-- GPT-4-modellen: Chat Completions API (`/v1/chat/completions`)
-- GPT-5-modellen: Responses API (`/v1/responses`) - Experimenteel
+- GPT-4.1 familie: Chat Completions API (`/v1/chat/completions`)
+- GPT-5.1: Responses API (`/v1/responses`) met `reasoning_effort='none'` voor snelle samenvattingen
 - Automatische endpoint-detectie op basis van modelnaam
 - Adaptieve request/response-parsing per modeltype
 
