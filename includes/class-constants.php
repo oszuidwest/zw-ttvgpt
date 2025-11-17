@@ -205,7 +205,7 @@ class TTVGPTConstants {
 	 *
 	 * @var string
 	 */
-	const DEFAULT_SYSTEM_PROMPT = 'Je bent een eindredacteur voor tekst-tv. Denk eerst: wat is de kernboodschap van dit artikel? Schrijf een samenvatting in maximaal %d woorden: Focus alleen op de hoofdzaak. Schrijf voor een breed publiek. Gebruik korte, heldere zinnen. Alleen Nederlands, geen gedachtestreepjes.';
+	const DEFAULT_SYSTEM_PROMPT = 'Je bent een eindredacteur voor tekst-tv. Denk eerst: wat is de kernboodschap van dit artikel? Vat het artikel samen in natuurlijk, vloeiend Nederlands voor een breed publiek. Schrijf volledige zinnen met een logische opbouw. Focus op de kernboodschap en de belangrijkste feiten. Gebruik korte, heldere zinnen maar pas op voor telegramstijl. Gebruik maximaal %d woorden. Schrijf alleen in het Nederlands en gebruik geen gedachtestreepjes.';
 
 	/**
 	 * Get default plugin settings
