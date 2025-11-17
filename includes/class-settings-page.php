@@ -193,14 +193,14 @@ class TTVGPTSettingsPage {
 	public function render_model_field(): void {
 		$current_model = TTVGPTSettingsManager::get_model();
 		?>
-		<input type="text" 
-				id="zw_ttvgpt_model" 
-				name="<?php echo $this->get_field_name( 'model' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in get_field_name() ?>" 
+		<input type="text"
+				id="zw_ttvgpt_model"
+				name="<?php echo $this->get_field_name( 'model' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in get_field_name() ?>"
 				value="<?php echo esc_attr( $current_model ); ?>"
 				class="regular-text"
-				placeholder="gpt-4.1-mini" />
+				placeholder="gpt-5.1" />
 		<p class="description">
-			<?php esc_html_e( 'Aanbevolen: gpt-4.1-mini (snel & goedkoop)', 'zw-ttvgpt' ); ?>
+			<?php esc_html_e( 'Aanbevolen: gpt-5.1 (beste kwaliteit). Alternatieven: gpt-4.1, gpt-4.1-mini, gpt-4.1-nano', 'zw-ttvgpt' ); ?>
 		</p>
 		<?php
 	}

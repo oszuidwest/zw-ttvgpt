@@ -97,7 +97,7 @@ class TTVGPTConstants {
 	 *
 	 * @var string
 	 */
-	const DEFAULT_MODEL = 'gpt-4.1-mini';
+	const DEFAULT_MODEL = 'gpt-5.1';
 
 	/**
 	 * Maximum requests allowed per user in rate limit window.
@@ -156,19 +156,12 @@ class TTVGPTConstants {
 	const WORD_LIMIT_STEP = 10;
 
 	/**
-	 * API request timeout in seconds (for GPT-4 and earlier models).
+	 * API request timeout in seconds for all models (GPT-5.1 and GPT-4.1 family).
+	 * GPT-5.1 uses reasoning_effort='none' for fast responses, similar to GPT-4.1 speed.
 	 *
 	 * @var int
 	 */
 	const API_TIMEOUT = 30;
-
-	/**
-	 * API request timeout in seconds for GPT-5 models.
-	 * GPT-5 models with reasoning can take longer, so we use a higher timeout.
-	 *
-	 * @var int
-	 */
-	const API_TIMEOUT_GPT5 = 60;
 
 	/**
 	 * Maximum number of retry attempts for word count validation.
@@ -207,11 +200,12 @@ class TTVGPTConstants {
 
 	/**
 	 * Default system prompt for AI summary generation.
+	 * Optimized for GPT-5.1 with reasoning_effort='low'.
 	 * Use %d as placeholder for word limit.
 	 *
 	 * @var string
 	 */
-	const DEFAULT_SYSTEM_PROMPT = 'Je bent een ervaren eindredacteur die perfect Nederlands beheerst. Vat het volgende nieuwsartikel samen op een heldere en beknopte manier die makkelijk te begrijpen is voor een breed publiek. Focus op de hoofdzaak en laat bijzaken weg. Schrijf een vloeiend verhaal met natuurlijke overgangen. Gebruik korte zinslengtes om de leesbaarheid te behouden. Negeer alles in het artikel dat geen Nederlands is. Parse HTML. Gebruik nooit Engelse woorden. Gebruik geen gedachtestreepjes (—), alleen komma\'s en punten. Gebruik maximaal %d woorden.';
+	const DEFAULT_SYSTEM_PROMPT = 'Je bent een eindredacteur voor tekst-tv. Denk eerst: wat is de kernboodschap van dit artikel? Vat het artikel samen in natuurlijk, vloeiend Nederlands voor een breed publiek. Schrijf volledige zinnen met een logische opbouw. Focus op de kernboodschap en de belangrijkste feiten. Gebruik korte, heldere zinnen maar pas op voor telegramstijl. Gebruik maximaal %d woorden. Schrijf alleen in het Nederlands en gebruik geen gedachtestreepjes.';
 
 	/**
 	 * Get default plugin settings
