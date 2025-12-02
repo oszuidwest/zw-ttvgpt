@@ -12,7 +12,11 @@ permissions:
   contents: write
 
 jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+
   validate-and-release:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -87,11 +91,14 @@ jobs:
             --exclude .github \
             --exclude .gitignore \
             --exclude composer.json \
+            --exclude composer.lock \
             --exclude package.json \
+            --exclude package-lock.json \
             --exclude phpcs.xml \
             --exclude phpstan.neon \
             --exclude phpstan-bootstrap.php \
-            --exclude eslint.config.js
+            --exclude eslint.config.js \
+            --exclude README.md
 
       - name: Set Plugin Name
         run: |

@@ -7,19 +7,7 @@ permissions:
 on:
   pull_request:
     branches: [ main ]
-  push:
-    branches: [ main ]
-    paths:
-      - '**.php'
-      - '**.js'
-      - '**.css'
-      - 'composer.json'
-      - 'composer.lock'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'phpcs.xml'
-      - 'phpstan.neon'
-      - '.github/workflows/**'
+  workflow_call:
 
 jobs:
   test:
@@ -42,40 +30,40 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v6
       with:
-        node-version: '20'
+        node-version: '24'
         cache: 'npm'
-        
+
     - name: Install PHP dependencies
       run: composer install --no-progress --no-suggest --prefer-dist --optimize-autoloader
-      
+
     - name: Install JavaScript dependencies
       run: npm ci
-      
+
     - name: Run code quality tests
       run: composer test
-      
+
   auto-fix:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         ref: ${{ github.head_ref }}
-        
+
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.3'
         coverage: none
         tools: composer:v2
-        
+
     - name: Setup Node.js
       uses: actions/setup-node@v6
       with:
-        node-version: '20'
+        node-version: '24'
         cache: 'npm'
         
     - name: Install PHP dependencies
