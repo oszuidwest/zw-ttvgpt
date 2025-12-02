@@ -3,14 +3,15 @@
  * Plugin Name: ZuidWest TV Tekst TV GPT
  * Plugin URI: https://github.com/oszuidwest/zw-ttvgpt
  * Description: Genereert automatisch samenvattingen voor Tekst TV met behulp van OpenAI GPT-modellen
- * Version: 0.14.0
+ * Version: 0.15.0
  * Author: Streekomroep ZuidWest
  * Author URI: https://www.zuidwesttv.nl
  * License: GPL v3 or later
  * License URI: https://www.gnu.org/licenses/gpl-3.0.html
  * Text Domain: zw-ttvgpt
- * Requires at least: 6.0
+ * Requires at least: 6.8
  * Requires PHP: 8.3
+ * Requires Plugins: advanced-custom-fields
  *
  * @package ZW_TTVGPT
  */
@@ -19,7 +20,7 @@ if ( ! defined( 'WPINC' ) ) {
 	die;
 }
 
-define( 'ZW_TTVGPT_VERSION', '0.14.0' );
+define( 'ZW_TTVGPT_VERSION', '0.15.0' );
 define( 'ZW_TTVGPT_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ZW_TTVGPT_URL', plugin_dir_url( __FILE__ ) );
 require_once ZW_TTVGPT_DIR . 'includes/class-constants.php';
@@ -88,11 +89,6 @@ function zw_ttvgpt_activate() {
 	if ( version_compare( PHP_VERSION, '8.3', '<' ) ) {
 		deactivate_plugins( plugin_basename( __FILE__ ) );
 		wp_die( 'Deze plugin vereist minimaal PHP versie 8.3.' );
-	}
-
-	if ( ! function_exists( 'get_field' ) && ! defined( 'WP_CLI' ) && ! getenv( 'CI' ) ) {
-		deactivate_plugins( plugin_basename( __FILE__ ) );
-		wp_die( 'Deze plugin vereist de Advanced Custom Fields plugin.' );
 	}
 
 	if ( ! get_option( ZW_TTVGPT_Core\TTVGPTConstants::SETTINGS_OPTION_NAME ) ) {

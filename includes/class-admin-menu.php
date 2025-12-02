@@ -63,6 +63,8 @@ class TTVGPTAdminMenu {
 	/**
 	 * Load CSS and JavaScript assets on post edit screens and audit page
 	 *
+	 * Uses wp_enqueue_script_module (WordPress 6.5+) for ES modules support.
+	 *
 	 * @param string $hook Current admin page hook.
 	 * @return void
 	 */
@@ -78,7 +80,6 @@ class TTVGPTAdminMenu {
 		// Enqueue fine tuning page assets
 		if ( 'tools_page_zw-ttvgpt-fine-tuning' === $hook ) {
 			wp_enqueue_style( 'zw-ttvgpt-fine-tuning', ZW_TTVGPT_URL . 'assets/admin.css', array(), $version );
-			wp_enqueue_script( 'jquery' );
 			return;
 		}
 
@@ -92,43 +93,51 @@ class TTVGPTAdminMenu {
 			return;
 		}
 
-		// Enqueue assets (same for both Block Editor and Classic Editor)
+		// Enqueue CSS
 		wp_enqueue_style( 'zw-ttvgpt-admin', ZW_TTVGPT_URL . 'assets/admin.css', array(), $version );
-		wp_enqueue_script( 'zw-ttvgpt-admin', ZW_TTVGPT_URL . 'assets/admin.js', array( 'jquery' ), $version, true );
 
-		wp_localize_script(
-			'zw-ttvgpt-admin',
-			'zwTTVGPT',
-			array(
-				'ajaxUrl'        => admin_url( 'admin-ajax.php' ),
-				'nonce'          => wp_create_nonce( 'zw_ttvgpt_nonce' ),
-				'acfFields'      => TTVGPTHelper::get_acf_field_ids(),
-				'debugMode'      => TTVGPTSettingsManager::is_debug_mode(),
-				'animationDelay' => array(
-					'min'   => 20,
-					'max'   => 50,
-					'space' => 30,
+		// Inline script data before module loads (wp_enqueue_script_module doesn't support wp_localize_script)
+		$inline_data = array(
+			'ajaxUrl'        => admin_url( 'admin-ajax.php' ),
+			'nonce'          => wp_create_nonce( 'zw_ttvgpt_nonce' ),
+			'acfFields'      => TTVGPTHelper::get_acf_field_ids(),
+			'debugMode'      => TTVGPTSettingsManager::is_debug_mode(),
+			'animationDelay' => array(
+				'min'   => 20,
+				'max'   => 50,
+				'space' => 30,
+			),
+			'timeouts'       => array( 'successMessage' => 3000 ),
+			'strings'        => array(
+				'generating'      => __( 'Genereren...', 'zw-ttvgpt' ),
+				'error'           => __( 'Fout opgetreden', 'zw-ttvgpt' ),
+				'success'         => __( 'Klaar!', 'zw-ttvgpt' ),
+				'buttonText'      => __( 'Genereer', 'zw-ttvgpt' ),
+				'loadingMessages' => array(
+					__( '🤔 Even nadenken...', 'zw-ttvgpt' ),
+					__( '📰 Artikel aan het lezen...', 'zw-ttvgpt' ),
+					__( '✨ AI magie aan het werk...', 'zw-ttvgpt' ),
+					__( '🔍 De essentie aan het vinden...', 'zw-ttvgpt' ),
+					__( '📝 Aan het samenvatten...', 'zw-ttvgpt' ),
+					__( '🎯 Belangrijkste punten selecteren...', 'zw-ttvgpt' ),
+					__( '🧠 Neuronen aan het vuren...', 'zw-ttvgpt' ),
+					__( '🚀 Tekst TV klaar maken...', 'zw-ttvgpt' ),
+					__( '🎨 Tekst aan het polijsten...', 'zw-ttvgpt' ),
+					__( '🌟 Briljante samenvatting maken...', 'zw-ttvgpt' ),
 				),
-				'timeouts'       => array( 'successMessage' => 3000 ),
-				'strings'        => array(
-					'generating'      => __( 'Genereren...', 'zw-ttvgpt' ),
-					'error'           => __( 'Fout opgetreden', 'zw-ttvgpt' ),
-					'success'         => __( 'Klaar!', 'zw-ttvgpt' ),
-					'buttonText'      => __( 'Genereer', 'zw-ttvgpt' ),
-					'loadingMessages' => array(
-						__( '🤔 Even nadenken...', 'zw-ttvgpt' ),
-						__( '📰 Artikel aan het lezen...', 'zw-ttvgpt' ),
-						__( '✨ AI magie aan het werk...', 'zw-ttvgpt' ),
-						__( '🔍 De essentie aan het vinden...', 'zw-ttvgpt' ),
-						__( '📝 Aan het samenvatten...', 'zw-ttvgpt' ),
-						__( '🎯 Belangrijkste punten selecteren...', 'zw-ttvgpt' ),
-						__( '🧠 Neuronen aan het vuren...', 'zw-ttvgpt' ),
-						__( '🚀 Tekst TV klaar maken...', 'zw-ttvgpt' ),
-						__( '🎨 Tekst aan het polijsten...', 'zw-ttvgpt' ),
-						__( '🌟 Briljante samenvatting maken...', 'zw-ttvgpt' ),
-					),
-				),
-			)
+			),
 		);
+
+		// Add inline script before module (wp_add_inline_script doesn't work with modules)
+		wp_register_script( 'zw-ttvgpt-data', false, array(), $version, false );
+		wp_enqueue_script( 'zw-ttvgpt-data' );
+		wp_add_inline_script(
+			'zw-ttvgpt-data',
+			'window.zwTTVGPT = ' . wp_json_encode( $inline_data ) . ';',
+			'before'
+		);
+
+		// Enqueue ES module (WordPress 6.5+)
+		wp_enqueue_script_module( 'zw-ttvgpt-admin', ZW_TTVGPT_URL . 'assets/admin.mjs', array(), $version );
 	}
 }
