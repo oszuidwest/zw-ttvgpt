@@ -10,7 +10,7 @@
  * License URI: https://www.gnu.org/licenses/gpl-3.0.html
  * Text Domain: zw-ttvgpt
  * Requires at least: 6.0
- * Requires PHP: 8.2
+ * Requires PHP: 8.3
  *
  * @package ZW_TTVGPT
  */
@@ -23,6 +23,7 @@ define( 'ZW_TTVGPT_VERSION', '0.14.0' );
 define( 'ZW_TTVGPT_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ZW_TTVGPT_URL', plugin_dir_url( __FILE__ ) );
 require_once ZW_TTVGPT_DIR . 'includes/class-constants.php';
+require_once ZW_TTVGPT_DIR . 'includes/enum-audit-status.php';
 require_once ZW_TTVGPT_DIR . 'includes/class-settings-manager.php';
 require_once ZW_TTVGPT_DIR . 'includes/class-api-error-handler.php';
 require_once ZW_TTVGPT_DIR . 'includes/class-rate-limiter.php';
@@ -84,9 +85,9 @@ add_action( 'init', 'zw_ttvgpt_init' );
  * @return void
  */
 function zw_ttvgpt_activate() {
-	if ( version_compare( PHP_VERSION, '8.2', '<' ) ) {
+	if ( version_compare( PHP_VERSION, '8.3', '<' ) ) {
 		deactivate_plugins( plugin_basename( __FILE__ ) );
-		wp_die( 'Deze plugin vereist minimaal PHP versie 8.2.' );
+		wp_die( 'Deze plugin vereist minimaal PHP versie 8.3.' );
 	}
 
 	if ( ! function_exists( 'get_field' ) && ! defined( 'WP_CLI' ) && ! getenv( 'CI' ) ) {

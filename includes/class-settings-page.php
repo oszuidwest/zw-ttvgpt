@@ -14,21 +14,12 @@ namespace ZW_TTVGPT_Core;
  */
 class TTVGPTSettingsPage {
 	/**
-	 * Logger instance
-	 *
-	 * @var TTVGPTLogger
-	 */
-	private TTVGPTLogger $logger;
-
-	/**
 	 * Initialize settings page and register WordPress hooks
 	 *
-	 * @param TTVGPTLogger $logger Logger instance for debugging
+	 * @param TTVGPTLogger $logger Logger instance for debugging.
 	 */
-	public function __construct( TTVGPTLogger $logger ) {
-		$this->logger = $logger;
-
-		add_action( 'admin_init', array( $this, 'register_settings' ) );
+	public function __construct( private readonly TTVGPTLogger $logger ) {
+		add_action( 'admin_init', $this->register_settings( ... ) );
 	}
 
 	/**

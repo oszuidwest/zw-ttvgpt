@@ -17,17 +17,13 @@ namespace ZW_TTVGPT_Core;
 class TTVGPTSettingsManager {
 	/**
 	 * Cache key for settings
-	 *
-	 * @var string
 	 */
-	private const CACHE_KEY = 'zw_ttvgpt_settings';
+	private const string CACHE_KEY = 'zw_ttvgpt_settings';
 
 	/**
 	 * Cache group for settings
-	 *
-	 * @var string
 	 */
-	private const CACHE_GROUP = 'zw_ttvgpt';
+	private const string CACHE_GROUP = 'zw_ttvgpt';
 
 	/**
 	 * Retrieve all plugin settings with caching

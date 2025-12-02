@@ -15,65 +15,36 @@ namespace ZW_TTVGPT_Core;
 class TTVGPTApiHandler {
 	/**
 	 * OpenAI Chat Completions API endpoint (for GPT-4.1 family: gpt-4.1, gpt-4.1-mini, gpt-4.1-nano)
-	 *
-	 * @var string
 	 */
-	private const CHAT_COMPLETIONS_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
+	private const string CHAT_COMPLETIONS_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 
 	/**
 	 * OpenAI Responses API endpoint (GPT-5.1 only)
-	 *
-	 * @var string
 	 */
-	private const RESPONSES_ENDPOINT = 'https://api.openai.com/v1/responses';
+	private const string RESPONSES_ENDPOINT = 'https://api.openai.com/v1/responses';
 
 	/**
 	 * Maximum tokens for API response
-	 *
-	 * @var int
 	 */
-	private const MAX_TOKENS = 2048;
+	private const int MAX_TOKENS = 2048;
 
 	/**
 	 * Temperature for API responses (controls randomness)
-	 *
-	 * @var float
 	 */
-	private const TEMPERATURE = 0.7;
-
-	/**
-	 * API key
-	 *
-	 * @var string
-	 */
-	private string $api_key;
-
-	/**
-	 * Model to use
-	 *
-	 * @var string
-	 */
-	private string $model;
-
-	/**
-	 * Logger instance
-	 *
-	 * @var TTVGPTLogger
-	 */
-	private TTVGPTLogger $logger;
+	private const float TEMPERATURE = 0.7;
 
 	/**
 	 * Initialize API handler with credentials and dependencies
 	 *
-	 * @param string       $api_key API key for OpenAI authentication
-	 * @param string       $model   Model identifier to use for requests
-	 * @param TTVGPTLogger $logger  Logger instance for debugging and errors
+	 * @param string       $api_key API key for OpenAI authentication (marked sensitive for stack trace protection).
+	 * @param string       $model   Model identifier to use for requests.
+	 * @param TTVGPTLogger $logger  Logger instance for debugging and errors.
 	 */
-	public function __construct( string $api_key, string $model, TTVGPTLogger $logger ) {
-		$this->api_key = $api_key;
-		$this->model   = $model;
-		$this->logger  = $logger;
-	}
+	public function __construct(
+		#[\SensitiveParameter] private readonly string $api_key,
+		private readonly string $model,
+		private readonly TTVGPTLogger $logger
+	) {}
 
 	/**
 	 * Generate system prompt for summarization
@@ -174,10 +145,10 @@ class TTVGPTApiHandler {
 	/**
 	 * Extract summary text from Chat Completions API response
 	 *
-	 * @param array $data Response data from API
-	 * @return string|\WP_Error Summary text or WP_Error if invalid
+	 * @param array $data Response data from API.
+	 * @return string|\WP_Error Summary text or WP_Error if invalid.
 	 */
-	private function extract_chat_completions_summary( array $data ) {
+	private function extract_chat_completions_summary( array $data ): string|\WP_Error {
 		if ( ! isset( $data['choices'][0]['message']['content'] ) ) {
 			$this->logger->error( 'Invalid Chat Completions API response structure' );
 			return new \WP_Error(
@@ -192,10 +163,10 @@ class TTVGPTApiHandler {
 	/**
 	 * Extract summary text from Responses API response
 	 *
-	 * @param array $data Response data from API
-	 * @return string|\WP_Error Summary text or WP_Error if invalid
+	 * @param array $data Response data from API.
+	 * @return string|\WP_Error Summary text or WP_Error if invalid.
 	 */
-	private function extract_responses_summary( array $data ) {
+	private function extract_responses_summary( array $data ): string|\WP_Error {
 		// Check if output_text helper is available
 		if ( isset( $data['output_text'] ) && is_string( $data['output_text'] ) ) {
 			return trim( $data['output_text'] );
@@ -229,11 +200,11 @@ class TTVGPTApiHandler {
 	/**
 	 * Generate text summary using OpenAI API (Chat Completions or Responses)
 	 *
-	 * @param string $content    Content to summarize
-	 * @param int    $word_limit Maximum words for summary
-	 * @return string|\WP_Error Summary string on success, WP_Error on failure
+	 * @param string $content    Content to summarize.
+	 * @param int    $word_limit Maximum words for summary.
+	 * @return string|\WP_Error Summary string on success, WP_Error on failure.
 	 */
-	public function generate_summary( string $content, int $word_limit ) {
+	public function generate_summary( string $content, int $word_limit ): string|\WP_Error {
 		$is_gpt5  = TTVGPTHelper::is_gpt5_model( $this->model );
 		$api_type = $is_gpt5 ? 'Responses' : 'Chat Completions';
 		$endpoint = $this->get_api_endpoint();
