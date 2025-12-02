@@ -16,27 +16,16 @@ namespace ZW_TTVGPT_Core;
  */
 class TTVGPTLogger {
 	/**
-	 * Debug mode flag
-	 *
-	 * @var bool
-	 */
-	private bool $debug_mode;
-
-	/**
 	 * Log prefix
-	 *
-	 * @var string
 	 */
-	private string $prefix = 'ZW_TTVGPT';
+	private const string PREFIX = 'ZW_TTVGPT';
 
 	/**
 	 * Constructor
 	 *
 	 * @param bool $debug_mode Whether debug mode is enabled.
 	 */
-	public function __construct( bool $debug_mode = false ) {
-		$this->debug_mode = $debug_mode;
-	}
+	public function __construct( private readonly bool $debug_mode = false ) {}
 
 	/**
 	 * Log debug message when debug mode is enabled
@@ -66,14 +55,14 @@ class TTVGPTLogger {
 	/**
 	 * Write formatted log entry to PHP error log
 	 *
-	 * @param string $level   Log level (DEBUG or ERROR)
-	 * @param string $message Message to log
-	 * @param array  $context Additional context data
+	 * @param string $level   Log level (DEBUG or ERROR).
+	 * @param string $message Message to log.
+	 * @param array  $context Additional context data.
 	 * @return void
 	 */
 	private function write_log( string $level, string $message, array $context = array() ): void {
 		$timestamp   = current_time( 'Y-m-d H:i:s' );
-		$log_message = sprintf( '[%s] %s.%s: %s', $timestamp, $this->prefix, $level, $message );
+		$log_message = sprintf( '[%s] %s.%s: %s', $timestamp, self::PREFIX, $level, $message );
 
 		if ( ! empty( $context ) ) {
 			$log_message .= ' | Context: ' . wp_json_encode( $context );

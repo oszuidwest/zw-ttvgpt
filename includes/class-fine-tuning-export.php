@@ -16,38 +16,17 @@ namespace ZW_TTVGPT_Core;
  */
 class TTVGPTFineTuningExport {
 	/**
-	 * Logger instance
-	 *
-	 * @var TTVGPTLogger
-	 */
-	private TTVGPTLogger $logger;
-
-	/**
-	 * API handler instance for reusing production logic
-	 *
-	 * @var TTVGPTApiHandler
-	 */
-	private TTVGPTApiHandler $api_handler;
-
-	/**
-	 * Word limit for summaries (matches production settings)
-	 *
-	 * @var int
-	 */
-	private int $word_limit;
-
-	/**
 	 * Initialize fine tuning export with dependencies
 	 *
 	 * @param TTVGPTLogger     $logger      Logger instance for debugging.
 	 * @param TTVGPTApiHandler $api_handler API handler for reusing production logic.
 	 * @param int              $word_limit  Word limit matching production settings.
 	 */
-	public function __construct( TTVGPTLogger $logger, TTVGPTApiHandler $api_handler, int $word_limit ) {
-		$this->logger      = $logger;
-		$this->api_handler = $api_handler;
-		$this->word_limit  = $word_limit;
-	}
+	public function __construct(
+		private readonly TTVGPTLogger $logger,
+		private readonly TTVGPTApiHandler $api_handler,
+		private readonly int $word_limit
+	) {}
 
 	/**
 	 * Initialize WordPress filesystem API
@@ -386,13 +365,14 @@ class TTVGPTFineTuningExport {
 				continue;
 			}
 
-			$data = json_decode( $line, true );
-
-			if ( JSON_ERROR_NONE !== json_last_error() ) {
+			// Use json_validate() for efficient validation without parsing (PHP 8.3+)
+			if ( ! json_validate( $line ) ) {
 				// translators: %d: line number with invalid JSON
 				$errors[] = sprintf( __( 'Regel %d: Ongeldige JSON', 'zw-ttvgpt' ), $line_count );
 				continue;
 			}
+
+			$data = json_decode( $line, true );
 
 			// Validate DPO structure
 			if ( ! is_array( $data ) || ! $this->validate_dpo_entry( $data ) ) {

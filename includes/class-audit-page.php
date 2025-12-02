@@ -73,47 +73,35 @@ class TTVGPTAuditPage {
 
 		$posts  = TTVGPTAuditHelper::get_posts( $year, $month );
 		$counts = array(
-			'fully_human_written'   => 0,
-			'ai_written_not_edited' => 0,
-			'ai_written_edited'     => 0,
+			AuditStatus::FullyHumanWritten->value  => 0,
+			AuditStatus::AiWrittenNotEdited->value => 0,
+			AuditStatus::AiWrittenEdited->value    => 0,
 		);
 
 		// Bulk fetch all meta data in one query to avoid N+1 problem
-		$post_ids   = array_map(
-			static function ( $post ) {
-				return $post->ID;
-			},
-			$posts
-		);
+		$post_ids   = array_map( static fn( $post ) => $post->ID, $posts );
 		$meta_cache = TTVGPTAuditHelper::get_bulk_meta_data( $post_ids );
 
 		$categorized_posts = array();
 		foreach ( $posts as $post ) {
 			$analysis = TTVGPTAuditHelper::categorize_post( $post, $meta_cache );
-			++$counts[ $analysis['status'] ];
+			$status   = $analysis['status'];
+			++$counts[ $status->value ];
 
 			// Apply status filter if set
-			$status_match = empty( $status_filter ) || $analysis['status'] === $status_filter;
+			$status_match = empty( $status_filter ) || $status->value === $status_filter;
 
-			// Apply change filter if set
-			$change_match = true;
-			if ( ! empty( $change_filter ) && 'ai_written_edited' === $analysis['status'] ) {
-				$change_percentage = $analysis['change_percentage'];
-				switch ( $change_filter ) {
-					case 'low':
-						$change_match = $change_percentage <= 20;
-						break;
-					case 'medium':
-						$change_match = $change_percentage > 20 && $change_percentage <= 50;
-						break;
-					case 'high':
-						$change_match = $change_percentage > 50;
-						break;
-				}
-			} elseif ( ! empty( $change_filter ) ) {
-				// If change filter is set but post is not AI+, exclude it
-				$change_match = false;
-			}
+			// Apply change filter if set (using match expression)
+			$change_match = match ( true ) {
+				empty( $change_filter )                       => true,
+				AuditStatus::AiWrittenEdited !== $status      => false,
+				default                                       => match ( $change_filter ) {
+					'low'    => $analysis['change_percentage'] <= 20,
+					'medium' => $analysis['change_percentage'] > 20 && $analysis['change_percentage'] <= 50,
+					'high'   => $analysis['change_percentage'] > 50,
+					default  => true,
+				},
+			};
 
 			if ( $status_match && $change_match ) {
 				$categorized_posts[] = array_merge( array( 'post' => $post ), $analysis );
@@ -165,6 +153,10 @@ class TTVGPTAuditPage {
 			'year'  => $year,
 			'month' => $month,
 		);
+
+		$human_status = AuditStatus::FullyHumanWritten;
+		$ai_unedited  = AuditStatus::AiWrittenNotEdited;
+		$ai_edited    = AuditStatus::AiWrittenEdited;
 		?>
 		<h2 class="screen-reader-text"><?php esc_html_e( 'Auditlog filteren', 'zw-ttvgpt' ); ?></h2>
 		<ul class="subsubsub">
@@ -173,19 +165,19 @@ class TTVGPTAuditPage {
 					<?php esc_html_e( 'Alle', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( (string) $total ); ?>)</span>
 				</a>
 			</li>
-			<li class="human">
-				<a href="<?php echo esc_url( add_query_arg( array_merge( $current_params, array( 'status' => 'fully_human_written' ) ), $base_url ) ); ?>" <?php echo 'fully_human_written' === $status_filter ? 'class="current" aria-current="page"' : ''; ?>>
-					<?php esc_html_e( 'Handgeschreven', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $counts['fully_human_written'] ); ?>)</span>
+			<li class="<?php echo esc_attr( $human_status->get_css_class() ); ?>">
+				<a href="<?php echo esc_url( add_query_arg( array_merge( $current_params, array( 'status' => $human_status->value ) ), $base_url ) ); ?>" <?php echo $human_status->value === $status_filter ? 'class="current" aria-current="page"' : ''; ?>>
+					<?php echo esc_html( $human_status->get_label() ); ?> <span class="count">(<?php echo esc_html( (string) $counts[ $human_status->value ] ); ?>)</span>
 				</a>
 			</li>
-			<li class="ai-unedited">
-				<a href="<?php echo esc_url( add_query_arg( array_merge( $current_params, array( 'status' => 'ai_written_not_edited' ) ), $base_url ) ); ?>" <?php echo 'ai_written_not_edited' === $status_filter ? 'class="current" aria-current="page"' : ''; ?>>
-					<?php esc_html_e( 'AI-gegenereerd', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $counts['ai_written_not_edited'] ); ?>)</span>
+			<li class="<?php echo esc_attr( $ai_unedited->get_css_class() ); ?>">
+				<a href="<?php echo esc_url( add_query_arg( array_merge( $current_params, array( 'status' => $ai_unedited->value ) ), $base_url ) ); ?>" <?php echo $ai_unedited->value === $status_filter ? 'class="current" aria-current="page"' : ''; ?>>
+					<?php echo esc_html( $ai_unedited->get_label() ); ?> <span class="count">(<?php echo esc_html( (string) $counts[ $ai_unedited->value ] ); ?>)</span>
 				</a>
 			</li>
-			<li class="ai-edited">
-				<a href="<?php echo esc_url( add_query_arg( array_merge( $current_params, array( 'status' => 'ai_written_edited' ) ), $base_url ) ); ?>" <?php echo 'ai_written_edited' === $status_filter ? 'class="current" aria-current="page"' : ''; ?>>
-					<?php esc_html_e( 'AI-bewerkt', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( $counts['ai_written_edited'] ); ?>)</span>
+			<li class="<?php echo esc_attr( $ai_edited->get_css_class() ); ?>">
+				<a href="<?php echo esc_url( add_query_arg( array_merge( $current_params, array( 'status' => $ai_edited->value ) ), $base_url ) ); ?>" <?php echo $ai_edited->value === $status_filter ? 'class="current" aria-current="page"' : ''; ?>>
+					<?php echo esc_html( $ai_edited->get_label() ); ?> <span class="count">(<?php echo esc_html( (string) $counts[ $ai_edited->value ] ); ?>)</span>
 				</a>
 			</li>
 		</ul>
@@ -274,17 +266,6 @@ class TTVGPTAuditPage {
 	 * @return void
 	 */
 	private function render_audit_table( array $categorized_posts, array $meta_cache ): void {
-		$type_labels = array(
-			'fully_human_written'   => __( 'Handgeschreven', 'zw-ttvgpt' ),
-			'ai_written_not_edited' => __( 'AI-gegenereerd', 'zw-ttvgpt' ),
-			'ai_written_edited'     => __( 'AI-bewerkt', 'zw-ttvgpt' ),
-		);
-
-		$css_classes = array(
-			'fully_human_written'   => 'human',
-			'ai_written_not_edited' => 'ai-unedited',
-			'ai_written_edited'     => 'ai-edited',
-		);
 		?>
 		<h2 class="screen-reader-text"><?php esc_html_e( 'Auditlog', 'zw-ttvgpt' ); ?></h2>
 		<table class="wp-list-table widefat fixed striped table-view-list posts zw-audit-table">
@@ -312,16 +293,15 @@ class TTVGPTAuditPage {
 						$status        = $item['status'];
 						$ai_content    = $item['ai_content'];
 						$human_content = $item['human_content'];
-
-						$author      = get_userdata( $post->post_author );
-						$edit_last   = $meta_cache[ $post->ID ]['_edit_last'] ?? '';
-						$last_editor = is_numeric( $edit_last ) ? get_userdata( (int) $edit_last ) : false;
-						$post_url    = get_edit_post_link( $post->ID );
+						$author_data   = get_userdata( $post->post_author );
+						$edit_last     = $meta_cache[ $post->ID ]['_edit_last'] ?? '';
+						$editor_data   = is_numeric( $edit_last ) ? get_userdata( (int) $edit_last ) : null;
+						$post_url      = get_edit_post_link( $post->ID );
 						?>
-						<tr id="post-<?php echo esc_attr( $post->ID ); ?>" class="iedit author-self level-0 post-<?php echo esc_attr( $post->ID ); ?> type-post status-<?php echo esc_attr( $post->post_status ); ?> <?php echo esc_attr( $css_classes[ $status ] ); ?>">
+						<tr id="post-<?php echo esc_attr( (string) $post->ID ); ?>" class="iedit author-self level-0 post-<?php echo esc_attr( (string) $post->ID ); ?> type-post status-<?php echo esc_attr( $post->post_status ); ?> <?php echo esc_attr( $status->get_css_class() ); ?>">
 							<td class="type column-type" data-colname="<?php esc_attr_e( 'Type', 'zw-ttvgpt' ); ?>">
-								<span class="zw-audit-type-label <?php echo esc_attr( $css_classes[ $status ] ); ?>">
-									<?php echo esc_html( $type_labels[ $status ] ); ?>
+								<span class="zw-audit-type-label <?php echo esc_attr( $status->get_css_class() ); ?>">
+									<?php echo esc_html( $status->get_label() ); ?>
 								</span>
 							</td>
 							<td class="title column-title has-row-actions column-primary page-title" data-colname="<?php esc_attr_e( 'Titel', 'zw-ttvgpt' ); ?>">
@@ -357,7 +337,7 @@ class TTVGPTAuditPage {
 											<?php esc_html_e( 'Bekijken', 'zw-ttvgpt' ); ?>
 										</a>
 									</span>
-									<?php if ( 'ai_written_edited' === $status ) : ?>
+									<?php if ( AuditStatus::AiWrittenEdited === $status ) : ?>
 										| <span class="view-diff">
 											<a href="#TB_inline?width=800&height=600&inlineId=zw-diff-modal-<?php echo esc_attr( $post->ID ); ?>" class="thickbox"
 												aria-label="<?php esc_attr_e( 'Toon verschillen tussen AI en bewerkte versie', 'zw-ttvgpt' ); ?>">
@@ -369,18 +349,18 @@ class TTVGPTAuditPage {
 								<button type="button" class="toggle-row"><span class="screen-reader-text"><?php esc_html_e( 'Meer details weergeven', 'zw-ttvgpt' ); ?></span></button>
 							</td>
 							<td class="author column-author" data-colname="<?php esc_attr_e( 'Auteur', 'zw-ttvgpt' ); ?>">
-								<?php echo esc_html( $author ? $author->display_name : __( 'Onbekend', 'zw-ttvgpt' ) ); ?>
+								<?php echo esc_html( $author_data?->display_name ?? __( 'Onbekend', 'zw-ttvgpt' ) ); ?>
 							</td>
 							<td class="editor column-editor" data-colname="<?php esc_attr_e( 'Eindredacteur', 'zw-ttvgpt' ); ?>">
-								<?php if ( $last_editor && $last_editor->ID !== $post->post_author ) : ?>
-									<?php echo esc_html( $last_editor->display_name ); ?>
+								<?php if ( $editor_data && $editor_data->ID !== $post->post_author ) : ?>
+									<?php echo esc_html( $editor_data->display_name ); ?>
 								<?php else : ?>
 									<span aria-hidden="true">—</span>
 									<span class="screen-reader-text"><?php esc_html_e( 'Geen eindredacteur', 'zw-ttvgpt' ); ?></span>
 								<?php endif; ?>
 							</td>
 							<td class="change column-change" data-colname="<?php esc_attr_e( 'Wijzigingen %', 'zw-ttvgpt' ); ?>">
-								<?php if ( 'ai_written_edited' === $status && isset( $item['change_percentage'] ) ) : ?>
+								<?php if ( AuditStatus::AiWrittenEdited === $status && isset( $item['change_percentage'] ) ) : ?>
 									<span class="change-percentage <?php echo esc_attr( $item['change_percentage'] > 50 ? 'high-change' : ( $item['change_percentage'] > 20 ? 'medium-change' : 'low-change' ) ); ?>">
 										<?php echo esc_html( $item['change_percentage'] . '%' ); ?>
 									</span>
@@ -415,7 +395,7 @@ class TTVGPTAuditPage {
 		
 		<!-- ThickBox Inline Modals for Diff Display -->
 		<?php foreach ( $categorized_posts as $item ) : ?>
-			<?php if ( 'ai_written_edited' === $item['status'] ) : ?>
+			<?php if ( AuditStatus::AiWrittenEdited === $item['status'] ) : ?>
 				<?php
 				$post = $item['post'];
 				$diff = TTVGPTAuditHelper::generate_word_diff( $item['ai_content'], $item['human_content'] );

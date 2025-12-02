@@ -18,31 +18,17 @@ class TTVGPTFineTuningPage {
 	use TTVGPTAjaxSecurity;
 
 	/**
-	 * Fine tuning export instance
-	 *
-	 * @var TTVGPTFineTuningExport
-	 */
-	private TTVGPTFineTuningExport $export;
-
-	/**
-	 * Logger instance
-	 *
-	 * @var TTVGPTLogger
-	 */
-	private TTVGPTLogger $logger;
-
-	/**
 	 * Initialize fine tuning page with dependencies
 	 *
 	 * @param TTVGPTFineTuningExport $export Export functionality instance.
 	 * @param TTVGPTLogger           $logger Logger instance for debugging.
 	 */
-	public function __construct( TTVGPTFineTuningExport $export, TTVGPTLogger $logger ) {
-		$this->export = $export;
-		$this->logger = $logger;
-
+	public function __construct(
+		private readonly TTVGPTFineTuningExport $export,
+		private readonly TTVGPTLogger $logger
+	) {
 		// Register AJAX handler
-		add_action( 'wp_ajax_zw_ttvgpt_export_training_data', array( $this, 'handle_export_ajax' ) );
+		add_action( 'wp_ajax_zw_ttvgpt_export_training_data', $this->handle_export_ajax( ... ) );
 	}
 
 	/**
@@ -274,9 +260,9 @@ class TTVGPTFineTuningPage {
 	/**
 	 * Handle AJAX request for exporting training data
 	 *
-	 * @return void
+	 * @return never
 	 */
-	public function handle_export_ajax(): void {
+	public function handle_export_ajax(): never {
 		// Nonce is verified in validate_ajax_request() method
 		$this->validate_ajax_request( 'zw_ttvgpt_fine_tuning_nonce', TTVGPTConstants::REQUIRED_CAPABILITY );
 

@@ -16,31 +16,17 @@ namespace ZW_TTVGPT_Core;
  */
 class TTVGPTAdminMenu {
 	/**
-	 * Logger instance
-	 *
-	 * @var TTVGPTLogger
-	 */
-	private TTVGPTLogger $logger;
-
-	/**
-	 * Fine tuning page instance
-	 *
-	 * @var TTVGPTFineTuningPage
-	 */
-	private TTVGPTFineTuningPage $fine_tuning_page;
-
-	/**
 	 * Initialize admin menu and register WordPress hooks
 	 *
 	 * @param TTVGPTLogger         $logger           Logger instance for debugging.
 	 * @param TTVGPTFineTuningPage $fine_tuning_page Fine tuning page instance.
 	 */
-	public function __construct( TTVGPTLogger $logger, TTVGPTFineTuningPage $fine_tuning_page ) {
-		$this->logger           = $logger;
-		$this->fine_tuning_page = $fine_tuning_page;
-
-		add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
-		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
+	public function __construct(
+		private readonly TTVGPTLogger $logger,
+		private readonly TTVGPTFineTuningPage $fine_tuning_page
+	) {
+		add_action( 'admin_menu', $this->add_admin_menu( ... ) );
+		add_action( 'admin_enqueue_scripts', $this->enqueue_admin_assets( ... ) );
 	}
 
 	/**

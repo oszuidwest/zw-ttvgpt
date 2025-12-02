@@ -16,47 +16,26 @@ class TTVGPTSummaryGenerator {
 	use TTVGPTAjaxSecurity;
 
 	/**
-	 * API handler instance
-	 *
-	 * @var TTVGPTApiHandler
-	 */
-	private TTVGPTApiHandler $api_handler;
-
-	/**
-	 * Word limit for summaries
-	 *
-	 * @var int
-	 */
-	private int $word_limit;
-
-	/**
-	 * Logger instance
-	 *
-	 * @var TTVGPTLogger
-	 */
-	private TTVGPTLogger $logger;
-
-	/**
 	 * Initialize summary generator with dependencies and register AJAX handler
 	 *
-	 * @param TTVGPTApiHandler $api_handler API handler for OpenAI communication
-	 * @param int              $word_limit  Maximum words allowed in summaries
-	 * @param TTVGPTLogger     $logger      Logger instance for debugging
+	 * @param TTVGPTApiHandler $api_handler API handler for OpenAI communication.
+	 * @param int              $word_limit  Maximum words allowed in summaries.
+	 * @param TTVGPTLogger     $logger      Logger instance for debugging.
 	 */
-	public function __construct( TTVGPTApiHandler $api_handler, int $word_limit, TTVGPTLogger $logger ) {
-		$this->api_handler = $api_handler;
-		$this->word_limit  = $word_limit;
-		$this->logger      = $logger;
-
-		add_action( 'wp_ajax_zw_ttvgpt_generate', array( $this, 'handle_ajax_request' ) );
+	public function __construct(
+		private readonly TTVGPTApiHandler $api_handler,
+		private readonly int $word_limit,
+		private readonly TTVGPTLogger $logger
+	) {
+		add_action( 'wp_ajax_zw_ttvgpt_generate', $this->handle_ajax_request( ... ) );
 	}
 
 	/**
 	 * Process AJAX request for generating summary with security and validation
 	 *
-	 * @return void
+	 * @return never
 	 */
-	public function handle_ajax_request(): void {
+	public function handle_ajax_request(): never {
 		// Nonce is verified in validate_ajax_request() method
 		$this->validate_ajax_request( 'zw_ttvgpt_nonce', TTVGPTConstants::EDIT_CAPABILITY );
 
@@ -124,11 +103,11 @@ class TTVGPTSummaryGenerator {
 	/**
 	 * Generate summary with automatic retry if word count exceeds limit
 	 *
-	 * @param string $content    Content to summarize
-	 * @param int    $word_limit Maximum words allowed
-	 * @return string|\WP_Error Summary text or error
+	 * @param string $content    Content to summarize.
+	 * @param int    $word_limit Maximum words allowed.
+	 * @return string|\WP_Error Summary text or error.
 	 */
-	private function generate_summary_with_retry( string $content, int $word_limit ) {
+	private function generate_summary_with_retry( string $content, int $word_limit ): string|\WP_Error {
 		$attempt = 0;
 
 		while ( $attempt < TTVGPTConstants::MAX_RETRY_ATTEMPTS ) {

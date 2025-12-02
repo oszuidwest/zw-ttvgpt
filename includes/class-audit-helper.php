@@ -244,7 +244,7 @@ class TTVGPTAuditHelper {
 	 *
 	 * @param \WP_Post $post       Post object to categorize.
 	 * @param array    $meta_cache Meta data cache to avoid N+1 queries.
-	 * @return array Analysis result with status, ai_content, human_content, and change_percentage.
+	 * @return array Analysis result with status (AuditStatus enum), ai_content, human_content, and change_percentage.
 	 */
 	public static function categorize_post( \WP_Post $post, array $meta_cache = array() ): array {
 		$ai_content    = $meta_cache[ $post->ID ][ TTVGPTConstants::ACF_FIELD_AI_CONTENT ] ?? get_post_meta( $post->ID, TTVGPTConstants::ACF_FIELD_AI_CONTENT, true );
@@ -254,18 +254,16 @@ class TTVGPTAuditHelper {
 		$ai_clean    = self::strip_region_prefix( $ai_content );
 		$human_clean = self::strip_region_prefix( $human_content );
 
-		// Determine status based on content analysis
-		if ( empty( $ai_content ) || '' === trim( $ai_content ) ) {
-			$status = 'fully_human_written';
-		} elseif ( $ai_clean === $human_clean ) {
-			$status = 'ai_written_not_edited';
-		} else {
-			$status = 'ai_written_edited';
-		}
+		// Determine status based on content analysis using enum
+		$status = match ( true ) {
+			empty( $ai_content ) || '' === trim( $ai_content ) => AuditStatus::FullyHumanWritten,
+			$ai_clean === $human_clean                         => AuditStatus::AiWrittenNotEdited,
+			default                                            => AuditStatus::AiWrittenEdited,
+		};
 
-			// Calculate percentage change for AI+ articles
+		// Calculate percentage change for AI+ articles
 		$change_percentage = 0;
-		if ( 'ai_written_edited' === $status ) {
+		if ( AuditStatus::AiWrittenEdited === $status ) {
 			$change_percentage = self::calculate_change_percentage( $ai_clean, $human_clean );
 		}
 
