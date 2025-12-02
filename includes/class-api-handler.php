@@ -58,13 +58,36 @@ class TTVGPTApiHandler {
 	}
 
 	/**
-	 * Prepare content for API request by stripping HTML tags
+	 * Prepare content for API request by extracting text from HTML
+	 *
+	 * Removes script/style content (which wp_strip_all_tags doesn't handle),
+	 * converts block elements to newlines, and normalizes whitespace.
 	 *
 	 * @param string $content Raw content to clean
 	 * @return string Cleaned content ready for API
 	 */
 	public function prepare_content( string $content ): string {
-		return wp_strip_all_tags( $content );
+		// Remove script and style elements WITH their content
+		// wp_strip_all_tags() only removes tags, not the content inside
+		$content = preg_replace( '/<script\b[^>]*>.*?<\/script>/is', '', $content ) ?? $content;
+		$content = preg_replace( '/<style\b[^>]*>.*?<\/style>/is', '', $content ) ?? $content;
+		$content = preg_replace( '/<noscript\b[^>]*>.*?<\/noscript>/is', '', $content ) ?? $content;
+
+		// Convert block elements to newlines for proper paragraph spacing
+		$content = preg_replace( '/<\/(p|div|h[1-6]|li|tr|blockquote)>/i', "\n", $content ) ?? $content;
+		$content = preg_replace( '/<br\s*\/?>/i', "\n", $content ) ?? $content;
+
+		// Strip remaining tags
+		$text = wp_strip_all_tags( $content );
+
+		// Decode HTML entities
+		$text = html_entity_decode( $text, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+
+		// Normalize whitespace
+		$text = preg_replace( '/[ \t]+/', ' ', $text ) ?? $text;
+		$text = preg_replace( '/\n{3,}/', "\n\n", $text ) ?? $text;
+
+		return trim( $text );
 	}
 
 	/**

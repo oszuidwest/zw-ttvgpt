@@ -9,8 +9,9 @@
  * License: GPL v3 or later
  * License URI: https://www.gnu.org/licenses/gpl-3.0.html
  * Text Domain: zw-ttvgpt
- * Requires at least: 6.0
+ * Requires at least: 6.8
  * Requires PHP: 8.3
+ * Requires Plugins: advanced-custom-fields
  *
  * @package ZW_TTVGPT
  */
@@ -88,11 +89,6 @@ function zw_ttvgpt_activate() {
 	if ( version_compare( PHP_VERSION, '8.3', '<' ) ) {
 		deactivate_plugins( plugin_basename( __FILE__ ) );
 		wp_die( 'Deze plugin vereist minimaal PHP versie 8.3.' );
-	}
-
-	if ( ! function_exists( 'get_field' ) && ! defined( 'WP_CLI' ) && ! getenv( 'CI' ) ) {
-		deactivate_plugins( plugin_basename( __FILE__ ) );
-		wp_die( 'Deze plugin vereist de Advanced Custom Fields plugin.' );
 	}
 
 	if ( ! get_option( ZW_TTVGPT_Core\TTVGPTConstants::SETTINGS_OPTION_NAME ) ) {

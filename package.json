@@ -4,8 +4,8 @@
   "description": "JavaScript assets for ZW TTVGPT WordPress plugin",
   "private": true,
   "scripts": {
-    "lint:js": "eslint assets/*.js",
-    "lint:js:fix": "eslint assets/*.js --fix",
+    "lint:js": "eslint 'assets/*.js' 'assets/*.mjs'",
+    "lint:js:fix": "eslint 'assets/*.js' 'assets/*.mjs' --fix",
     "lint:css": "stylelint assets/*.css",
     "lint:css:fix": "stylelint assets/*.css --fix",
     "lint": "npm run lint:js && npm run lint:css",
