@@ -138,4 +138,41 @@ class TTVGPTHelper {
 		}
 		return str_word_count( $text );
 	}
+
+	/**
+	 * Check if plugin translations are available
+	 *
+	 * Uses has_translation() to check if translations exist without loading
+	 * them first. This improves performance by avoiding unnecessary translation
+	 * file loading.
+	 *
+	 * @return bool True if translations are available, false otherwise.
+	 */
+	public static function has_plugin_translation(): bool {
+		return has_translation( 'zw-ttvgpt' );
+	}
+
+	/**
+	 * Get localized strings with fallback if no translations available
+	 *
+	 * Uses has_translation() to optimize performance by skipping translation
+	 * loading when not needed. Returns original strings if no translations exist.
+	 *
+	 * @param array $strings Array of strings to translate (key => original text).
+	 * @return array Translated strings or originals if no translation available.
+	 */
+	public static function get_localized_strings( array $strings ): array {
+		// Check if translations are available before processing
+		if ( ! self::has_plugin_translation() ) {
+			return $strings;
+		}
+
+		$translated = array();
+		foreach ( $strings as $key => $text ) {
+			// Use __() for translation when available
+			$translated[ $key ] = __( $text, 'zw-ttvgpt' ); // phpcs:ignore WordPress.WP.I18n.NonSingularStringLiteralText
+		}
+
+		return $translated;
+	}
 }
