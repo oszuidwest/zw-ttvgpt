@@ -6,8 +6,8 @@
  * Version: 0.14.0
  * Author: Streekomroep ZuidWest
  * Author URI: https://www.zuidwesttv.nl
- * License: GPL v3 or later
- * License URI: https://www.gnu.org/licenses/gpl-3.0.html
+ * License: GPL-2.0-or-later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: zw-ttvgpt
  * Requires at least: 6.0
  * Requires PHP: 8.3
