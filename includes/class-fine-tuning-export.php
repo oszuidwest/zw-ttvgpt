@@ -109,6 +109,7 @@ class TTVGPTFineTuningExport {
 		$this->logger->debug( 'Training data generation completed. Stats: ' . wp_json_encode( $stats ) );
 
 		return array(
+			'success' => true,
 			'message' => sprintf(
 				/* translators: %1$d: number of processed posts, %2$d: number of suitable posts for training */
 				__( '%1$d berichten verwerkt, %2$d geschikt voor training', 'zw-ttvgpt' ),

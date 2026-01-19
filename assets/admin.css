@@ -22,7 +22,21 @@
 /* Inline generate button for ACF field */
 .zw-ttvgpt-inline-generate {
     display: block;
-    margin-top: 8px !important;
+}
+
+/* Word counter */
+.zw-ttvgpt-word-counter {
+    font-size: 13px;
+    color: #646970;
+}
+
+.zw-ttvgpt-word-counter--ok {
+    color: #00a32a;
+}
+
+.zw-ttvgpt-word-counter--over {
+    font-weight: 600;
+    color: #d63638;
 }
 
 /* Loading state animations */
