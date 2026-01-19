@@ -25,6 +25,9 @@ on:
       - 'biome.json'
       - 'phpstan.neon'
 
+permissions:
+  contents: read
+
 jobs:
   php:
     name: PHP ${{ matrix.php }}
