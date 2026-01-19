@@ -5,6 +5,10 @@
  * @package ZW_TTVGPT
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 namespace ZW_TTVGPT_Core;
 
 /**

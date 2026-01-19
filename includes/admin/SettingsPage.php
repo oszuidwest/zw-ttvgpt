@@ -5,6 +5,10 @@
  * @package ZW_TTVGPT
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 namespace ZW_TTVGPT_Core\Admin;
 
 use ZW_TTVGPT_Core\Constants;

@@ -42,8 +42,6 @@ use ZW_TTVGPT_Core\Admin\FineTuningPage;
  * @return void
  */
 function zw_ttvgpt_init() {
-	load_plugin_textdomain( 'zw-ttvgpt', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
-
 	$logger = new Logger( SettingsManager::is_debug_mode() );
 
 	$api_handler = new ApiHandler(
