@@ -219,16 +219,17 @@
 				let errorMessage = zwTTVGPT.strings.error;
 				try {
 					const response = JSON.parse(xhr.responseText);
-					if (response && response.data) {
+					const data = response?.data;
+					if (data) {
 						errorMessage =
-							typeof response.data === 'string'
-								? response.data
-								: response.data.message || errorMessage;
+							typeof data === 'string'
+								? data
+								: data.message || errorMessage;
 					}
 				} catch {
-					errorMessage = error
-						? `${zwTTVGPT.strings.error}: ${error}`
-						: zwTTVGPT.strings.error;
+					if (error) {
+						errorMessage = `${zwTTVGPT.strings.error}: ${error}`;
+					}
 				}
 
 				showStatus('error', errorMessage);
@@ -378,13 +379,12 @@
 	 */
 	function getSelectedRegions() {
 		// Try Block Editor first, fallback to Classic Editor
+		const blockEditorSelector =
+			'.editor-post-taxonomies__hierarchical-terms-list input[type="checkbox"]:checked';
+		const $blockCheckboxes = $(blockEditorSelector);
 		const $checkboxes =
-			$(
-				'.editor-post-taxonomies__hierarchical-terms-list input[type="checkbox"]:checked'
-			).length > 0
-				? $(
-						'.editor-post-taxonomies__hierarchical-terms-list input[type="checkbox"]:checked'
-					)
+			$blockCheckboxes.length > 0
+				? $blockCheckboxes
 				: $(SELECTORS.regionCheckboxes);
 
 		if (zwTTVGPT.debugMode) {
@@ -668,49 +668,51 @@
 		}
 
 		// Create a shuffled copy of messages
-		let messages = _.shuffle(zwTTVGPT.strings.loadingMessages),
-			messageIndex = 0,
-			messageCount = 0,
-			activeTransition = null;
+		const state = {
+			messages: _.shuffle(zwTTVGPT.strings.loadingMessages),
+			messageIndex: 0,
+			messageCount: 0,
+			activeTransition: null,
+		};
 
 		// Clear the field and disable it
 		$cachedAcfField.prop('disabled', true).attr('placeholder', '');
 
 		// Show first message immediately
-		$cachedAcfField.val(messages[messageIndex]);
-		messageIndex++;
-		messageCount++;
+		$cachedAcfField.val(state.messages[state.messageIndex]);
+		state.messageIndex++;
+		state.messageCount++;
 
 		// Function to show next message
 		function showNextMessage() {
-			if (messageIndex >= messages.length) {
+			if (state.messageIndex >= state.messages.length) {
 				// Reshuffle when we've shown all messages
-				messages = _.shuffle(messages);
-				messageIndex = 0;
+				state.messages = _.shuffle(state.messages);
+				state.messageIndex = 0;
 			}
 
 			// Get next message
-			const nextMessage = messages[messageIndex];
+			const nextMessage = state.messages[state.messageIndex];
 			let charIndex = 0;
 
 			// Clear any existing transition
-			if (activeTransition) {
-				clearInterval(activeTransition);
+			if (state.activeTransition) {
+				clearInterval(state.activeTransition);
 			}
 
 			// Gradually replace current text with next message
-			activeTransition = setInterval(function () {
+			state.activeTransition = setInterval(function () {
 				if (charIndex <= nextMessage.length) {
 					$cachedAcfField.val(nextMessage.substring(0, charIndex));
 					charIndex += 2; // Type 2 chars at a time for smooth transition
 				} else {
-					clearInterval(activeTransition);
-					activeTransition = null;
+					clearInterval(state.activeTransition);
+					state.activeTransition = null;
 				}
 			}, 20);
 
-			messageIndex++;
-			messageCount++;
+			state.messageIndex++;
+			state.messageCount++;
 		}
 
 		// Show second message quickly, then normal speed for rest
@@ -721,8 +723,8 @@
 
 		// Store intervals and count getter for cleanup
 		$cachedAcfField.data('message-interval', messageInterval);
-		$cachedAcfField.data('active-transition', () => activeTransition);
-		$cachedAcfField.data('message-count', () => messageCount);
+		$cachedAcfField.data('active-transition', () => state.activeTransition);
+		$cachedAcfField.data('message-count', () => state.messageCount);
 	}
 
 	// Initialize when ready
