@@ -124,7 +124,14 @@ class TTVGPTConstants {
 	/**
 	 * Maximum number of retry attempts for word count validation.
 	 */
-	public const int MAX_RETRY_ATTEMPTS = 5;
+	public const int MAX_RETRY_ATTEMPTS = 3;
+
+	/**
+	 * Minimum response ratio (as fraction of word limit).
+	 * Responses shorter than this ratio are considered invalid.
+	 * E.g., 0.2 means response must be at least 20% of word limit.
+	 */
+	public const float MIN_RESPONSE_RATIO = 0.2;
 
 	/**
 	 * Success message display duration in milliseconds.
