@@ -1,8 +1,9 @@
 <?php
 /**
- * Logger class for ZW TTVGPT
+ * Logger class for ZW TTVGPT.
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 
 namespace ZW_TTVGPT_Core;
@@ -12,31 +13,40 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Logger class
+ * Logger class.
  *
  * Simplified logging system with only debug and error levels.
  * Debug messages are only logged when debug mode is enabled.
  * Error messages are always logged but with limited context in production.
+ *
+ * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 class Logger {
 	/**
-	 * Log prefix
+	 * Log prefix for identifying plugin messages.
+	 *
+	 * @since 1.0.0
+	 * @var string
 	 */
 	private const string PREFIX = 'ZW_TTVGPT';
 
 	/**
-	 * Constructor
+	 * Initializes the logger with debug mode configuration.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param bool $debug_mode Whether debug mode is enabled.
 	 */
 	public function __construct( private readonly bool $debug_mode = false ) {}
 
 	/**
-	 * Log debug message when debug mode is enabled
+	 * Logs a debug message when debug mode is enabled.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param string $message Debug message to log.
 	 * @param array  $context Additional context data.
-	 * @return void
 	 *
 	 * @phpstan-param LogContext $context
 	 */
@@ -47,11 +57,12 @@ class Logger {
 	}
 
 	/**
-	 * Log error message
+	 * Logs an error message.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param string $message Error message to log.
 	 * @param array  $context Additional context data.
-	 * @return void
 	 *
 	 * @phpstan-param LogContext $context
 	 */
@@ -61,12 +72,13 @@ class Logger {
 
 
 	/**
-	 * Write formatted log entry to PHP error log
+	 * Writes a formatted log entry to PHP error log.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param string $level   Log level (DEBUG or ERROR).
 	 * @param string $message Message to log.
 	 * @param array  $context Additional context data.
-	 * @return void
 	 *
 	 * @phpstan-param LogContext $context
 	 */

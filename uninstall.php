@@ -1,8 +1,11 @@
 <?php
 /**
- * Uninstall ZW TTVGPT
+ * Uninstall ZW TTVGPT.
+ *
+ * Removes all plugin data when uninstalled.
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {

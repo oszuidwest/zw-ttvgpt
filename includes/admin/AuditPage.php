@@ -1,8 +1,9 @@
 <?php
 /**
- * Audit Page class for ZW TTVGPT
+ * Audit Page class for ZW TTVGPT.
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 
 namespace ZW_TTVGPT_Core\Admin;
@@ -16,22 +17,27 @@ use ZW_TTVGPT_Core\AuditStatus;
 use ZW_TTVGPT_Core\Helper;
 
 /**
- * Audit Page class
+ * Audit Page class.
  *
- * Handles audit page rendering and analysis
+ * Handles audit page rendering and analysis.
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 class AuditPage {
 	/**
-	 * Initialize audit page
+	 * Initializes the audit page.
+	 *
+	 * @since 1.0.0
 	 */
 	public function __construct() {
 		// Constructor logic if needed.
 	}
 
 	/**
-	 * Get validated filter parameters from GET request
+	 * Gets validated filter parameters from GET request.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @return array Validated parameters including year, month, status_filter, and change_filter.
 	 *
@@ -50,9 +56,9 @@ class AuditPage {
 	}
 
 	/**
-	 * Render audit analysis page
+	 * Renders the audit analysis page.
 	 *
-	 * @return void
+	 * @since 1.0.0
 	 */
 	public function render(): void {
 		$params        = $this->get_filter_params();
@@ -148,13 +154,14 @@ class AuditPage {
 
 
 	/**
-	 * Render WordPress-style status filter links
+	 * Renders WordPress-style status filter links.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param int    $year          Current year for filtering.
 	 * @param int    $month         Current month for filtering.
 	 * @param string $status_filter Current status filter value.
 	 * @param array  $counts        Statistics counts for each category.
-	 * @return void
 	 *
 	 * @phpstan-param array<string, int> $counts
 	 */
@@ -226,7 +233,9 @@ class AuditPage {
 	}
 
 	/**
-	 * Render WordPress-style table navigation
+	 * Renders WordPress-style table navigation.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param int    $year             Current year for filtering.
 	 * @param int    $month            Current month for filtering.
@@ -235,7 +244,6 @@ class AuditPage {
 	 * @param string $change_filter    Current change percentage filter value.
 	 * @param array  $counts           Statistics counts for each category.
 	 * @param string $which            Position of navigation ('top' or 'bottom').
-	 * @return void
 	 *
 	 * @phpstan-param array<int, MonthData> $available_months
 	 * @phpstan-param array<string, int> $counts
@@ -311,11 +319,12 @@ class AuditPage {
 	}
 
 	/**
-	 * Render WordPress-style table with audit data
+	 * Renders WordPress-style table with audit data.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param array $categorized_posts Array of categorized posts with analysis data.
 	 * @param array $meta_cache        Meta data cache to avoid N+1 queries.
-	 * @return void
 	 *
 	 * @phpstan-param array<int, array<string, mixed>> $categorized_posts
 	 * @phpstan-param array<int, array<string, string>> $meta_cache

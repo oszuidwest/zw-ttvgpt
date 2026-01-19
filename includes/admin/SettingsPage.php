@@ -1,8 +1,9 @@
 <?php
 /**
- * Settings Page class for ZW TTVGPT
+ * Settings Page class for ZW TTVGPT.
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 
 namespace ZW_TTVGPT_Core\Admin;
@@ -17,13 +18,18 @@ use ZW_TTVGPT_Core\Logger;
 use ZW_TTVGPT_Core\SettingsManager;
 
 /**
- * Settings Page class
+ * Settings Page class.
  *
- * Handles settings page rendering and form processing
+ * Handles settings page rendering and form processing.
+ *
+ * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 class SettingsPage {
 	/**
-	 * Initialize settings page and register WordPress hooks
+	 * Initializes the settings page and registers WordPress hooks.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param Logger $logger Logger instance for debugging.
 	 */
@@ -32,7 +38,9 @@ class SettingsPage {
 	}
 
 	/**
-	 * Generate settings field name attribute
+	 * Generates settings field name attribute.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param string $field_key Field key within settings array.
 	 * @return string Escaped name attribute value.
@@ -42,9 +50,9 @@ class SettingsPage {
 	}
 
 	/**
-	 * Register all plugin settings, sections, and fields with WordPress
+	 * Registers all plugin settings, sections, and fields with WordPress.
 	 *
-	 * @return void
+	 * @since 1.0.0
 	 */
 	public function register_settings(): void {
 		register_setting(
@@ -118,9 +126,9 @@ class SettingsPage {
 	}
 
 	/**
-	 * Render settings page
+	 * Renders the settings page.
 	 *
-	 * @return void
+	 * @since 1.0.0
 	 */
 	public function render(): void {
 		?>
@@ -139,36 +147,36 @@ class SettingsPage {
 	}
 
 	/**
-	 * Render API section description
+	 * Renders the API section description.
 	 *
-	 * @return void
+	 * @since 1.0.0
 	 */
 	public function render_api_section(): void {
 		echo '<p>' . esc_html__( 'Vul je OpenAI gegevens in om te beginnen.', 'zw-ttvgpt' ) . '</p>';
 	}
 
 	/**
-	 * Render summary section description
+	 * Renders the summary section description.
 	 *
-	 * @return void
+	 * @since 1.0.0
 	 */
 	public function render_summary_section(): void {
 		echo '<p>' . esc_html__( 'Bepaal hoe je samenvattingen eruit zien.', 'zw-ttvgpt' ) . '</p>';
 	}
 
 	/**
-	 * Render debug section description
+	 * Renders the debug section description.
 	 *
-	 * @return void
+	 * @since 1.0.0
 	 */
 	public function render_debug_section(): void {
 		echo '<p>' . esc_html__( 'Voor ontwikkelaars en probleemoplossing.', 'zw-ttvgpt' ) . '</p>';
 	}
 
 	/**
-	 * Render API key field
+	 * Renders the API key field.
 	 *
-	 * @return void
+	 * @since 1.0.0
 	 */
 	public function render_api_key_field(): void {
 		$api_key    = SettingsManager::get_api_key();
@@ -187,9 +195,9 @@ class SettingsPage {
 	}
 
 	/**
-	 * Render model field
+	 * Renders the model field.
 	 *
-	 * @return void
+	 * @since 1.0.0
 	 */
 	public function render_model_field(): void {
 		$current_model = SettingsManager::get_model();
@@ -208,9 +216,9 @@ class SettingsPage {
 	}
 
 	/**
-	 * Render word limit field
+	 * Renders the word limit field.
 	 *
-	 * @return void
+	 * @since 1.0.0
 	 */
 	public function render_word_limit_field(): void {
 		$word_limit = SettingsManager::get_word_limit();
@@ -230,9 +238,9 @@ class SettingsPage {
 	}
 
 	/**
-	 * Render system prompt field
+	 * Renders the system prompt field.
 	 *
-	 * @return void
+	 * @since 1.0.0
 	 */
 	public function render_system_prompt_field(): void {
 		$system_prompt = SettingsManager::get_system_prompt();
@@ -256,9 +264,9 @@ class SettingsPage {
 	}
 
 	/**
-	 * Render debug mode field
+	 * Renders the debug mode field.
 	 *
-	 * @return void
+	 * @since 1.0.0
 	 */
 	public function render_debug_mode_field(): void {
 		$debug_mode = SettingsManager::is_debug_mode();
@@ -283,7 +291,9 @@ class SettingsPage {
 	}
 
 	/**
-	 * Sanitize and validate all plugin settings before saving
+	 * Sanitizes and validates all plugin settings before saving.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param array $input Raw input data from settings form.
 	 * @return array Sanitized settings array.

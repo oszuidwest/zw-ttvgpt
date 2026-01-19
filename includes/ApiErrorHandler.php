@@ -1,8 +1,9 @@
 <?php
 /**
- * API Error Handler class for ZW TTVGPT
+ * API Error Handler class for ZW TTVGPT.
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 
 namespace ZW_TTVGPT_Core;
@@ -12,15 +13,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * API Error Handler class
+ * API Error Handler class.
  *
- * Centralized handling of API error messages
+ * Provides centralized handling of API error messages.
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 class ApiErrorHandler {
 	/**
-	 * Convert HTTP status codes to localized error messages
+	 * Converts HTTP status codes to localized error messages.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param int $status_code HTTP status code from API response.
 	 * @return string Localized error message for end users.

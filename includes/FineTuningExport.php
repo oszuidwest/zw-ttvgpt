@@ -1,8 +1,9 @@
 <?php
 /**
- * Fine Tuning Export class for ZW TTVGPT
+ * Fine Tuning Export class for ZW TTVGPT.
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 
 namespace ZW_TTVGPT_Core;
@@ -12,15 +13,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Fine Tuning Export class
+ * Fine Tuning Export class.
  *
- * Exports AI+human training data in JSONL format for OpenAI fine-tuning
+ * Exports AI+human training data in JSONL format for OpenAI fine-tuning.
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 class FineTuningExport {
 	/**
-	 * Initialize fine tuning export with dependencies
+	 * Initializes fine tuning export with dependencies.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param Logger     $logger      Logger instance for debugging.
 	 * @param ApiHandler $api_handler API handler for reusing production logic.
@@ -33,7 +37,9 @@ class FineTuningExport {
 	) {}
 
 	/**
-	 * Initialize WordPress filesystem API
+	 * Initializes WordPress filesystem API.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @return \WP_Filesystem_Base WordPress filesystem instance.
 	 */
@@ -49,9 +55,11 @@ class FineTuningExport {
 	}
 
 	/**
-	 * Generate JSONL training data for DPO fine-tuning
+	 * Generates JSONL training data for DPO fine-tuning.
 	 *
-	 * @param array $filters Optional filters for date range and post count.
+	 * @since 1.0.0
+	 *
+	 * @param array $filters Optional. Filters for date range and post count. Default empty array.
 	 * @return array|\WP_Error Training result with data and stats, or WP_Error on failure.
 	 *
 	 * @phpstan-param TrainingFilters $filters
@@ -129,7 +137,9 @@ class FineTuningExport {
 	}
 
 	/**
-	 * Get posts suitable for DPO training (AI generated + human edited)
+	 * Retrieves posts suitable for DPO training (AI generated + human edited).
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param array $filters Filters for date range and limits.
 	 * @return array Array of post objects with AI and human content.
@@ -204,7 +214,9 @@ class FineTuningExport {
 	}
 
 	/**
-	 * Create a single training entry in DPO format
+	 * Creates a single training entry in DPO format.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param \stdClass $post Post object with ID, ai_content, human_content, and post_content properties.
 	 * @return array|null Training entry array or null if content is invalid.
@@ -263,10 +275,12 @@ class FineTuningExport {
 
 
 	/**
-	 * Export training data as JSONL file
+	 * Exports training data as JSONL file.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param array  $training_data Array of training entries.
-	 * @param string $filename      Optional filename (defaults to timestamped name).
+	 * @param string $filename      Optional. Filename (defaults to timestamped name). Default empty.
 	 * @return array|\WP_Error Export result with file info, or WP_Error on failure.
 	 *
 	 * @phpstan-param array<int, mixed> $training_data
@@ -334,10 +348,12 @@ class FineTuningExport {
 	}
 
 	/**
-	 * Validate JSONL file format
+	 * Validates JSONL file format.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param string $file_path Path to JSONL file.
-	 * @param int    $max_lines Maximum lines to validate (0 = all).
+	 * @param int    $max_lines Optional. Maximum lines to validate (0 = all). Default 100.
 	 * @return array|\WP_Error Validation result with details, or WP_Error on failure.
 	 *
 	 * @phpstan-return array{message: string, line_count: int, valid_entries: int, errors: array<int, string>, error_count: int}|\WP_Error
@@ -411,7 +427,9 @@ class FineTuningExport {
 	}
 
 	/**
-	 * Validate single DPO entry structure
+	 * Validates single DPO entry structure.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param array $entry DPO entry to validate.
 	 * @return bool True if entry has valid DPO structure, false otherwise.

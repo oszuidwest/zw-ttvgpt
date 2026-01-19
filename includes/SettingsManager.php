@@ -1,8 +1,9 @@
 <?php
 /**
- * Settings Manager class for ZW TTVGPT
+ * Settings Manager class for ZW TTVGPT.
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 
 namespace ZW_TTVGPT_Core;
@@ -12,25 +13,34 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Settings Manager class
+ * Settings Manager class.
  *
- * Handles all settings operations for the plugin
+ * Handles all settings operations for the plugin.
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 class SettingsManager {
 	/**
-	 * Cache key for settings
+	 * Cache key for settings.
+	 *
+	 * @since 1.0.0
+	 * @var string
 	 */
 	private const string CACHE_KEY = 'zw_ttvgpt_settings';
 
 	/**
-	 * Cache group for settings
+	 * Cache group for settings.
+	 *
+	 * @since 1.0.0
+	 * @var string
 	 */
 	private const string CACHE_GROUP = 'zw_ttvgpt';
 
 	/**
-	 * Retrieve all plugin settings with caching
+	 * Retrieves all plugin settings with caching.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @return array Complete settings array with defaults applied.
 	 *
@@ -52,7 +62,9 @@ class SettingsManager {
 	}
 
 	/**
-	 * Retrieve specific setting value with fallback
+	 * Retrieves a specific setting value with fallback.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param string $key           Setting key to retrieve.
 	 * @param mixed  $default_value Default value if setting not found.
@@ -64,7 +76,9 @@ class SettingsManager {
 	}
 
 	/**
-	 * Update plugin settings and refresh cache
+	 * Updates plugin settings and refreshes cache.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param array $new_settings Settings to merge with existing values.
 	 * @return bool True if settings were successfully updated.
@@ -85,7 +99,9 @@ class SettingsManager {
 	}
 
 	/**
-	 * Reset all settings to default values and clear cache
+	 * Resets all settings to default values and clears cache.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @return bool True if settings were successfully reset.
 	 */
@@ -103,7 +119,9 @@ class SettingsManager {
 	}
 
 	/**
-	 * Completely remove plugin settings and clear cache
+	 * Deletes all plugin settings and clears cache.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @return bool True if settings were successfully deleted.
 	 */
@@ -113,7 +131,9 @@ class SettingsManager {
 	}
 
 	/**
-	 * Get API key from settings
+	 * Gets the API key from settings.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @return string API key value.
 	 */
@@ -123,7 +143,9 @@ class SettingsManager {
 	}
 
 	/**
-	 * Get configured OpenAI model name
+	 * Gets the configured OpenAI model name.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @return string Model identifier.
 	 */
@@ -133,7 +155,9 @@ class SettingsManager {
 	}
 
 	/**
-	 * Get configured word limit for summaries
+	 * Gets the configured word limit for summaries.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @return int Word limit value.
 	 */
@@ -143,7 +167,9 @@ class SettingsManager {
 	}
 
 	/**
-	 * Get configured system prompt template
+	 * Gets the configured system prompt template.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @return string System prompt template with %d placeholder for word limit.
 	 */
@@ -153,7 +179,9 @@ class SettingsManager {
 	}
 
 	/**
-	 * Check if debug mode is enabled
+	 * Checks if debug mode is enabled.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @return bool True if debug mode is enabled, false otherwise.
 	 */

@@ -1,8 +1,9 @@
 <?php
 /**
- * Admin class for ZW TTVGPT
+ * Admin class for ZW TTVGPT.
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 
 namespace ZW_TTVGPT_Core\Admin;
@@ -14,15 +15,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ZW_TTVGPT_Core\Logger;
 
 /**
- * Admin class
+ * Admin class.
  *
- * Main admin interface coordinator
+ * Main admin interface coordinator.
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 class Admin {
 	/**
-	 * Initialize admin interface
+	 * Initializes the admin interface.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param Logger         $logger           Logger instance for debugging.
 	 * @param FineTuningPage $fine_tuning_page Fine tuning page instance.

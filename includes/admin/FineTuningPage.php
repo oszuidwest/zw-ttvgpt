@@ -1,8 +1,9 @@
 <?php
 /**
- * Fine Tuning Page class for ZW TTVGPT
+ * Fine Tuning Page class for ZW TTVGPT.
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 
 namespace ZW_TTVGPT_Core\Admin;
@@ -17,17 +18,20 @@ use ZW_TTVGPT_Core\FineTuningExport;
 use ZW_TTVGPT_Core\Logger;
 
 /**
- * Fine Tuning Page class
+ * Fine Tuning Page class.
  *
- * Admin interface for managing OpenAI fine tuning jobs and training data export
+ * Admin interface for managing OpenAI fine tuning jobs and training data export.
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 class FineTuningPage {
 	use AjaxSecurity;
 
 	/**
-	 * Initialize fine tuning page with dependencies
+	 * Initializes the fine tuning page with dependencies.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param FineTuningExport $export Export functionality instance.
 	 * @param Logger           $logger Logger instance for debugging.
@@ -41,9 +45,9 @@ class FineTuningPage {
 	}
 
 	/**
-	 * Render the fine tuning administration page
+	 * Renders the fine tuning administration page.
 	 *
-	 * @return void
+	 * @since 1.0.0
 	 */
 	public function render(): void {
 		$this->validate_page_access( Constants::REQUIRED_CAPABILITY );
@@ -202,9 +206,9 @@ class FineTuningPage {
 	}
 
 	/**
-	 * Render training data export section
+	 * Renders the training data export section.
 	 *
-	 * @return void
+	 * @since 1.0.0
 	 */
 	private function render_export_section(): void {
 		?>
@@ -238,9 +242,9 @@ class FineTuningPage {
 	}
 
 	/**
-	 * Render instructions section
+	 * Renders the instructions section.
 	 *
-	 * @return void
+	 * @since 1.0.0
 	 */
 	private function render_instructions_section(): void {
 		?>
@@ -276,7 +280,9 @@ class FineTuningPage {
 	}
 
 	/**
-	 * Handle AJAX request for exporting training data
+	 * Handles AJAX request for exporting training data.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @return never
 	 */

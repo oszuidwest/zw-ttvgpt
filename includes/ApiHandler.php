@@ -1,8 +1,9 @@
 <?php
 /**
- * API Handler class for ZW TTVGPT
+ * API Handler class for ZW TTVGPT.
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 
 namespace ZW_TTVGPT_Core;
@@ -12,33 +13,50 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * API Handler class
+ * API Handler class.
  *
- * Handles communication with OpenAI API
+ * Handles communication with the OpenAI API.
+ *
+ * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 class ApiHandler {
 	/**
-	 * OpenAI Chat Completions API endpoint (for GPT-4.1 family: gpt-4.1, gpt-4.1-mini, gpt-4.1-nano)
+	 * OpenAI Chat Completions API endpoint (for GPT-4.1 family).
+	 *
+	 * @since 1.0.0
+	 * @var string
 	 */
 	private const string CHAT_COMPLETIONS_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 
 	/**
-	 * OpenAI Responses API endpoint (GPT-5.1 only)
+	 * OpenAI Responses API endpoint (GPT-5.1 only).
+	 *
+	 * @since 1.0.0
+	 * @var string
 	 */
 	private const string RESPONSES_ENDPOINT = 'https://api.openai.com/v1/responses';
 
 	/**
-	 * Maximum tokens for API response
+	 * Maximum tokens for API response.
+	 *
+	 * @since 1.0.0
+	 * @var int
 	 */
 	private const int MAX_TOKENS = 2048;
 
 	/**
-	 * Temperature for API responses (controls randomness)
+	 * Temperature for API responses (controls randomness).
+	 *
+	 * @since 1.0.0
+	 * @var float
 	 */
 	private const float TEMPERATURE = 0.7;
 
 	/**
-	 * Initialize API handler with credentials and dependencies
+	 * Initializes API handler with credentials and dependencies.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param string $api_key API key for OpenAI authentication (marked sensitive for stack trace protection).
 	 * @param string $model   Model identifier to use for requests.
@@ -51,10 +69,12 @@ class ApiHandler {
 	) {}
 
 	/**
-	 * Generate system prompt for summarization
+	 * Generates system prompt for summarization.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param int $word_limit Maximum words for summary.
-	 * @return string System prompt text
+	 * @return string System prompt text.
 	 */
 	public function get_system_prompt( int $word_limit ): string {
 		$prompt_template = SettingsManager::get_system_prompt();
@@ -62,13 +82,15 @@ class ApiHandler {
 	}
 
 	/**
-	 * Prepare content for API request by extracting text from HTML
+	 * Prepares content for API request by extracting text from HTML.
 	 *
 	 * Removes script/style content (which wp_strip_all_tags doesn't handle),
 	 * converts block elements to newlines, and normalizes whitespace.
 	 *
+	 * @since 1.0.0
+	 *
 	 * @param string $content Raw content to clean.
-	 * @return string Cleaned content ready for API
+	 * @return string Cleaned content ready for API.
 	 */
 	public function prepare_content( string $content ): string {
 		// Remove script and style elements WITH their content.
@@ -95,7 +117,9 @@ class ApiHandler {
 	}
 
 	/**
-	 * Build messages array for OpenAI API chat completion
+	 * Builds messages array for OpenAI API chat completion.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param string $content    Cleaned content to summarize.
 	 * @param int    $word_limit Maximum words for summary.
@@ -117,9 +141,11 @@ class ApiHandler {
 	}
 
 	/**
-	 * Determine which API endpoint to use based on the model
+	 * Determines which API endpoint to use based on the model.
 	 *
-	 * @return string API endpoint URL
+	 * @since 1.0.0
+	 *
+	 * @return string API endpoint URL.
 	 */
 	private function get_api_endpoint(): string {
 		if ( Helper::is_gpt5_model( $this->model ) ) {
@@ -130,7 +156,9 @@ class ApiHandler {
 	}
 
 	/**
-	 * Build request body for Chat Completions API (GPT-4.1 family: gpt-4.1, gpt-4.1-mini, gpt-4.1-nano)
+	 * Builds request body for Chat Completions API (GPT-4.1 family).
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param string $content    Cleaned content to summarize.
 	 * @param int    $word_limit Maximum words for summary.
@@ -148,7 +176,9 @@ class ApiHandler {
 	}
 
 	/**
-	 * Build request body for Responses API (GPT-5.1 only)
+	 * Builds request body for Responses API (GPT-5.1 only).
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param string $content    Cleaned content to summarize.
 	 * @param int    $word_limit Maximum words for summary.
@@ -176,7 +206,9 @@ class ApiHandler {
 	}
 
 	/**
-	 * Extract summary text from Chat Completions API response
+	 * Extracts summary text from Chat Completions API response.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param array $data Response data from API.
 	 * @return string|\WP_Error Summary text or WP_Error if invalid.
@@ -196,7 +228,9 @@ class ApiHandler {
 	}
 
 	/**
-	 * Extract summary text from Responses API response
+	 * Extracts summary text from Responses API response.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param array $data Response data from API.
 	 * @return string|\WP_Error Summary text or WP_Error if invalid.
@@ -235,7 +269,9 @@ class ApiHandler {
 	}
 
 	/**
-	 * Generate text summary using OpenAI API (Chat Completions or Responses)
+	 * Generates text summary using OpenAI API (Chat Completions or Responses).
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param string $content    Content to summarize.
 	 * @param int    $word_limit Maximum words for summary.

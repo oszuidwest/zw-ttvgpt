@@ -1,8 +1,9 @@
 <?php
 /**
- * Helper class for ZW TTVGPT
+ * Helper class for ZW TTVGPT.
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 
 namespace ZW_TTVGPT_Core;
@@ -12,18 +13,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Helper class
+ * Helper class.
  *
- * Common utility functions for the plugin
+ * Provides common utility functions for the plugin.
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 class Helper {
 
 	/**
-	 * Remove all plugin-related transients from database
+	 * Removes all plugin-related transients from database.
 	 *
-	 * @return void
+	 * @since 1.0.0
 	 */
 	public static function cleanup_transients(): void {
 		// Get all users to clean their rate limit transients.
@@ -45,9 +47,9 @@ class Helper {
 	}
 
 	/**
-	 * Remove all plugin data including settings and transients
+	 * Removes all plugin data including settings and transients.
 	 *
-	 * @return void
+	 * @since 1.0.0
 	 */
 	public static function cleanup_plugin_data(): void {
 		SettingsManager::delete_settings();
@@ -55,7 +57,9 @@ class Helper {
 	}
 
 	/**
-	 * Generate ACF field selectors for JavaScript usage
+	 * Generates ACF field selectors for JavaScript usage.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @return array Field selector mappings for client-side access.
 	 *
@@ -69,7 +73,9 @@ class Helper {
 	}
 
 	/**
-	 * Validate OpenAI API key format
+	 * Validates OpenAI API key format.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param string $api_key API key to validate.
 	 * @return bool True if key format is valid (starts with 'sk-'), false otherwise.
@@ -79,10 +85,12 @@ class Helper {
 	}
 
 	/**
-	 * Build SQL date filter clause for post queries
+	 * Builds SQL date filter clause for post queries.
 	 *
-	 * @param string $start_date Start date in Y-m-d format.
-	 * @param string $end_date   End date in Y-m-d format.
+	 * @since 1.0.0
+	 *
+	 * @param string $start_date Optional. Start date in Y-m-d format. Default empty.
+	 * @param string $end_date   Optional. End date in Y-m-d format. Default empty.
 	 * @return string SQL WHERE clause or empty string if dates invalid.
 	 */
 	public static function build_date_filter_clause( string $start_date = '', string $end_date = '' ): string {
@@ -102,7 +110,9 @@ class Helper {
 	}
 
 	/**
-	 * Get asset version string with cache busting in debug mode
+	 * Gets asset version string with cache busting in debug mode.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @return string Version string for asset enqueuing.
 	 */
@@ -111,7 +121,7 @@ class Helper {
 	}
 
 	/**
-	 * Check if a model requires the Responses API (GPT-5.1 only)
+	 * Checks if a model requires the Responses API (GPT-5.1 only).
 	 *
 	 * Only gpt-5.1 is supported. The older gpt-5 model (without .1) is deprecated
 	 * and replaced by gpt-5.1.
@@ -119,6 +129,8 @@ class Helper {
 	 * Note: This function accepts any model starting with 'gpt-5' for forward
 	 * compatibility with potential future GPT-5 variants, but currently only
 	 * gpt-5.1 is tested and recommended.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param string $model Model identifier to check.
 	 * @return bool True if model uses Responses API (GPT-5.* family), false otherwise.
@@ -132,7 +144,9 @@ class Helper {
 	}
 
 	/**
-	 * Count words in a string
+	 * Counts words in a string.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param string $text Text to count words in.
 	 * @return int Number of words.
@@ -146,11 +160,13 @@ class Helper {
 	}
 
 	/**
-	 * Check if plugin translations are available
+	 * Checks if plugin translations are available.
 	 *
 	 * Uses has_translation() to check if translations exist without loading
 	 * them first. This improves performance by avoiding unnecessary translation
 	 * file loading.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @return bool True if translations are available, false otherwise.
 	 */
@@ -159,10 +175,12 @@ class Helper {
 	}
 
 	/**
-	 * Get localized strings with fallback if no translations available
+	 * Gets localized strings with fallback if no translations available.
 	 *
 	 * Uses has_translation() to optimize performance by skipping translation
 	 * loading when not needed. Returns original strings if no translations exist.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param array<string, string> $strings Array of strings to translate (key => original text).
 	 * @return array<string, string> Translated strings or originals if no translation available.

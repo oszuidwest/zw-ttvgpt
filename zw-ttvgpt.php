@@ -14,6 +14,7 @@
  * Requires Plugins: advanced-custom-fields
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 
 if ( ! defined( 'WPINC' ) ) {
@@ -38,9 +39,9 @@ use ZW_TTVGPT_Core\Admin\Admin;
 use ZW_TTVGPT_Core\Admin\FineTuningPage;
 
 /**
- * Initialize plugin components with dependency injection
+ * Initializes plugin components with dependency injection.
  *
- * @return void
+ * @since 1.0.0
  */
 function zw_ttvgpt_init() {
 	$logger = new Logger( SettingsManager::is_debug_mode() );
@@ -75,9 +76,9 @@ function zw_ttvgpt_init() {
 add_action( 'init', 'zw_ttvgpt_init' );
 
 /**
- * Validates environment and initializes plugin settings on activation
+ * Validates environment and initializes plugin settings on activation.
  *
- * @return void
+ * @since 1.0.0
  */
 function zw_ttvgpt_activate() {
 	// @phpstan-ignore if.alwaysFalse (Defensive runtime check, phpstan assumes PHP 8.3+)
@@ -100,9 +101,9 @@ function zw_ttvgpt_activate() {
 register_activation_hook( __FILE__, 'zw_ttvgpt_activate' );
 
 /**
- * Cleans up temporary data and rewrite rules on deactivation
+ * Cleans up temporary data and rewrite rules on deactivation.
  *
- * @return void
+ * @since 1.0.0
  */
 function zw_ttvgpt_deactivate() {
 	Helper::cleanup_transients();

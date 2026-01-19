@@ -1,8 +1,9 @@
 <?php
 /**
- * Audit Helper class for ZW TTVGPT
+ * Audit Helper class for ZW TTVGPT.
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 
 namespace ZW_TTVGPT_Core;
@@ -12,15 +13,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Audit Helper class
+ * Audit Helper class.
  *
- * Handles audit-specific functionality
+ * Handles audit-specific functionality for content analysis.
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 class AuditHelper {
 	/**
-	 * Get the most recent month that has relevant posts for audit analysis
+	 * Retrieves the most recent month that has relevant posts for audit analysis.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @return array|null Array with 'year' and 'month' keys or null if no posts found.
 	 *
@@ -77,7 +81,9 @@ class AuditHelper {
 	}
 
 	/**
-	 * Get all months with audit data for navigation
+	 * Retrieves all months with audit data for navigation.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @return array Array of arrays with 'year' and 'month' keys.
 	 *
@@ -86,8 +92,7 @@ class AuditHelper {
 	public static function get_months(): array {
 		global $wpdb;
 
-		// For performance, we use direct SQL here as WP_Query doesn't support.
-		// GROUP BY efficiently. This is a case where direct SQL is justified.
+		// Direct SQL is used for performance since WP_Query doesn't support GROUP BY efficiently.
 		$results = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT YEAR(p.post_date) as year, MONTH(p.post_date) as month
@@ -132,7 +137,9 @@ class AuditHelper {
 	}
 
 	/**
-	 * Retrieve all posts for audit analysis from specific month and year
+	 * Retrieves all posts for audit analysis from specific month and year.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param int $year  Target year.
 	 * @param int $month Target month (1-12).
@@ -178,7 +185,9 @@ class AuditHelper {
 
 
 	/**
-	 * Get bulk meta data for multiple posts to avoid N+1 queries
+	 * Retrieves bulk meta data for multiple posts to avoid N+1 queries.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param array $post_ids Array of post IDs.
 	 * @return array Associative array with post_id as key and meta_data as value.
@@ -240,7 +249,9 @@ class AuditHelper {
 	}
 
 	/**
-	 * Strip region prefix from content for comparison
+	 * Strips region prefix from content for comparison.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param string $content Content to clean.
 	 * @return string Cleaned content without region prefix.
@@ -253,10 +264,12 @@ class AuditHelper {
 	}
 
 	/**
-	 * Categorize a post based on its AI and human content
+	 * Categorizes a post based on its AI and human content.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param \WP_Post $post       Post object to categorize.
-	 * @param array    $meta_cache Meta data cache to avoid N+1 queries.
+	 * @param array    $meta_cache Optional. Meta data cache to avoid N+1 queries. Default empty array.
 	 * @return array Analysis result with status (AuditStatus enum), ai_content, human_content, and change_percentage.
 	 *
 	 * @phpstan-param array<int, array<string, string>> $meta_cache
@@ -294,7 +307,9 @@ class AuditHelper {
 	}
 
 	/**
-	 * Generate word-level diff highlighting for content comparison
+	 * Generates word-level diff highlighting for content comparison.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param string $old      Original text.
 	 * @param string $modified Modified text.
@@ -357,7 +372,9 @@ class AuditHelper {
 	}
 
 	/**
-	 * Calculate percentage of change between AI and human content
+	 * Calculates percentage of change between AI and human content.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param string $ai_content    Original AI content.
 	 * @param string $human_content Edited human content.

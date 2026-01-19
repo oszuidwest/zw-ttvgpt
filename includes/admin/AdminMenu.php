@@ -1,8 +1,9 @@
 <?php
 /**
- * Admin Menu class for ZW TTVGPT
+ * Admin Menu class for ZW TTVGPT.
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 
 namespace ZW_TTVGPT_Core\Admin;
@@ -17,15 +18,18 @@ use ZW_TTVGPT_Core\Logger;
 use ZW_TTVGPT_Core\SettingsManager;
 
 /**
- * Admin Menu class
+ * Admin Menu class.
  *
- * Handles WordPress admin menu registration and asset loading
+ * Handles WordPress admin menu registration and asset loading.
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 class AdminMenu {
 	/**
-	 * Initialize admin menu and register WordPress hooks
+	 * Initializes the admin menu and registers WordPress hooks.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param Logger         $logger           Logger instance for debugging.
 	 * @param FineTuningPage $fine_tuning_page Fine tuning page instance.
@@ -39,9 +43,9 @@ class AdminMenu {
 	}
 
 	/**
-	 * Add plugin settings page to WordPress admin menu
+	 * Adds plugin settings page to WordPress admin menu.
 	 *
-	 * @return void
+	 * @since 1.0.0
 	 */
 	public function add_admin_menu(): void {
 		add_options_page(
@@ -70,10 +74,11 @@ class AdminMenu {
 	}
 
 	/**
-	 * Load CSS and JavaScript assets on post edit screens and audit page
+	 * Loads CSS and JavaScript assets on post edit screens and audit page.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param string $hook Current admin page hook.
-	 * @return void
 	 */
 	public function enqueue_admin_assets( string $hook ): void {
 		$version = Helper::get_asset_version();

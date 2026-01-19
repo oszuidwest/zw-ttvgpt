@@ -1,8 +1,9 @@
 <?php
 /**
- * Summary Generator class for ZW TTVGPT
+ * Summary Generator class for ZW TTVGPT.
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 
 namespace ZW_TTVGPT_Core;
@@ -12,15 +13,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Summary Generator class
+ * Summary Generator class.
  *
- * Core functionality for generating summaries
+ * Core functionality for generating summaries.
+ *
+ * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 class SummaryGenerator {
 	use AjaxSecurity;
 
 	/**
-	 * Initialize summary generator with dependencies and register AJAX handler
+	 * Initializes the summary generator with dependencies and registers AJAX handler.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param ApiHandler $api_handler API handler for OpenAI communication.
 	 * @param int        $word_limit  Maximum words allowed in summaries.
@@ -35,7 +41,9 @@ class SummaryGenerator {
 	}
 
 	/**
-	 * Process AJAX request for generating summary with security and validation
+	 * Processes AJAX request for generating summary with security and validation.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @return never
 	 */
@@ -105,10 +113,12 @@ class SummaryGenerator {
 	}
 
 	/**
-	 * Generate summary with automatic retry for invalid responses.
+	 * Generates summary with automatic retry for invalid responses.
 	 *
 	 * Retries when response is too short (< 20% of limit) or too long (> limit).
 	 * Returns the last attempt if all retries fail, allowing user to manually adjust.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param string $content    Content to summarize.
 	 * @param int    $word_limit Maximum words allowed.
@@ -148,11 +158,12 @@ class SummaryGenerator {
 	}
 
 	/**
-	 * Save generated summary to ACF fields and mark as AI-generated
+	 * Saves generated summary to ACF fields and marks as AI-generated.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param int    $post_id Post ID to update.
 	 * @param string $summary Generated summary text.
-	 * @return void
 	 */
 	private function save_to_acf( int $post_id, string $summary ): void {
 		if ( ! function_exists( 'update_field' ) ) {
