@@ -62,6 +62,8 @@ jobs:
         if: matrix.php == '8.3'
         uses: wordpress/plugin-check-action@v1
         with:
+          exclude-files: |
+            phpstan-bootstrap.php
           exclude-checks: |
             late_escaping
             plugin_review_phpcs
