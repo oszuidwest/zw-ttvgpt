@@ -94,6 +94,9 @@
 	/**
 	 * Count words in text (matches PHP str_word_count behavior).
 	 *
+	 * PHP considers apostrophes and hyphens as word characters when surrounded
+	 * by letters, but commas and other punctuation split words.
+	 *
 	 * @param {string} text Text to count words in.
 	 * @return {number} Word count.
 	 */
@@ -101,12 +104,10 @@
 		if (!text || typeof text !== 'string') {
 			return 0;
 		}
-		const trimmed = text.trim();
-		if (trimmed.length === 0) {
-			return 0;
-		}
-		// Split on whitespace and filter empty strings
-		return trimmed.split(/\s+/).filter(Boolean).length;
+		// Match word sequences: letters with optional internal apostrophes/hyphens
+		// Examples: "woord,woord" = 2, "woord-woord" = 1, "it's" = 1
+		const matches = text.match(/[\p{L}]+([-'][\p{L}]+)*/gu);
+		return matches ? matches.length : 0;
 	}
 
 	/**
