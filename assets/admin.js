@@ -31,7 +31,8 @@
 		};
 
 	let $cachedAcfField = null,
-		$cachedGptField = null;
+		$cachedGptField = null,
+		$cachedWordCounter = null;
 
 	/**
 	 * Initialize plugin components and cache DOM elements.
@@ -57,17 +58,79 @@
 			return;
 		}
 
+		// Create container for button and word counter
+		const $container = $('<div>').addClass('zw-ttvgpt-controls').css({
+			display: 'flex',
+			'align-items': 'center',
+			gap: '12px',
+			'margin-top': '8px',
+		});
+
 		const $button = $('<button>')
 			.attr({
 				type: 'button',
 				class: 'button button-secondary zw-ttvgpt-inline-generate',
 				'data-post-id': $('#post_ID').val(),
 			})
-			.text(zwTTVGPT.strings.buttonText)
-			.css('margin-top', '8px');
+			.text(zwTTVGPT.strings.buttonText);
 
-		$cachedAcfField.parent().append($button);
+		// Create word counter element
+		$cachedWordCounter = $('<span>')
+			.addClass('zw-ttvgpt-word-counter')
+			.attr('aria-live', 'polite');
+
+		$container.append($button, $cachedWordCounter);
+		$cachedAcfField.parent().append($container);
+
 		$button.on('click', handleGenerateClick);
+
+		// Bind input events for real-time word count updates
+		$cachedAcfField.on('input change keyup', updateWordCounter);
+
+		// Initial word count update
+		updateWordCounter();
+	}
+
+	/**
+	 * Count words in text (matches PHP str_word_count behavior).
+	 *
+	 * @param {string} text Text to count words in.
+	 * @return {number} Word count.
+	 */
+	function countWords(text) {
+		if (!text || typeof text !== 'string') {
+			return 0;
+		}
+		const trimmed = text.trim();
+		if (trimmed.length === 0) {
+			return 0;
+		}
+		// Split on whitespace and filter empty strings
+		return trimmed.split(/\s+/).filter(Boolean).length;
+	}
+
+	/**
+	 * Update word counter display with current word count.
+	 *
+	 * @return {void}
+	 */
+	function updateWordCounter() {
+		if (!$cachedWordCounter || !$cachedAcfField) {
+			return;
+		}
+
+		const text = $cachedAcfField.val() || '',
+			wordCount = countWords(text),
+			wordLimit = zwTTVGPT.wordLimit || 100,
+			isOverLimit = wordCount > wordLimit;
+
+		$cachedWordCounter
+			.text(`${wordCount} / ${wordLimit} woorden`)
+			.toggleClass('zw-ttvgpt-word-counter--over', isOverLimit)
+			.toggleClass(
+				'zw-ttvgpt-word-counter--ok',
+				!isOverLimit && wordCount > 0
+			);
 	}
 
 	/**
@@ -455,6 +518,9 @@
 				// Scroll to bottom if needed
 				$element[0].scrollTop = $element[0].scrollHeight;
 
+				// Update word counter during animation
+				updateWordCounter();
+
 				// Simplified delay calculation
 				const lastChar = text.charAt(index - 1);
 				let delayConfig = TYPING_DELAYS.default;
@@ -472,6 +538,9 @@
 			} else {
 				// Re-enable field immediately when done
 				$element.prop('disabled', false);
+
+				// Update word counter with final text
+				updateWordCounter();
 
 				// Ensure button is re-enabled when typing completes
 				if ($button && $button.data('is-generating')) {
