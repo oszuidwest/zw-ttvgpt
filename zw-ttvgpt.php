@@ -43,7 +43,7 @@ use ZW_TTVGPT_Core\Admin\FineTuningPage;
  *
  * @since 1.0.0
  */
-function zw_ttvgpt_init() {
+function zw_ttvgpt_init(): void {
 	$logger = new Logger( SettingsManager::is_debug_mode() );
 
 	$api_handler = new ApiHandler(
@@ -80,7 +80,7 @@ add_action( 'init', 'zw_ttvgpt_init' );
  *
  * @since 1.0.0
  */
-function zw_ttvgpt_activate() {
+function zw_ttvgpt_activate(): void {
 	// @phpstan-ignore if.alwaysFalse (Defensive runtime check, phpstan assumes PHP 8.3+)
 	if ( version_compare( PHP_VERSION, '8.3', '<' ) ) {
 		deactivate_plugins( plugin_basename( __FILE__ ) );
@@ -105,7 +105,7 @@ register_activation_hook( __FILE__, 'zw_ttvgpt_activate' );
  *
  * @since 1.0.0
  */
-function zw_ttvgpt_deactivate() {
+function zw_ttvgpt_deactivate(): void {
 	Helper::cleanup_transients();
 	flush_rewrite_rules();
 }
