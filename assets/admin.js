@@ -104,10 +104,14 @@
 		if (!text || typeof text !== 'string') {
 			return 0;
 		}
-		// Match word sequences: letters with optional internal apostrophes/hyphens
+		// Count word sequences without allocating array
 		// Examples: "woord,woord" = 2, "woord-woord" = 1, "it's" = 1
-		const matches = text.match(/[\p{L}]+([-'][\p{L}]+)*/gu);
-		return matches ? matches.length : 0;
+		let count = 0;
+		const regex = /[\p{L}]+([-'][\p{L}]+)*/gu;
+		while (regex.exec(text)) {
+			count++;
+		}
+		return count;
 	}
 
 	/**
