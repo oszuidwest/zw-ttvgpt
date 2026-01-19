@@ -11,7 +11,6 @@
  * Text Domain: zw-ttvgpt
  * Requires at least: 6.8
  * Requires PHP: 8.3
- * Requires Plugins: advanced-custom-fields
  *
  * @package ZW_TTVGPT
  * @since   1.0.0
@@ -90,8 +89,6 @@ function zw_ttvgpt_activate(): void {
 		deactivate_plugins( plugin_basename( __FILE__ ) );
 		wp_die( 'Deze plugin vereist minimaal PHP versie 8.3.' );
 	}
-
-	// ACF dependency is handled by WordPress 6.8+ via "Requires Plugins" header.
 
 	if ( ! get_option( Constants::SETTINGS_OPTION_NAME ) ) {
 		add_option(
