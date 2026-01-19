@@ -113,7 +113,6 @@ class TTVGPTSummaryGenerator {
 	private function generate_summary_with_retry( string $content, int $word_limit ): string|\WP_Error {
 		$min_words   = (int) ( $word_limit * TTVGPTConstants::MIN_RESPONSE_RATIO );
 		$last_result = '';
-		$retry_count = 0;
 
 		for ( $attempt = 1; $attempt <= TTVGPTConstants::MAX_RETRY_ATTEMPTS; $attempt++ ) {
 			$result = $this->api_handler->generate_summary( $content, $word_limit );
@@ -126,23 +125,20 @@ class TTVGPTSummaryGenerator {
 			$word_count  = TTVGPTHelper::count_words( $result );
 
 			// Check if response is valid (within min/max bounds)
-			$too_short = $word_count < $min_words;
-			$too_long  = $word_count > $word_limit;
+			$is_valid = $word_count >= $min_words && $word_count <= $word_limit;
 
-			if ( ! $too_short && ! $too_long ) {
-				// Valid response
-				if ( $retry_count > 0 ) {
-					$this->logger->debug( sprintf( 'Summary accepted after %d retries', $retry_count ) );
+			if ( $is_valid ) {
+				if ( $attempt > 1 ) {
+					$this->logger->debug( sprintf( 'Summary accepted after %d retries', $attempt - 1 ) );
 				}
 				return $result;
 			}
-
-			// Invalid response - retry if attempts remaining
-			++$retry_count;
 		}
 
 		// All attempts exhausted - return last attempt for user to manually adjust
-		$this->logger->debug( sprintf( 'Summary retry limit reached (%d retries), returning last attempt', $retry_count ) );
+		$this->logger->debug(
+			sprintf( 'Summary retry limit reached (%d attempts), returning last attempt', TTVGPTConstants::MAX_RETRY_ATTEMPTS )
+		);
 
 		return $last_result;
 	}
