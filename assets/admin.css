@@ -4,198 +4,205 @@
 
 /* Status messages */
 .zw-ttvgpt-status {
-    padding: 10px;
-    margin: 10px 0;
-    border-left: 4px solid;
+	padding: 10px;
+	margin: 10px 0;
+	border-left: 4px solid;
 }
 
 .zw-ttvgpt-status.notice-error {
-    background: #fbeaea;
-    border-left-color: #dc3232;
+	background: #fbeaea;
+	border-left-color: #dc3232;
 }
 
 .zw-ttvgpt-status.notice-success {
-    background: #ecf7ed;
-    border-left-color: #46b450;
+	background: #ecf7ed;
+	border-left-color: #46b450;
 }
 
 /* Inline generate button for ACF field */
 .zw-ttvgpt-inline-generate {
-    display: block;
+	display: block;
 }
 
 /* Word counter */
 .zw-ttvgpt-word-counter {
-    font-size: 13px;
-    color: #646970;
+	font-size: 13px;
+	color: #646970;
 }
 
 .zw-ttvgpt-word-counter--ok {
-    color: #00a32a;
+	color: #00a32a;
 }
 
 .zw-ttvgpt-word-counter--over {
-    font-weight: 600;
-    color: #d63638;
+	font-weight: 600;
+	color: #d63638;
 }
 
 /* Loading state animations */
 @keyframes zw-ttvgpt-gradient {
-    0% {
-        background-position: 0% 50%;
-    }
+	0% {
+		background-position: 0% 50%;
+	}
 
-    50% {
-        background-position: 100% 50%;
-    }
+	50% {
+		background-position: 100% 50%;
+	}
 
-    100% {
-        background-position: 0% 50%;
-    }
+	100% {
+		background-position: 0% 50%;
+	}
 }
 
 @keyframes zw-ttvgpt-shimmer {
-    0% {
-        transform: translateX(-100%) translateY(-100%) rotate(45deg);
-    }
+	0% {
+		transform: translateX(-100%) translateY(-100%) rotate(45deg);
+	}
 
-    100% {
-        transform: translateX(100%) translateY(100%) rotate(45deg);
-    }
+	100% {
+		transform: translateX(100%) translateY(100%) rotate(45deg);
+	}
 }
 
 /* Generate button during generation */
 .button.zw-ttvgpt-generating {
-    position: relative;
-    overflow: hidden;
-    color: #fff;
-    text-shadow: 0 1px 2px rgb(0 0 0 / 20%);
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #667eea 100%);
-    background-size: 400% 400%;
-    border-color: #667eea;
-    animation: zw-ttvgpt-gradient 3s ease infinite;
+	position: relative;
+	overflow: hidden;
+	color: #fff;
+	text-shadow: 0 1px 2px rgb(0 0 0 / 20%);
+	background: linear-gradient(
+		135deg,
+		#667eea 0%,
+		#764ba2 25%,
+		#f093fb 50%,
+		#4facfe 75%,
+		#667eea 100%
+	);
+	background-size: 400% 400%;
+	border-color: #667eea;
+	animation: zw-ttvgpt-gradient 3s ease infinite;
 }
 
 .button.zw-ttvgpt-generating:hover {
-    color: #fff;
+	color: #fff;
 }
 
 /* Add shimmer effect to button while generating */
 .button.zw-ttvgpt-generating::after {
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    content: '';
-    background: linear-gradient(
-        45deg,
-        transparent 30%,
-        rgb(255 255 255 / 30%) 50%,
-        transparent 70%
-    );
-    animation: zw-ttvgpt-shimmer 1.5s infinite;
+	position: absolute;
+	top: -50%;
+	left: -50%;
+	width: 200%;
+	height: 200%;
+	content: "";
+	background: linear-gradient(
+		45deg,
+		transparent 30%,
+		rgb(255 255 255 / 30%) 50%,
+		transparent 70%
+	);
+	animation: zw-ttvgpt-shimmer 1.5s infinite;
 }
 
 /* Settings page */
 .zw-ttvgpt-settings-section {
-    margin-top: 20px;
+	margin-top: 20px;
 }
 
 .zw-ttvgpt-settings-section th {
-    padding-left: 0;
+	padding-left: 0;
 }
 
 /* Hide the GPT marker field */
 .acf-field-66ad2a3105371 {
-    display: none !important;
+	display: none !important;
 }
 
 /* Fine-tuning export page styles */
 .export-summary {
-    padding: 20px;
-    margin: 15px 0;
-    background: #f8f9fa;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
+	padding: 20px;
+	margin: 15px 0;
+	background: #f8f9fa;
+	border: 1px solid #e0e0e0;
+	border-radius: 4px;
 }
 
 .export-summary h4 {
-    margin-top: 0;
-    margin-bottom: 15px;
-    color: #1d2327;
+	margin-top: 0;
+	margin-bottom: 15px;
+	color: #1d2327;
 }
 
 .file-download {
-    font-weight: 600;
-    color: #2271b1;
-    text-decoration: none;
+	font-weight: 600;
+	color: #2271b1;
+	text-decoration: none;
 }
 
 .file-download:hover {
-    color: #135e96;
+	color: #135e96;
 }
 
 .file-size {
-    font-size: 0.9em;
-    color: #646970;
+	font-size: 0.9em;
+	color: #646970;
 }
 
 .export-stats {
-    margin: 15px 0;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
+	margin: 15px 0;
+	border: 1px solid #e0e0e0;
+	border-radius: 4px;
 }
 
 .export-stats summary {
-    padding: 10px 15px;
-    font-weight: 600;
-    cursor: pointer;
-    background: #f6f7f7;
+	padding: 10px 15px;
+	font-weight: 600;
+	cursor: pointer;
+	background: #f6f7f7;
 }
 
 .export-stats summary:hover {
-    background: #f0f0f1;
+	background: #f0f0f1;
 }
 
 .export-stats .export-stats-content {
-    padding: 15px;
-    background: #fff;
+	padding: 15px;
+	background: #fff;
 }
 
 .export-stats-list {
-    padding: 0;
-    margin: 0;
-    list-style: none;
+	padding: 0;
+	margin: 0;
+	list-style: none;
 }
 
 .export-stats-list li {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px solid #f0f0f1;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 8px 0;
+	border-bottom: 1px solid #f0f0f1;
 }
 
 .export-stats-list li:last-child {
-    border-bottom: none;
+	border-bottom: none;
 }
 
 .export-stats-label {
-    font-weight: 500;
-    color: #50575e;
+	font-weight: 500;
+	color: #50575e;
 }
 
 .export-stats-value {
-    font-family: Monaco, 'Courier New', monospace;
-    font-weight: 600;
-    color: #1d2327;
+	font-family: Monaco, "Courier New", monospace;
+	font-weight: 600;
+	color: #1d2327;
 }
 
 .export-stats-value.error {
-    color: #d63638;
+	color: #d63638;
 }
 
 .export-stats-value.success {
-    color: #00a32a;
+	color: #00a32a;
 }

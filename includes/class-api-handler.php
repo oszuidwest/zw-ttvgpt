@@ -49,7 +49,7 @@ class TTVGPTApiHandler {
 	/**
 	 * Generate system prompt for summarization
 	 *
-	 * @param int $word_limit Maximum words for summary
+	 * @param int $word_limit Maximum words for summary.
 	 * @return string System prompt text
 	 */
 	public function get_system_prompt( int $word_limit ): string {
@@ -60,7 +60,7 @@ class TTVGPTApiHandler {
 	/**
 	 * Prepare content for API request by stripping HTML tags
 	 *
-	 * @param string $content Raw content to clean
+	 * @param string $content Raw content to clean.
 	 * @return string Cleaned content ready for API
 	 */
 	public function prepare_content( string $content ): string {
@@ -70,8 +70,8 @@ class TTVGPTApiHandler {
 	/**
 	 * Build messages array for OpenAI API chat completion
 	 *
-	 * @param string $content    Cleaned content to summarize
-	 * @param int    $word_limit Maximum words for summary
+	 * @param string $content    Cleaned content to summarize.
+	 * @param int    $word_limit Maximum words for summary.
 	 * @return array Messages array for OpenAI API
 	 */
 	public function build_messages( string $content, int $word_limit ): array {
@@ -103,8 +103,8 @@ class TTVGPTApiHandler {
 	/**
 	 * Build request body for Chat Completions API (GPT-4.1 family: gpt-4.1, gpt-4.1-mini, gpt-4.1-nano)
 	 *
-	 * @param string $content    Cleaned content to summarize
-	 * @param int    $word_limit Maximum words for summary
+	 * @param string $content    Cleaned content to summarize.
+	 * @param int    $word_limit Maximum words for summary.
 	 * @return array Request body array
 	 */
 	private function build_chat_completions_request( string $content, int $word_limit ): array {
@@ -119,8 +119,8 @@ class TTVGPTApiHandler {
 	/**
 	 * Build request body for Responses API (GPT-5.1 only)
 	 *
-	 * @param string $content    Cleaned content to summarize
-	 * @param int    $word_limit Maximum words for summary
+	 * @param string $content    Cleaned content to summarize.
+	 * @param int    $word_limit Maximum words for summary.
 	 * @return array Request body array
 	 */
 	private function build_responses_request( string $content, int $word_limit ): array {

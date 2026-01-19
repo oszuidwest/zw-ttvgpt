@@ -247,8 +247,10 @@ class TTVGPTAuditHelper {
 	 * @return array Analysis result with status (AuditStatus enum), ai_content, human_content, and change_percentage.
 	 */
 	public static function categorize_post( \WP_Post $post, array $meta_cache = array() ): array {
-		$ai_content    = $meta_cache[ $post->ID ][ TTVGPTConstants::ACF_FIELD_AI_CONTENT ] ?? get_post_meta( $post->ID, TTVGPTConstants::ACF_FIELD_AI_CONTENT, true );
-		$human_content = $meta_cache[ $post->ID ][ TTVGPTConstants::ACF_FIELD_HUMAN_CONTENT ] ?? get_post_meta( $post->ID, TTVGPTConstants::ACF_FIELD_HUMAN_CONTENT, true );
+		$ai_key        = TTVGPTConstants::ACF_FIELD_AI_CONTENT;
+		$human_key     = TTVGPTConstants::ACF_FIELD_HUMAN_CONTENT;
+		$ai_content    = $meta_cache[ $post->ID ][ $ai_key ] ?? get_post_meta( $post->ID, $ai_key, true );
+		$human_content = $meta_cache[ $post->ID ][ $human_key ] ?? get_post_meta( $post->ID, $human_key, true );
 
 		// Clean content for accurate comparison
 		$ai_clean    = self::strip_region_prefix( $ai_content );

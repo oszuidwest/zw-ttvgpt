@@ -10,30 +10,22 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
-  test:
-    uses: ./.github/workflows/test.yml
-
   validate-and-release:
-    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
 
-      - name: Extract and Validate Version
-        id: version_extraction
+      - name: Extract Version from Main Plugin File
+        id: extract_version
         run: |
           VERSION=$(sed -n 's/.*Version:\s*\([0-9.]\+\).*/\1/p' zw-ttvgpt.php | head -1)
-          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
+          if [[ ! "$VERSION" =~ ^[0-9]+(\.[0-9]+)+$ ]]; then
             echo "Error: Invalid version format - $VERSION"
             exit 1
           fi
-          echo "Extracted Version: $VERSION"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
@@ -41,7 +33,6 @@ jobs:
         id: tag_validation
         run: |
           LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null || echo "")
-          echo "Latest Tag: ${LATEST_TAG:-No previous tag}"
           echo "LATEST_TAG=${LATEST_TAG}" >> $GITHUB_ENV
 
       - name: Compare Versions and Decide Release
@@ -49,24 +40,17 @@ jobs:
         env:
           FORCE_RELEASE: ${{ github.event.inputs.force_release }}
         run: |
-          version_gt() {
-            test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1"
-          }
+          version_gt() { test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1"; }
           RELEASE_NEEDED=false
           if [[ "$FORCE_RELEASE" == "true" ]]; then
-            echo "Forced release triggered"
             RELEASE_NEEDED=true
           elif [[ -z "$LATEST_TAG" ]]; then
-            echo "No previous tag found. First release."
             RELEASE_NEEDED=true
           elif version_gt "$VERSION" "$LATEST_TAG"; then
-            echo "New version is higher than latest tag"
             RELEASE_NEEDED=true
           else
-            echo "No new release needed"
             RELEASE_NEEDED=false
           fi
-          echo "Release needed: $RELEASE_NEEDED"
           echo "RELEASE_NEEDED=$RELEASE_NEEDED" >> $GITHUB_ENV
 
       - name: Stop if No Release Needed
@@ -81,48 +65,54 @@ jobs:
           git config user.email github-actions@github.com
           git tag ${{ env.VERSION }}
           git push origin ${{ env.VERSION }}
-          echo "Tag ${{ env.VERSION }} created and pushed"
 
-      - name: Prepare Release Directory
-        run: |
-          mkdir -p release
-          rsync -av --progress . ./release \
-            --exclude release \
-            --exclude .git \
-            --exclude .github \
-            --exclude .gitignore \
-            --exclude composer.json \
-            --exclude composer.lock \
-            --exclude package.json \
-            --exclude package-lock.json \
-            --exclude phpcs.xml \
-            --exclude phpstan.neon \
-            --exclude phpstan-bootstrap.php \
-            --exclude eslint.config.js \
-            --exclude README.md
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer
+
+      - name: Install Production Dependencies
+        run: composer install --no-dev --optimize-autoloader
 
       - name: Set Plugin Name
         run: |
           PLUGIN_NAME="zw-ttvgpt"
           echo "PLUGIN_NAME=$PLUGIN_NAME" >> $GITHUB_ENV
 
+      - name: Prepare Release Directory
+        run: |
+          mkdir -p release/${{ env.PLUGIN_NAME }}
+          rsync -av --progress . ./release/${{ env.PLUGIN_NAME }} \
+            --include 'README.md' \
+            --exclude '*.md' \
+            --exclude release \
+            --exclude .git \
+            --exclude .github \
+            --exclude .claude \
+            --exclude node_modules \
+            --exclude composer.json \
+            --exclude composer.lock \
+            --exclude package.json \
+            --exclude package-lock.json \
+            --exclude biome.json \
+            --exclude phpcs.xml \
+            --exclude phpstan.neon \
+            --exclude phpstan-bootstrap.php \
+            --exclude '*.log' \
+            --exclude '.gitignore'
+
       - name: Create Zip Package
         run: |
           cd release
-          zip -r "../${{ env.PLUGIN_NAME }}.zip" ./*
+          zip -r "../${{ env.PLUGIN_NAME }}-${{ env.VERSION }}.zip" ${{ env.PLUGIN_NAME }}
           cd ..
-          ls -la "${{ env.PLUGIN_NAME }}.zip"
 
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create ${{ env.VERSION }} \
-            "${{ env.PLUGIN_NAME }}.zip" \
+            "${{ env.PLUGIN_NAME }}-${{ env.VERSION }}.zip" \
             --title "${{ env.VERSION }}" \
-            --generate-notes
-
-      - name: Notify on Failure
-        if: failure()
-        run: |
-          echo "::error::Release process failed. Please check workflow logs."
+            --notes "Automated release for version ${{ env.VERSION }}"

@@ -12,9 +12,7 @@
  *
  * @param {jQuery} $ jQuery object.
  */
-(function ($) {
-	'use strict';
-
+(($) => {
 	const SELECTORS = {
 			contentEditor: '.wp-editor-area',
 			acfSummaryField: `#${zwTTVGPT.acfFields.summary}`,
@@ -40,7 +38,7 @@
 	 * @return {void}
 	 */
 	function init() {
-		$(document).ready(function () {
+		$(document).ready(() => {
 			$cachedAcfField = $(SELECTORS.acfSummaryField);
 			$cachedGptField = $(SELECTORS.acfGptField);
 
@@ -134,7 +132,7 @@
 			.toggleClass('zw-ttvgpt-word-counter--over', isOverLimit)
 			.toggleClass(
 				'zw-ttvgpt-word-counter--ok',
-				!isOverLimit && wordCount > 0
+				!isOverLimit && wordCount > 0,
 			);
 	}
 
@@ -159,7 +157,7 @@
 		if (!content || content.trim().length === 0) {
 			showStatus(
 				'error',
-				'Geen inhoud gevonden. Zorg dat de editor geladen is en voeg eerst tekst toe.'
+				'Geen inhoud gevonden. Zorg dat de editor geladen is en voeg eerst tekst toe.',
 			);
 			return;
 		}
@@ -212,14 +210,14 @@
 					$button.data('is-generating', false);
 				}
 			},
-			error(xhr, status, error) {
+			error(xhr, _status, error) {
 				console.error('ZW TTVGPT Error:', error, xhr.responseText);
 				clearLoadingMessages();
 
 				let errorMessage = zwTTVGPT.strings.error;
 				try {
 					const response = JSON.parse(xhr.responseText);
-					if (response && response.data) {
+					if (response?.data) {
 						errorMessage =
 							typeof response.data === 'string'
 								? response.data
@@ -339,7 +337,7 @@
 	 */
 	function isBlockEditorCheckbox($checkbox) {
 		const id = $checkbox.attr('id');
-		return id && id.startsWith('inspector-checkbox-control');
+		return id?.startsWith('inspector-checkbox-control');
 	}
 
 	/**
@@ -349,7 +347,7 @@
 	 * @return {string} Label text.
 	 */
 	function getBlockEditorLabel($checkbox) {
-		const $label = $('label[for="' + $checkbox.attr('id') + '"]');
+		const $label = $(`label[for="${$checkbox.attr('id')}"]`);
 		return $label.text().trim();
 	}
 
@@ -380,10 +378,10 @@
 		// Try Block Editor first, fallback to Classic Editor
 		const $checkboxes =
 			$(
-				'.editor-post-taxonomies__hierarchical-terms-list input[type="checkbox"]:checked'
+				'.editor-post-taxonomies__hierarchical-terms-list input[type="checkbox"]:checked',
 			).length > 0
 				? $(
-						'.editor-post-taxonomies__hierarchical-terms-list input[type="checkbox"]:checked'
+						'.editor-post-taxonomies__hierarchical-terms-list input[type="checkbox"]:checked',
 					)
 				: $(SELECTORS.regionCheckboxes);
 
@@ -423,7 +421,7 @@
 	function startThinkingAnimation(element, text = '') {
 		let index = 0;
 		const isButton = element instanceof jQuery && element.is('button'),
-			interval = setInterval(function () {
+			interval = setInterval(() => {
 				const char = THINKING_CHARS[index % THINKING_CHARS.length];
 				if (isButton) {
 					element.html(char + (text ? ` ${text}` : ''));
@@ -470,7 +468,7 @@
 				waitTime = 700; // Buffer for transition to complete
 			}
 
-			setTimeout(function () {
+			setTimeout(() => {
 				// Update ACF fields with animation
 				animateText($cachedAcfField, data.summary, $button);
 				$cachedGptField.val(data.summary);
@@ -480,7 +478,7 @@
 			 * Already shown enough messages
 			 * Add small delay to ensure last transition completes
 			 */
-			setTimeout(function () {
+			setTimeout(() => {
 				animateText($cachedAcfField, data.summary, $button);
 				$cachedGptField.val(data.summary);
 			}, 500);
@@ -506,7 +504,7 @@
 		}
 
 		// Small delay to prevent collision with loading messages
-		setTimeout(function () {
+		setTimeout(() => {
 			$element.val('').prop('disabled', true);
 			typeCharacter();
 		}, 100);
@@ -548,7 +546,7 @@
 				updateWordCounter();
 
 				// Ensure button is re-enabled when typing completes
-				if ($button && $button.data('is-generating')) {
+				if ($button?.data('is-generating')) {
 					setLoadingState($button, false);
 					$button.data('is-generating', false);
 				}
@@ -570,7 +568,7 @@
 			// Start thinking animation
 			const interval = startThinkingAnimation(
 				$button,
-				zwTTVGPT.strings.generating
+				zwTTVGPT.strings.generating,
 			);
 			$button.data('thinking-interval', interval);
 		} else {
@@ -606,7 +604,7 @@
 
 		const cssClass = type === 'error' ? 'notice-error' : 'notice-success',
 			$status = $(
-				`<div class="notice ${cssClass} zw-ttvgpt-status" style="margin: 10px 0;"><p>${message}</p></div>`
+				`<div class="notice ${cssClass} zw-ttvgpt-status" style="margin: 10px 0;"><p>${message}</p></div>`,
 			);
 
 		$cachedAcfField.parent().prepend($status);
@@ -614,7 +612,7 @@
 
 		// Auto-hide success messages
 		if (type === 'success') {
-			setTimeout(function () {
+			setTimeout(() => {
 				$status.slideUp(function () {
 					$(this).remove();
 				});
@@ -699,7 +697,7 @@
 			}
 
 			// Gradually replace current text with next message
-			activeTransition = setInterval(function () {
+			activeTransition = setInterval(() => {
 				if (charIndex <= nextMessage.length) {
 					$cachedAcfField.val(nextMessage.substring(0, charIndex));
 					charIndex += 2; // Type 2 chars at a time for smooth transition

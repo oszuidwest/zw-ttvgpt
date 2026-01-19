@@ -177,8 +177,8 @@ class TTVGPTSummaryGenerator {
 	/**
 	 * Save generated summary to ACF fields and mark as AI-generated
 	 *
-	 * @param int    $post_id Post ID to update
-	 * @param string $summary Generated summary text
+	 * @param int    $post_id Post ID to update.
+	 * @param string $summary Generated summary text.
 	 * @return void
 	 */
 	private function save_to_acf( int $post_id, string $summary ): void {

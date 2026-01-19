@@ -30,8 +30,8 @@ class TTVGPTLogger {
 	/**
 	 * Log debug message when debug mode is enabled
 	 *
-	 * @param string $message Debug message to log
-	 * @param array  $context Additional context data
+	 * @param string $message Debug message to log.
+	 * @param array  $context Additional context data.
 	 * @return void
 	 */
 	public function debug( string $message, array $context = array() ): void {
@@ -43,8 +43,8 @@ class TTVGPTLogger {
 	/**
 	 * Log error message
 	 *
-	 * @param string $message Error message to log
-	 * @param array  $context Additional context data
+	 * @param string $message Error message to log.
+	 * @param array  $context Additional context data.
 	 * @return void
 	 */
 	public function error( string $message, array $context = array() ): void {

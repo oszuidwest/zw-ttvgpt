@@ -144,6 +144,7 @@ class TTVGPTFineTuningPage {
 							'<div class="export-summary">' +
 								'<h4>Exportdetails</h4>' +
 								'<p><strong>' + response.data.file_info.line_count + ' trainingsrecords</strong> geëxporteerd</p>' +
+								<?php // phpcs:ignore Generic.Files.LineLength.TooLong -- Inline JS template string ?>
 								'<p><a href="' + response.data.file_info.file_url + '" target="_blank" class="file-download">📄 ' + response.data.file_info.filename + '</a> <span class="file-size">(' + Math.round(response.data.file_info.file_size / 1024) + ' KB)</span></p>' +
 							'</div>' +
 							'<details class="export-stats">' +
@@ -165,6 +166,7 @@ class TTVGPTFineTuningPage {
 				});
 			});
 			
+			<?php // phpcs:disable Generic.Files.LineLength.TooLong -- Inline JS template strings ?>
 			function generateStatsHTML(stats) {
 				return '<div class="export-stats-content">' +
 					'<ul class="export-stats-list">' +
@@ -175,7 +177,7 @@ class TTVGPTFineTuningPage {
 					'</ul>' +
 					'</div>';
 			}
-			
+
 			function generateFileInfoHTML(fileInfo) {
 				return '<div class="file-info">' +
 					'<h4><?php esc_html_e( 'Geëxporteerd bestand', 'zw-ttvgpt' ); ?></h4>' +
@@ -184,6 +186,7 @@ class TTVGPTFineTuningPage {
 					'<p><strong><?php esc_html_e( 'Bestandsgrootte:', 'zw-ttvgpt' ); ?></strong> ' + Math.round(fileInfo.file_size / 1024) + ' KB</p>' +
 					'</div>';
 			}
+			<?php // phpcs:enable Generic.Files.LineLength.TooLong ?>
 		});
 		</script>
 		<?php
@@ -198,6 +201,7 @@ class TTVGPTFineTuningPage {
 		?>
 		<div class="fine-tuning-section">
 			<h2><?php esc_html_e( 'Training data exporteren', 'zw-ttvgpt' ); ?></h2>
+			<?php // phpcs:ignore Generic.Files.LineLength.TooLong -- Translation string must not be split ?>
 			<p><?php esc_html_e( 'Exporteer door AI gegenereerde en menselijk bewerkte berichten als JSONL-bestand voor DPO-finetuning. Het bestand gebruikt exact dezelfde systeemprompt en contentformattering als de productieplugin.', 'zw-ttvgpt' ); ?></p>
 			
 			<div class="form-row">
@@ -233,24 +237,29 @@ class TTVGPTFineTuningPage {
 		?>
 		<div class="fine-tuning-section">
 			<h2><?php esc_html_e( 'Volgende stappen', 'zw-ttvgpt' ); ?></h2>
+			<?php // phpcs:ignore Generic.Files.LineLength.TooLong -- Translation string must not be split ?>
 			<p><?php esc_html_e( 'Nadat je het training data bestand hebt geëxporteerd, kun je het uploaden naar OpenAI en een fine-tuning job aanmaken:', 'zw-ttvgpt' ); ?></p>
 			
 			<ol>
 				<li>
 					<strong><?php esc_html_e( 'Upload naar OpenAI:', 'zw-ttvgpt' ); ?></strong>
+					<?php // phpcs:ignore Generic.Files.LineLength.TooLong -- Translation string with link ?>
 					<p><?php esc_html_e( 'Ga naar het', 'zw-ttvgpt' ); ?> <a href="https://platform.openai.com/finetune" target="_blank">OpenAI-platform</a> <?php esc_html_e( 'en upload het geëxporteerde JSONL-bestand.', 'zw-ttvgpt' ); ?></p>
 				</li>
 				<li>
 					<strong><?php esc_html_e( 'Maak een fine-tuning job aan:', 'zw-ttvgpt' ); ?></strong>
+					<?php // phpcs:ignore Generic.Files.LineLength.TooLong -- Translation string must not be split ?>
 					<p><?php esc_html_e( 'Selecteer DPO (Direct Preference Optimization) als trainingsmethode en kies een basismodel (aanbevolen: gpt-4.1-mini).', 'zw-ttvgpt' ); ?></p>
 				</li>
 				<li>
 					<strong><?php esc_html_e( 'Gebruik het fine-tuned model:', 'zw-ttvgpt' ); ?></strong>
+					<?php // phpcs:ignore Generic.Files.LineLength.TooLong -- Translation string must not be split ?>
 					<p><?php esc_html_e( 'Wanneer de training is voltooid, kun je het fine-tuned model gebruiken door de modelnaam bij te werken in de plugin-instellingen.', 'zw-ttvgpt' ); ?></p>
 				</li>
 			</ol>
 			
 			<div class="notice notice-info inline">
+				<?php // phpcs:ignore Generic.Files.LineLength.TooLong -- Translation string must not be split ?>
 				<p><strong><?php esc_html_e( 'Let op:', 'zw-ttvgpt' ); ?></strong> <?php esc_html_e( 'DPO fine-tuning vereist zowel "preferred" als "non-preferred" responses. Alleen berichten waar AI-output door mensen is bewerkt komen in aanmerking voor export.', 'zw-ttvgpt' ); ?></p>
 			</div>
 		</div>

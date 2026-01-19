@@ -161,23 +161,52 @@ class TTVGPTAuditPage {
 		<h2 class="screen-reader-text"><?php esc_html_e( 'Auditlog filteren', 'zw-ttvgpt' ); ?></h2>
 		<ul class="subsubsub">
 			<li class="all">
-				<a href="<?php echo esc_url( add_query_arg( $current_params, $base_url ) ); ?>" <?php echo empty( $status_filter ) ? 'class="current" aria-current="page"' : ''; ?>>
+				<?php $all_url = add_query_arg( $current_params, $base_url ); ?>
+				<a href="<?php echo esc_url( $all_url ); ?>"
+					<?php echo empty( $status_filter ) ? 'class="current" aria-current="page"' : ''; ?>>
 					<?php esc_html_e( 'Alle', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( (string) $total ); ?>)</span>
 				</a>
 			</li>
 			<li class="<?php echo esc_attr( $human_status->get_css_class() ); ?>">
-				<a href="<?php echo esc_url( add_query_arg( array_merge( $current_params, array( 'status' => $human_status->value ) ), $base_url ) ); ?>" <?php echo $human_status->value === $status_filter ? 'class="current" aria-current="page"' : ''; ?>>
-					<?php echo esc_html( $human_status->get_label() ); ?> <span class="count">(<?php echo esc_html( (string) $counts[ $human_status->value ] ); ?>)</span>
+				<?php
+				$human_params   = array_merge( $current_params, array( 'status' => $human_status->value ) );
+				$human_url      = add_query_arg( $human_params, $base_url );
+				$human_selected = $human_status->value === $status_filter;
+				?>
+				<a href="<?php echo esc_url( $human_url ); ?>"
+					<?php if ( $human_selected ) : ?>
+					class="current" aria-current="page"
+					<?php endif; ?>>
+					<?php echo esc_html( $human_status->get_label() ); ?>
+					<span class="count">(<?php echo esc_html( (string) $counts[ $human_status->value ] ); ?>)</span>
 				</a>
 			</li>
 			<li class="<?php echo esc_attr( $ai_unedited->get_css_class() ); ?>">
-				<a href="<?php echo esc_url( add_query_arg( array_merge( $current_params, array( 'status' => $ai_unedited->value ) ), $base_url ) ); ?>" <?php echo $ai_unedited->value === $status_filter ? 'class="current" aria-current="page"' : ''; ?>>
-					<?php echo esc_html( $ai_unedited->get_label() ); ?> <span class="count">(<?php echo esc_html( (string) $counts[ $ai_unedited->value ] ); ?>)</span>
+				<?php
+				$unedited_params   = array_merge( $current_params, array( 'status' => $ai_unedited->value ) );
+				$unedited_url      = add_query_arg( $unedited_params, $base_url );
+				$unedited_selected = $ai_unedited->value === $status_filter;
+				?>
+				<a href="<?php echo esc_url( $unedited_url ); ?>"
+					<?php if ( $unedited_selected ) : ?>
+					class="current" aria-current="page"
+					<?php endif; ?>>
+					<?php echo esc_html( $ai_unedited->get_label() ); ?>
+					<span class="count">(<?php echo esc_html( (string) $counts[ $ai_unedited->value ] ); ?>)</span>
 				</a>
 			</li>
 			<li class="<?php echo esc_attr( $ai_edited->get_css_class() ); ?>">
-				<a href="<?php echo esc_url( add_query_arg( array_merge( $current_params, array( 'status' => $ai_edited->value ) ), $base_url ) ); ?>" <?php echo $ai_edited->value === $status_filter ? 'class="current" aria-current="page"' : ''; ?>>
-					<?php echo esc_html( $ai_edited->get_label() ); ?> <span class="count">(<?php echo esc_html( (string) $counts[ $ai_edited->value ] ); ?>)</span>
+				<?php
+				$edited_params   = array_merge( $current_params, array( 'status' => $ai_edited->value ) );
+				$edited_url      = add_query_arg( $edited_params, $base_url );
+				$edited_selected = $ai_edited->value === $status_filter;
+				?>
+				<a href="<?php echo esc_url( $edited_url ); ?>"
+					<?php if ( $edited_selected ) : ?>
+					class="current" aria-current="page"
+					<?php endif; ?>>
+					<?php echo esc_html( $ai_edited->get_label() ); ?>
+					<span class="count">(<?php echo esc_html( (string) $counts[ $ai_edited->value ] ); ?>)</span>
 				</a>
 			</li>
 		</ul>
@@ -196,7 +225,15 @@ class TTVGPTAuditPage {
 	 * @param string $which            Position of navigation ('top' or 'bottom').
 	 * @return void
 	 */
-	private function render_tablenav( int $year, int $month, array $available_months, string $status_filter, string $change_filter, array $counts, string $which ): void {
+	private function render_tablenav(
+		int $year,
+		int $month,
+		array $available_months,
+		string $status_filter,
+		string $change_filter,
+		array $counts,
+		string $which
+	): void {
 		$total = array_sum( $counts );
 		?>
 		<div class="tablenav <?php echo esc_attr( $which ); ?>">
@@ -298,13 +335,23 @@ class TTVGPTAuditPage {
 						$editor_data   = is_numeric( $edit_last ) ? get_userdata( (int) $edit_last ) : null;
 						$post_url      = get_edit_post_link( $post->ID );
 						?>
-						<tr id="post-<?php echo esc_attr( (string) $post->ID ); ?>" class="iedit author-self level-0 post-<?php echo esc_attr( (string) $post->ID ); ?> type-post status-<?php echo esc_attr( $post->post_status ); ?> <?php echo esc_attr( $status->get_css_class() ); ?>">
+						<?php
+						$row_classes = sprintf(
+							'iedit author-self level-0 post-%d type-post status-%s %s',
+							$post->ID,
+							$post->post_status,
+							$status->get_css_class()
+						);
+						?>
+						<tr id="post-<?php echo esc_attr( (string) $post->ID ); ?>"
+							class="<?php echo esc_attr( $row_classes ); ?>">
 							<td class="type column-type" data-colname="<?php esc_attr_e( 'Type', 'zw-ttvgpt' ); ?>">
 								<span class="zw-audit-type-label <?php echo esc_attr( $status->get_css_class() ); ?>">
 									<?php echo esc_html( $status->get_label() ); ?>
 								</span>
 							</td>
-							<td class="title column-title has-row-actions column-primary page-title" data-colname="<?php esc_attr_e( 'Titel', 'zw-ttvgpt' ); ?>">
+							<td class="title column-title has-row-actions column-primary page-title"
+							data-colname="<?php esc_attr_e( 'Titel', 'zw-ttvgpt' ); ?>">
 								<strong>
 									<?php if ( $post_url ) : ?>
 										<?php
@@ -324,7 +371,8 @@ class TTVGPTAuditPage {
 										/* translators: %s is the post title. */
 										$edit_aria_label = sprintf( __( 'Bewerk "%s"', 'zw-ttvgpt' ), get_the_title( $post->ID ) );
 										?>
-										<a href="<?php echo esc_url( (string) $post_url ); ?>" aria-label="<?php echo esc_attr( $edit_aria_label ); ?>">
+										<a href="<?php echo esc_url( (string) $post_url ); ?>"
+											aria-label="<?php echo esc_attr( $edit_aria_label ); ?>">
 											<?php esc_html_e( 'Bewerken', 'zw-ttvgpt' ); ?>
 										</a> |
 									</span>
@@ -333,20 +381,31 @@ class TTVGPTAuditPage {
 										/* translators: %s is the post title. */
 										$view_aria_label = sprintf( __( '"%s" bekijken', 'zw-ttvgpt' ), get_the_title( $post->ID ) );
 										?>
-										<a href="<?php echo esc_url( (string) get_permalink( $post->ID ) ); ?>" rel="bookmark" aria-label="<?php echo esc_attr( $view_aria_label ); ?>" target="_blank">
+										<a href="<?php echo esc_url( (string) get_permalink( $post->ID ) ); ?>"
+											rel="bookmark"
+											aria-label="<?php echo esc_attr( $view_aria_label ); ?>"
+											target="_blank">
 											<?php esc_html_e( 'Bekijken', 'zw-ttvgpt' ); ?>
 										</a>
 									</span>
 									<?php if ( AuditStatus::AiWrittenEdited === $status ) : ?>
+										<?php
+										$diff_url = '#TB_inline?width=800&height=600&inlineId=zw-diff-modal-' . $post->ID;
+										?>
 										| <span class="view-diff">
-											<a href="#TB_inline?width=800&height=600&inlineId=zw-diff-modal-<?php echo esc_attr( $post->ID ); ?>" class="thickbox"
+											<a href="<?php echo esc_attr( $diff_url ); ?>"
+												class="thickbox"
 												aria-label="<?php esc_attr_e( 'Toon verschillen tussen AI en bewerkte versie', 'zw-ttvgpt' ); ?>">
 												<?php esc_html_e( 'Verschillen', 'zw-ttvgpt' ); ?>
 											</a>
 										</span>
 									<?php endif; ?>
 								</div>
-								<button type="button" class="toggle-row"><span class="screen-reader-text"><?php esc_html_e( 'Meer details weergeven', 'zw-ttvgpt' ); ?></span></button>
+								<button type="button" class="toggle-row">
+									<span class="screen-reader-text">
+										<?php esc_html_e( 'Meer details weergeven', 'zw-ttvgpt' ); ?>
+									</span>
+								</button>
 							</td>
 							<td class="author column-author" data-colname="<?php esc_attr_e( 'Auteur', 'zw-ttvgpt' ); ?>">
 								<?php echo esc_html( $author_data?->display_name ?? __( 'Onbekend', 'zw-ttvgpt' ) ); ?>
@@ -359,10 +418,15 @@ class TTVGPTAuditPage {
 									<span class="screen-reader-text"><?php esc_html_e( 'Geen eindredacteur', 'zw-ttvgpt' ); ?></span>
 								<?php endif; ?>
 							</td>
-							<td class="change column-change" data-colname="<?php esc_attr_e( 'Wijzigingen %', 'zw-ttvgpt' ); ?>">
+							<td class="change column-change"
+								data-colname="<?php esc_attr_e( 'Wijzigingen %', 'zw-ttvgpt' ); ?>">
 								<?php if ( AuditStatus::AiWrittenEdited === $status && isset( $item['change_percentage'] ) ) : ?>
-									<span class="change-percentage <?php echo esc_attr( $item['change_percentage'] > 50 ? 'high-change' : ( $item['change_percentage'] > 20 ? 'medium-change' : 'low-change' ) ); ?>">
-										<?php echo esc_html( $item['change_percentage'] . '%' ); ?>
+									<?php
+									$pct       = $item['change_percentage'];
+									$pct_class = $pct > 50 ? 'high-change' : ( $pct > 20 ? 'medium-change' : 'low-change' );
+									?>
+									<span class="change-percentage <?php echo esc_attr( $pct_class ); ?>">
+										<?php echo esc_html( $pct . '%' ); ?>
 									</span>
 								<?php else : ?>
 									<span aria-hidden="true">—</span>

@@ -151,6 +151,7 @@ class TTVGPTConstants {
 	 * Optimized for GPT-5.1 with reasoning_effort='low'.
 	 * Use %d as placeholder for word limit.
 	 */
+	// phpcs:ignore Generic.Files.LineLength.TooLong -- System prompt must remain as single continuous string
 	public const string DEFAULT_SYSTEM_PROMPT = 'Je bent een eindredacteur voor tekst-tv. Denk eerst: wat is de kernboodschap van dit artikel? Vat het artikel samen in natuurlijk, vloeiend Nederlands voor een breed publiek. Schrijf volledige zinnen met een logische opbouw. Focus op de kernboodschap en de belangrijkste feiten. Gebruik korte, heldere zinnen maar pas op voor telegramstijl. Gebruik maximaal %d woorden. Schrijf alleen in het Nederlands en gebruik geen gedachtestreepjes.';
 
 	/**
@@ -171,7 +172,7 @@ class TTVGPTConstants {
 	/**
 	 * Generate rate limit transient key for specific user
 	 *
-	 * @param int $user_id User ID to generate key for
+	 * @param int $user_id User ID to generate key for.
 	 * @return string Transient key for rate limiting
 	 */
 	public static function get_rate_limit_key( int $user_id ): string {

@@ -4,48 +4,11 @@
   "description": "JavaScript assets for ZW TTVGPT WordPress plugin",
   "private": true,
   "scripts": {
-    "lint:js": "eslint assets/*.js",
-    "lint:js:fix": "eslint assets/*.js --fix",
-    "lint:css": "stylelint assets/*.css",
-    "lint:css:fix": "stylelint assets/*.css --fix",
-    "lint": "npm run lint:js && npm run lint:css",
-    "lint:fix": "npm run lint:js:fix && npm run lint:css:fix"
+    "lint": "biome check assets/",
+    "lint:fix": "biome check --write assets/",
+    "format": "biome format --write assets/"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.3",
-    "@typescript-eslint/eslint-plugin": "^8.51.0",
-    "@typescript-eslint/parser": "^8.48.0",
-    "@wordpress/eslint-plugin": "^23.0.0",
-    "@wordpress/stylelint-config": "^23.29.0",
-    "eslint": "^9.39.2",
-    "eslint-plugin-jsx-a11y": "^6.10.2",
-    "eslint-plugin-react": "^7.37.5",
-    "eslint-plugin-react-hooks": "^7.0.1",
-    "stylelint": "^16.26.1",
-    "stylelint-config-recess-order": "^7.4.0",
-    "stylelint-config-standard": "^39.0.1",
-    "stylelint-order": "^7.0.1"
-  },
-  "stylelint": {
-    "extends": ["@wordpress/stylelint-config", "stylelint-config-recess-order"],
-    "plugins": ["stylelint-order"],
-    "ignoreFiles": ["assets/css/vendor/**/*.css", "node_modules/**/*.css"],
-    "rules": {
-      "selector-max-universal": 1,
-      "selector-max-id": 0,
-      "max-nesting-depth": 4,
-      "declaration-block-no-redundant-longhand-properties": true,
-      "shorthand-property-no-redundant-values": true,
-      "declaration-block-no-duplicate-properties": [true, {"ignore": ["consecutive-duplicates-with-different-values"]}],
-      "no-duplicate-selectors": true,
-      "color-no-invalid-hex": true,
-      "function-calc-no-unspaced-operator": true,
-      "declaration-property-value-disallowed-list": {"/.*/": ["expression"]},
-      "function-disallowed-list": ["expression"],
-      "selector-class-pattern": null,
-      "no-descending-specificity": null,
-      "comment-empty-line-before": ["always", {"except": ["first-nested"], "ignore": ["stylelint-commands"]}],
-      "rule-empty-line-before": ["always-multi-line", {"except": ["first-nested"], "ignore": ["after-comment"]}]
-    }
+    "@biomejs/biome": "^2.3.0"
   }
 }

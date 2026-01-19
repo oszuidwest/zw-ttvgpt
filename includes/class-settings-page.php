@@ -162,13 +162,14 @@ class TTVGPTSettingsPage {
 	 * @return void
 	 */
 	public function render_api_key_field(): void {
-		$api_key = TTVGPTSettingsManager::get_api_key();
+		$api_key    = TTVGPTSettingsManager::get_api_key();
+		$field_name = $this->get_field_name( 'api_key' );
 		?>
-		<input type="password" 
-				id="zw_ttvgpt_api_key" 
-				name="<?php echo $this->get_field_name( 'api_key' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in get_field_name() ?>" 
-				value="<?php echo esc_attr( $api_key ); ?>" 
-				class="regular-text" 
+		<input type="password"
+				id="zw_ttvgpt_api_key"
+				name="<?php echo esc_attr( $field_name ); ?>"
+				value="<?php echo esc_attr( $api_key ); ?>"
+				class="regular-text"
 				autocomplete="off" />
 		<p class="description">
 			<?php esc_html_e( 'Begint met "sk-" (te vinden op platform.openai.com)', 'zw-ttvgpt' ); ?>
@@ -183,10 +184,11 @@ class TTVGPTSettingsPage {
 	 */
 	public function render_model_field(): void {
 		$current_model = TTVGPTSettingsManager::get_model();
+		$field_name    = $this->get_field_name( 'model' );
 		?>
 		<input type="text"
 				id="zw_ttvgpt_model"
-				name="<?php echo $this->get_field_name( 'model' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in get_field_name() ?>"
+				name="<?php echo esc_attr( $field_name ); ?>"
 				value="<?php echo esc_attr( $current_model ); ?>"
 				class="regular-text"
 				placeholder="gpt-5.1" />
@@ -203,10 +205,11 @@ class TTVGPTSettingsPage {
 	 */
 	public function render_word_limit_field(): void {
 		$word_limit = TTVGPTSettingsManager::get_word_limit();
+		$field_name = $this->get_field_name( 'word_limit' );
 		?>
 		<input type="number"
 				id="zw_ttvgpt_word_limit"
-				name="<?php echo $this->get_field_name( 'word_limit' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in get_field_name() ?>"
+				name="<?php echo esc_attr( $field_name ); ?>"
 				value="<?php echo esc_attr( (string) $word_limit ); ?>"
 				min="<?php echo esc_attr( (string) TTVGPTConstants::MIN_WORD_LIMIT ); ?>"
 				max="<?php echo esc_attr( (string) TTVGPTConstants::MAX_WORD_LIMIT ); ?>"
@@ -224,9 +227,10 @@ class TTVGPTSettingsPage {
 	 */
 	public function render_system_prompt_field(): void {
 		$system_prompt = TTVGPTSettingsManager::get_system_prompt();
+		$field_name    = $this->get_field_name( 'system_prompt' );
 		?>
 		<textarea id="zw_ttvgpt_system_prompt"
-				name="<?php echo $this->get_field_name( 'system_prompt' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in get_field_name() ?>"
+				name="<?php echo esc_attr( $field_name ); ?>"
 				rows="6"
 				class="large-text code"><?php echo esc_textarea( $system_prompt ); ?></textarea>
 		<p class="description">
@@ -249,11 +253,12 @@ class TTVGPTSettingsPage {
 	 */
 	public function render_debug_mode_field(): void {
 		$debug_mode = TTVGPTSettingsManager::is_debug_mode();
+		$field_name = $this->get_field_name( 'debug_mode' );
 		?>
 		<label for="zw_ttvgpt_debug_mode">
 			<input type="checkbox"
 					id="zw_ttvgpt_debug_mode"
-					name="<?php echo $this->get_field_name( 'debug_mode' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in get_field_name() ?>"
+					name="<?php echo esc_attr( $field_name ); ?>"
 					value="1"
 					<?php checked( $debug_mode ); ?> />
 			<?php esc_html_e( 'Debug-logging inschakelen', 'zw-ttvgpt' ); ?>
