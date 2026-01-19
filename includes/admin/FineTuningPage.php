@@ -1,43 +1,56 @@
 <?php
 /**
- * Fine Tuning Page class for ZW TTVGPT
+ * Fine Tuning Page class for ZW TTVGPT.
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 
-namespace ZW_TTVGPT_Core;
+namespace ZW_TTVGPT_Core\Admin;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+use ZW_TTVGPT_Core\AjaxSecurity;
+use ZW_TTVGPT_Core\Constants;
+use ZW_TTVGPT_Core\FineTuningExport;
+use ZW_TTVGPT_Core\Logger;
 
 /**
- * Fine Tuning Page class
+ * Fine Tuning Page class.
  *
- * Admin interface for managing OpenAI fine tuning jobs and training data export
+ * Admin interface for managing OpenAI fine tuning jobs and training data export.
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
-class TTVGPTFineTuningPage {
-	use TTVGPTAjaxSecurity;
+class FineTuningPage {
+	use AjaxSecurity;
 
 	/**
-	 * Initialize fine tuning page with dependencies
+	 * Initializes the fine tuning page with dependencies.
 	 *
-	 * @param TTVGPTFineTuningExport $export Export functionality instance.
-	 * @param TTVGPTLogger           $logger Logger instance for debugging.
+	 * @since 1.0.0
+	 *
+	 * @param FineTuningExport $export Export functionality instance.
+	 * @param Logger           $logger Logger instance for debugging.
 	 */
 	public function __construct(
-		private readonly TTVGPTFineTuningExport $export,
-		private readonly TTVGPTLogger $logger
+		private readonly FineTuningExport $export,
+		private readonly Logger $logger
 	) {
-		// Register AJAX handler
+		// Register AJAX handler.
 		add_action( 'wp_ajax_zw_ttvgpt_export_training_data', $this->handle_export_ajax( ... ) );
 	}
 
 	/**
-	 * Render the fine tuning administration page
+	 * Renders the fine tuning administration page.
 	 *
-	 * @return void
+	 * @since 1.0.0
 	 */
 	public function render(): void {
-		$this->validate_page_access( TTVGPTConstants::REQUIRED_CAPABILITY );
+		$this->validate_page_access( Constants::REQUIRED_CAPABILITY );
 
 		?>
 		<div class="wrap">
@@ -120,7 +133,7 @@ class TTVGPTFineTuningPage {
 
 		<script>
 		jQuery(document).ready(function($) {
-			// Export training data handler
+			// Export training data handler.
 			$('#export-training-data').on('click', function() {
 				const button = $(this);
 				const originalText = button.text();
@@ -144,6 +157,7 @@ class TTVGPTFineTuningPage {
 							'<div class="export-summary">' +
 								'<h4>Exportdetails</h4>' +
 								'<p><strong>' + response.data.file_info.line_count + ' trainingsrecords</strong> geëxporteerd</p>' +
+								<?php // phpcs:ignore Generic.Files.LineLength.TooLong -- Inline JS template string ?>
 								'<p><a href="' + response.data.file_info.file_url + '" target="_blank" class="file-download">📄 ' + response.data.file_info.filename + '</a> <span class="file-size">(' + Math.round(response.data.file_info.file_size / 1024) + ' KB)</span></p>' +
 							'</div>' +
 							'<details class="export-stats">' +
@@ -165,6 +179,7 @@ class TTVGPTFineTuningPage {
 				});
 			});
 			
+			<?php // phpcs:disable Generic.Files.LineLength.TooLong -- Inline JS template strings ?>
 			function generateStatsHTML(stats) {
 				return '<div class="export-stats-content">' +
 					'<ul class="export-stats-list">' +
@@ -175,7 +190,7 @@ class TTVGPTFineTuningPage {
 					'</ul>' +
 					'</div>';
 			}
-			
+
 			function generateFileInfoHTML(fileInfo) {
 				return '<div class="file-info">' +
 					'<h4><?php esc_html_e( 'Geëxporteerd bestand', 'zw-ttvgpt' ); ?></h4>' +
@@ -184,20 +199,22 @@ class TTVGPTFineTuningPage {
 					'<p><strong><?php esc_html_e( 'Bestandsgrootte:', 'zw-ttvgpt' ); ?></strong> ' + Math.round(fileInfo.file_size / 1024) + ' KB</p>' +
 					'</div>';
 			}
+			<?php // phpcs:enable Generic.Files.LineLength.TooLong ?>
 		});
 		</script>
 		<?php
 	}
 
 	/**
-	 * Render training data export section
+	 * Renders the training data export section.
 	 *
-	 * @return void
+	 * @since 1.0.0
 	 */
 	private function render_export_section(): void {
 		?>
 		<div class="fine-tuning-section">
 			<h2><?php esc_html_e( 'Training data exporteren', 'zw-ttvgpt' ); ?></h2>
+			<?php // phpcs:ignore Generic.Files.LineLength.TooLong -- Translation string must not be split ?>
 			<p><?php esc_html_e( 'Exporteer door AI gegenereerde en menselijk bewerkte berichten als JSONL-bestand voor DPO-finetuning. Het bestand gebruikt exact dezelfde systeemprompt en contentformattering als de productieplugin.', 'zw-ttvgpt' ); ?></p>
 			
 			<div class="form-row">
@@ -225,32 +242,37 @@ class TTVGPTFineTuningPage {
 	}
 
 	/**
-	 * Render instructions section
+	 * Renders the instructions section.
 	 *
-	 * @return void
+	 * @since 1.0.0
 	 */
 	private function render_instructions_section(): void {
 		?>
 		<div class="fine-tuning-section">
 			<h2><?php esc_html_e( 'Volgende stappen', 'zw-ttvgpt' ); ?></h2>
+			<?php // phpcs:ignore Generic.Files.LineLength.TooLong -- Translation string must not be split ?>
 			<p><?php esc_html_e( 'Nadat je het training data bestand hebt geëxporteerd, kun je het uploaden naar OpenAI en een fine-tuning job aanmaken:', 'zw-ttvgpt' ); ?></p>
 			
 			<ol>
 				<li>
 					<strong><?php esc_html_e( 'Upload naar OpenAI:', 'zw-ttvgpt' ); ?></strong>
+					<?php // phpcs:ignore Generic.Files.LineLength.TooLong -- Translation string with link ?>
 					<p><?php esc_html_e( 'Ga naar het', 'zw-ttvgpt' ); ?> <a href="https://platform.openai.com/finetune" target="_blank">OpenAI-platform</a> <?php esc_html_e( 'en upload het geëxporteerde JSONL-bestand.', 'zw-ttvgpt' ); ?></p>
 				</li>
 				<li>
 					<strong><?php esc_html_e( 'Maak een fine-tuning job aan:', 'zw-ttvgpt' ); ?></strong>
+					<?php // phpcs:ignore Generic.Files.LineLength.TooLong -- Translation string must not be split ?>
 					<p><?php esc_html_e( 'Selecteer DPO (Direct Preference Optimization) als trainingsmethode en kies een basismodel (aanbevolen: gpt-4.1-mini).', 'zw-ttvgpt' ); ?></p>
 				</li>
 				<li>
 					<strong><?php esc_html_e( 'Gebruik het fine-tuned model:', 'zw-ttvgpt' ); ?></strong>
+					<?php // phpcs:ignore Generic.Files.LineLength.TooLong -- Translation string must not be split ?>
 					<p><?php esc_html_e( 'Wanneer de training is voltooid, kun je het fine-tuned model gebruiken door de modelnaam bij te werken in de plugin-instellingen.', 'zw-ttvgpt' ); ?></p>
 				</li>
 			</ol>
 			
 			<div class="notice notice-info inline">
+				<?php // phpcs:ignore Generic.Files.LineLength.TooLong -- Translation string must not be split ?>
 				<p><strong><?php esc_html_e( 'Let op:', 'zw-ttvgpt' ); ?></strong> <?php esc_html_e( 'DPO fine-tuning vereist zowel "preferred" als "non-preferred" responses. Alleen berichten waar AI-output door mensen is bewerkt komen in aanmerking voor export.', 'zw-ttvgpt' ); ?></p>
 			</div>
 		</div>
@@ -258,15 +280,17 @@ class TTVGPTFineTuningPage {
 	}
 
 	/**
-	 * Handle AJAX request for exporting training data
+	 * Handles AJAX request for exporting training data.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @return never
 	 */
 	public function handle_export_ajax(): never {
-		// Nonce is verified in validate_ajax_request() method
-		$this->validate_ajax_request( 'zw_ttvgpt_fine_tuning_nonce', TTVGPTConstants::REQUIRED_CAPABILITY );
+		// Nonce is verified in validate_ajax_request() method.
+		$this->validate_ajax_request( 'zw_ttvgpt_fine_tuning_nonce', Constants::REQUIRED_CAPABILITY );
 
-		// Get filters from POST data
+		// Get filters from POST data.
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce verified in validate_ajax_request()
 		$filters = array();
 		if ( ! empty( $_POST['start_date'] ) ) {
@@ -280,19 +304,19 @@ class TTVGPTFineTuningPage {
 		}
 		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
-		// Generate training data
+		// Generate training data.
 		$this->logger->debug( 'Export training data requested with filters: ' . wp_json_encode( $filters ) );
 		$result = $this->export->generate_training_data( $filters );
 
-		if ( ! $result['success'] ) {
-			wp_send_json_error( array( 'message' => $result['message'] ) );
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
 		}
 
-		// Export to JSONL file
+		// Export to JSONL file.
 		$export_result = $this->export->export_to_jsonl( $result['data'] );
 
-		if ( ! $export_result['success'] ) {
-			wp_send_json_error( array( 'message' => $export_result['message'] ) );
+		if ( is_wp_error( $export_result ) ) {
+			wp_send_json_error( array( 'message' => $export_result->get_error_message() ) );
 		}
 
 		wp_send_json_success(

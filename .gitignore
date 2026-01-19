@@ -26,5 +26,6 @@ package-lock.json
 wp-config.php
 .htaccess
 
-# AI assistant files
-CLAUDE.md
+# Markdown files (except README.md)
+*.md
+!README.md

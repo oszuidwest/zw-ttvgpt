@@ -1,26 +1,51 @@
 <?php
 /**
- * Audit Status enum for ZW TTVGPT
+ * Audit Status enum for ZW TTVGPT.
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 
 namespace ZW_TTVGPT_Core;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
- * Audit Status enum
+ * Audit Status enum.
  *
- * Represents the possible states of content in the audit system
+ * Represents the possible states of content in the audit system.
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 enum AuditStatus: string {
-	case FullyHumanWritten  = 'fully_human_written';
-	case AiWrittenNotEdited = 'ai_written_not_edited';
-	case AiWrittenEdited    = 'ai_written_edited';
+	/**
+	 * Content was fully written by a human without AI assistance.
+	 *
+	 * @since 1.0.0
+	 */
+	case FullyHumanWritten = 'fully_human_written';
 
 	/**
-	 * Get the translated label for this status
+	 * Content was AI-generated and has not been edited by a human.
+	 *
+	 * @since 1.0.0
+	 */
+	case AiWrittenNotEdited = 'ai_written_not_edited';
+
+	/**
+	 * Content was AI-generated and has been edited by a human.
+	 *
+	 * @since 1.0.0
+	 */
+	case AiWrittenEdited = 'ai_written_edited';
+
+	/**
+	 * Gets the translated label for this status.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @return string Translated label.
 	 */
@@ -34,7 +59,9 @@ enum AuditStatus: string {
 	}
 
 	/**
-	 * Get the CSS class for this status
+	 * Gets the CSS class for this status.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @return string CSS class name.
 	 */

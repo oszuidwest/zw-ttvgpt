@@ -1,38 +1,54 @@
 <?php
 /**
- * Logger class for ZW TTVGPT
+ * Logger class for ZW TTVGPT.
  *
  * @package ZW_TTVGPT
+ * @since   1.0.0
  */
 
 namespace ZW_TTVGPT_Core;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
- * Logger class
+ * Logger class.
  *
  * Simplified logging system with only debug and error levels.
  * Debug messages are only logged when debug mode is enabled.
  * Error messages are always logged but with limited context in production.
+ *
+ * @package ZW_TTVGPT
+ * @since   1.0.0
  */
-class TTVGPTLogger {
+class Logger {
 	/**
-	 * Log prefix
+	 * Log prefix for identifying plugin messages.
+	 *
+	 * @since 1.0.0
+	 * @var string
 	 */
 	private const string PREFIX = 'ZW_TTVGPT';
 
 	/**
-	 * Constructor
+	 * Initializes the logger with debug mode configuration.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param bool $debug_mode Whether debug mode is enabled.
 	 */
 	public function __construct( private readonly bool $debug_mode = false ) {}
 
 	/**
-	 * Log debug message when debug mode is enabled
+	 * Logs a debug message when debug mode is enabled.
 	 *
-	 * @param string $message Debug message to log
-	 * @param array  $context Additional context data
-	 * @return void
+	 * @since 1.0.0
+	 *
+	 * @param string $message Debug message to log.
+	 * @param array  $context Additional context data.
+	 *
+	 * @phpstan-param LogContext $context
 	 */
 	public function debug( string $message, array $context = array() ): void {
 		if ( $this->debug_mode ) {
@@ -41,11 +57,14 @@ class TTVGPTLogger {
 	}
 
 	/**
-	 * Log error message
+	 * Logs an error message.
 	 *
-	 * @param string $message Error message to log
-	 * @param array  $context Additional context data
-	 * @return void
+	 * @since 1.0.0
+	 *
+	 * @param string $message Error message to log.
+	 * @param array  $context Additional context data.
+	 *
+	 * @phpstan-param LogContext $context
 	 */
 	public function error( string $message, array $context = array() ): void {
 		$this->write_log( 'ERROR', $message, $this->debug_mode ? $context : array() );
@@ -53,12 +72,15 @@ class TTVGPTLogger {
 
 
 	/**
-	 * Write formatted log entry to PHP error log
+	 * Writes a formatted log entry to PHP error log.
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param string $level   Log level (DEBUG or ERROR).
 	 * @param string $message Message to log.
 	 * @param array  $context Additional context data.
-	 * @return void
+	 *
+	 * @phpstan-param LogContext $context
 	 */
 	private function write_log( string $level, string $message, array $context = array() ): void {
 		$timestamp   = current_time( 'Y-m-d H:i:s' );
@@ -68,7 +90,7 @@ class TTVGPTLogger {
 			$log_message .= ' | Context: ' . wp_json_encode( $context );
 		}
 
-		// Log to PHP error log for consistent error tracking
+		// Log to PHP error log for consistent error tracking.
 		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Design choice for error tracking
 		error_log( $log_message );
 	}

@@ -1,17 +1,36 @@
 name: Lint
 
-permissions:
-  contents: read
-
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
+    paths:
+      - '**/*.php'
+      - '**/*.js'
+      - '**/*.css'
+      - 'composer.json'
+      - 'composer.lock'
+      - 'package.json'
+      - 'biome.json'
+      - 'phpstan.neon'
   pull_request:
+    paths:
+      - '**/*.php'
+      - '**/*.js'
+      - '**/*.css'
+      - 'composer.json'
+      - 'composer.lock'
+      - 'package.json'
+      - 'biome.json'
+      - 'phpstan.neon'
+
+permissions:
+  contents: read
 
 jobs:
-  lint:
-    name: QA
+  php:
+    name: PHP ${{ matrix.php }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -40,11 +59,28 @@ jobs:
       - run: ./vendor/bin/phpstan analyse --error-format=checkstyle | cs2pr
 
       - name: Run wp-plugin-check
-        if: matrix.php == '8.4'
+        if: matrix.php == '8.3'
         uses: wordpress/plugin-check-action@v1
         with:
+          exclude-files: |
+            phpstan-bootstrap.php
           exclude-checks: |
             late_escaping
             plugin_review_phpcs
             file_type
             plugin_readme
+
+  biome:
+    name: Biome
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run lint
