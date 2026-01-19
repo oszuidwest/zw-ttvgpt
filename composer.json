@@ -1,7 +1,6 @@
 {
     "name": "oszuidwest/zw-ttvgpt",
     "description": "Genereert automatisch samenvattingen voor Tekst TV met behulp van OpenAI's GPT modellen",
-    "version": "0.15.0",
     "type": "wordpress-plugin",
     "license": "GPL-3.0-or-later",
     "authors": [
