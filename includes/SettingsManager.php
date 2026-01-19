@@ -14,7 +14,7 @@ namespace ZW_TTVGPT_Core;
  *
  * @package ZW_TTVGPT
  */
-class TTVGPTSettingsManager {
+class SettingsManager {
 	/**
 	 * Cache key for settings
 	 */
@@ -29,20 +29,22 @@ class TTVGPTSettingsManager {
 	 * Retrieve all plugin settings with caching
 	 *
 	 * @return array Complete settings array with defaults applied.
+	 *
+	 * @phpstan-return PluginSettings
 	 */
 	public static function get_settings(): array {
 		$settings = wp_cache_get( self::CACHE_KEY, self::CACHE_GROUP );
 
 		if ( false === $settings ) {
 			$settings = get_option(
-				TTVGPTConstants::SETTINGS_OPTION_NAME,
-				TTVGPTConstants::get_default_settings()
+				Constants::SETTINGS_OPTION_NAME,
+				Constants::get_default_settings()
 			);
-			$settings = is_array( $settings ) ? $settings : TTVGPTConstants::get_default_settings();
+			$settings = is_array( $settings ) ? $settings : Constants::get_default_settings();
 			wp_cache_set( self::CACHE_KEY, $settings, self::CACHE_GROUP );
 		}
 
-		return is_array( $settings ) ? $settings : TTVGPTConstants::get_default_settings();
+		return is_array( $settings ) ? $settings : Constants::get_default_settings();
 	}
 
 	/**
@@ -62,12 +64,14 @@ class TTVGPTSettingsManager {
 	 *
 	 * @param array $new_settings Settings to merge with existing values.
 	 * @return bool True if settings were successfully updated.
+	 *
+	 * @phpstan-param PluginSettings $new_settings
 	 */
 	public static function update_settings( array $new_settings ): bool {
 		$settings = self::get_settings();
 		$settings = array_merge( $settings, $new_settings );
 
-		$result = update_option( TTVGPTConstants::SETTINGS_OPTION_NAME, $settings );
+		$result = update_option( Constants::SETTINGS_OPTION_NAME, $settings );
 
 		if ( $result ) {
 			wp_cache_set( self::CACHE_KEY, $settings, self::CACHE_GROUP );
@@ -83,8 +87,8 @@ class TTVGPTSettingsManager {
 	 */
 	public static function reset_settings(): bool {
 		$result = update_option(
-			TTVGPTConstants::SETTINGS_OPTION_NAME,
-			TTVGPTConstants::get_default_settings()
+			Constants::SETTINGS_OPTION_NAME,
+			Constants::get_default_settings()
 		);
 
 		if ( $result ) {
@@ -101,7 +105,7 @@ class TTVGPTSettingsManager {
 	 */
 	public static function delete_settings(): bool {
 		wp_cache_delete( self::CACHE_KEY, self::CACHE_GROUP );
-		return delete_option( TTVGPTConstants::SETTINGS_OPTION_NAME );
+		return delete_option( Constants::SETTINGS_OPTION_NAME );
 	}
 
 	/**
@@ -120,8 +124,8 @@ class TTVGPTSettingsManager {
 	 * @return string Model identifier.
 	 */
 	public static function get_model(): string {
-		$model = self::get_setting( 'model', TTVGPTConstants::DEFAULT_MODEL );
-		return is_string( $model ) ? $model : TTVGPTConstants::DEFAULT_MODEL;
+		$model = self::get_setting( 'model', Constants::DEFAULT_MODEL );
+		return is_string( $model ) ? $model : Constants::DEFAULT_MODEL;
 	}
 
 	/**
@@ -130,8 +134,8 @@ class TTVGPTSettingsManager {
 	 * @return int Word limit value.
 	 */
 	public static function get_word_limit(): int {
-		$word_limit = self::get_setting( 'word_limit', TTVGPTConstants::DEFAULT_WORD_LIMIT );
-		return is_numeric( $word_limit ) ? (int) $word_limit : TTVGPTConstants::DEFAULT_WORD_LIMIT;
+		$word_limit = self::get_setting( 'word_limit', Constants::DEFAULT_WORD_LIMIT );
+		return is_numeric( $word_limit ) ? (int) $word_limit : Constants::DEFAULT_WORD_LIMIT;
 	}
 
 	/**
@@ -140,8 +144,8 @@ class TTVGPTSettingsManager {
 	 * @return string System prompt template with %d placeholder for word limit.
 	 */
 	public static function get_system_prompt(): string {
-		$prompt = self::get_setting( 'system_prompt', TTVGPTConstants::DEFAULT_SYSTEM_PROMPT );
-		return is_string( $prompt ) && ! empty( $prompt ) ? $prompt : TTVGPTConstants::DEFAULT_SYSTEM_PROMPT;
+		$prompt = self::get_setting( 'system_prompt', Constants::DEFAULT_SYSTEM_PROMPT );
+		return is_string( $prompt ) && ! empty( $prompt ) ? $prompt : Constants::DEFAULT_SYSTEM_PROMPT;
 	}
 
 	/**

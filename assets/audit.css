@@ -1,283 +1,283 @@
 .zw-audit-table {
-	background: #fff;
+    background: #fff;
 }
 
 .zw-audit-table .column-type {
-	width: 80px;
+    width: 80px;
 }
 
 .zw-audit-table .column-author {
-	width: 120px;
+    width: 120px;
 }
 
 .zw-audit-table .column-editor {
-	width: 120px;
+    width: 120px;
 }
 
 .zw-audit-table .column-change {
-	width: 100px;
-	text-align: center;
+    width: 100px;
+    text-align: center;
 }
 
 .zw-audit-table .column-date {
-	width: 150px;
+    width: 150px;
 }
 
 .zw-audit-type-label {
-	display: inline-block;
-	padding: 2px 8px;
-	font-size: 11px;
-	font-weight: 600;
-	line-height: 1.4;
-	color: #fff;
-	text-transform: uppercase;
-	letter-spacing: 0.5px;
-	white-space: nowrap;
-	border-radius: 3px;
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    border-radius: 3px;
 }
 
 .zw-audit-type-label.human {
-	background: #0073aa;
+    background: #0073aa;
 }
 
 .zw-audit-type-label.ai-unedited {
-	background: #8c8f94;
+    background: #8c8f94;
 }
 
 .zw-audit-type-label.ai-edited {
-	background: #00a0d2;
+    background: #00a0d2;
 }
 
 .zw-audit-table tbody tr.human {
-	border-left: 4px solid #0073aa;
+    border-left: 4px solid #0073aa;
 }
 
 .zw-audit-table tbody tr.ai-unedited {
-	border-left: 4px solid #8c8f94;
+    border-left: 4px solid #8c8f94;
 }
 
 .zw-audit-table tbody tr.ai-edited {
-	border-left: 4px solid #00a0d2;
+    border-left: 4px solid #00a0d2;
 }
 
 .zw-audit-content-diff {
-	margin-top: 8px;
+    margin-top: 8px;
 }
 
 .zw-audit-content-diff details {
-	padding: 0;
-	margin: 0;
-	background: #f6f7f7;
-	border: 1px solid #dcdcde;
-	border-radius: 4px;
+    padding: 0;
+    margin: 0;
+    background: #f6f7f7;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
 }
 
 .zw-audit-content-diff summary {
-	padding: 8px 12px;
-	font-size: 12px;
-	font-weight: 600;
-	color: #50575e;
-	cursor: pointer;
-	user-select: none;
-	background: #f6f7f7;
-	border: none;
-	border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #50575e;
+    cursor: pointer;
+    user-select: none;
+    background: #f6f7f7;
+    border: none;
+    border-radius: 4px;
 }
 
 .zw-audit-content-diff summary:hover {
-	background: #f0f0f1;
+    background: #f0f0f1;
 }
 
 .zw-audit-content-diff details[open] summary {
-	margin-bottom: 0;
-	border-bottom: 1px solid #dcdcde;
-	border-radius: 4px 4px 0 0;
+    margin-bottom: 0;
+    border-bottom: 1px solid #dcdcde;
+    border-radius: 4px 4px 0 0;
 }
 
 .zw-audit-diff {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 16px;
-	padding: 16px;
-	background: #fff;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    padding: 16px;
+    background: #fff;
 }
 
 .zw-audit-diff-block {
-	overflow: hidden;
-	background: #f9f9f9;
-	border: 1px solid #dcdcde;
-	border-radius: 4px;
+    overflow: hidden;
+    background: #f9f9f9;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
 }
 
 .zw-audit-diff-header {
-	padding: 8px 12px;
-	margin: 0;
-	font-size: 11px;
-	font-weight: 600;
-	color: #646970;
-	text-transform: uppercase;
-	letter-spacing: 0.5px;
-	background: #f0f0f1;
-	border-bottom: 1px solid #dcdcde;
+    padding: 8px 12px;
+    margin: 0;
+    font-size: 11px;
+    font-weight: 600;
+    color: #646970;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: #f0f0f1;
+    border-bottom: 1px solid #dcdcde;
 }
 
 .zw-audit-diff-content {
-	max-height: 200px;
-	padding: 12px;
-	overflow-y: auto;
-	font-size: 13px;
-	line-height: 1.6;
-	word-wrap: break-word;
-	overflow-wrap: break-word;
+    max-height: 200px;
+    padding: 12px;
+    overflow-y: auto;
+    font-size: 13px;
+    line-height: 1.6;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .zw-audit-diff-content del {
-	padding: 1px 3px;
-	color: #721c24;
-	text-decoration: line-through;
-	background: #f8d7da;
-	border-radius: 2px;
+    padding: 1px 3px;
+    color: #721c24;
+    text-decoration: line-through;
+    background: #f8d7da;
+    border-radius: 2px;
 }
 
 .zw-audit-diff-content ins {
-	padding: 1px 3px;
-	color: #0c5460;
-	text-decoration: none;
-	background: #d1ecf1;
-	border-radius: 2px;
+    padding: 1px 3px;
+    color: #0c5460;
+    text-decoration: none;
+    background: #d1ecf1;
+    border-radius: 2px;
 }
 
 .zw-diff-added {
-	padding: 2px 4px;
-	font-weight: 500;
-	color: #155724;
-	background: #d4edda;
-	border-radius: 3px;
+    padding: 2px 4px;
+    font-weight: 500;
+    color: #155724;
+    background: #d4edda;
+    border-radius: 3px;
 }
 
 .zw-diff-removed {
-	padding: 2px 4px;
-	font-weight: 500;
-	color: #721c24;
-	text-decoration: line-through;
-	background: #f8d7da;
-	border-radius: 3px;
+    padding: 2px 4px;
+    font-weight: 500;
+    color: #721c24;
+    text-decoration: line-through;
+    background: #f8d7da;
+    border-radius: 3px;
 }
 
 .subsubsub {
-	float: left;
-	width: 100%;
-	padding-left: 0;
-	margin: 6px 0 0;
-	font-size: 13px;
-	white-space: nowrap;
+    float: left;
+    width: 100%;
+    padding-left: 0;
+    margin: 6px 0 0;
+    font-size: 13px;
+    white-space: nowrap;
 }
 
 .subsubsub li {
-	display: inline;
-	padding: 0;
-	margin: 0;
-	white-space: nowrap;
+    display: inline;
+    padding: 0;
+    margin: 0;
+    white-space: nowrap;
 }
 
 .subsubsub a {
-	padding: 0.2em;
-	line-height: 2;
-	white-space: nowrap;
-	text-decoration: none;
+    padding: 0.2em;
+    line-height: 2;
+    white-space: nowrap;
+    text-decoration: none;
 }
 
 .subsubsub a .count {
-	font-weight: 400;
-	color: #646970;
+    font-weight: 400;
+    color: #646970;
 }
 
 .subsubsub a.current {
-	font-weight: 600;
-	color: #000;
-	background: none;
-	border: none;
+    font-weight: 600;
+    color: #000;
+    background: none;
+    border: none;
 }
 
 .subsubsub a.current .count {
-	color: #646970;
+    color: #646970;
 }
 
 .subsubsub li:not(:last-child)::after {
-	color: #646970;
-	content: " | ";
+    color: #646970;
+    content: " | ";
 }
 
 .subsubsub li:last-child::after {
-	content: "";
+    content: "";
 }
 
 @media (width <= 782px) {
-	.zw-audit-diff {
-		grid-template-columns: 1fr;
-		gap: 12px;
-		padding: 12px;
-	}
+    .zw-audit-diff {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 12px;
+    }
 
-	.zw-audit-diff-content {
-		max-height: 150px;
-		padding: 10px;
-		font-size: 12px;
-	}
+    .zw-audit-diff-content {
+        max-height: 150px;
+        padding: 10px;
+        font-size: 12px;
+    }
 
-	.zw-audit-content-diff summary {
-		padding: 6px 10px;
-		font-size: 11px;
-	}
+    .zw-audit-content-diff summary {
+        padding: 6px 10px;
+        font-size: 11px;
+    }
 
-	.toggle-row {
-		display: block;
-	}
+    .toggle-row {
+        display: block;
+    }
 }
 
 .toggle-row {
-	float: right;
-	display: none;
-	width: 20px;
-	padding: 0;
-	margin: 0;
-	font-size: 12px;
-	line-height: 2;
-	color: #646970;
-	text-decoration: none;
-	cursor: pointer;
-	outline: none;
-	background: none;
-	border: none;
+    float: right;
+    display: none;
+    width: 20px;
+    padding: 0;
+    margin: 0;
+    font-size: 12px;
+    line-height: 2;
+    color: #646970;
+    text-decoration: none;
+    cursor: pointer;
+    outline: none;
+    background: none;
+    border: none;
 }
 
 .wrap .zw-audit-table {
-	clear: both;
+    clear: both;
 }
 
 .change-percentage {
-	display: inline-block;
-	min-width: 35px;
-	padding: 2px 6px;
-	font-size: 11px;
-	font-weight: 600;
-	color: #fff;
-	text-align: center;
-	border-radius: 3px;
+    display: inline-block;
+    min-width: 35px;
+    padding: 2px 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+    text-align: center;
+    border-radius: 3px;
 }
 
 .change-percentage.low-change {
-	background: #46b450;
+    background: #46b450;
 }
 
 .change-percentage.medium-change {
-	background: #ffb900;
+    background: #ffb900;
 }
 
 .change-percentage.high-change {
-	background: #dc3232;
+    background: #dc3232;
 }
 
 .zw-audit-table .column-change .change-percentage {
-	display: inline-block;
+    display: inline-block;
 }

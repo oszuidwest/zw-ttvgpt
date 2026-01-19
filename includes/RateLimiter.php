@@ -14,7 +14,7 @@ namespace ZW_TTVGPT_Core;
  *
  * @package ZW_TTVGPT
  */
-class TTVGPTRateLimiter {
+class RateLimiter {
 	/**
 	 * Check if current user has exceeded rate limit for API requests
 	 *
@@ -22,10 +22,10 @@ class TTVGPTRateLimiter {
 	 * @return bool True if user is rate limited, false otherwise.
 	 */
 	public static function is_limited( int $user_id ): bool {
-		$transient_key = TTVGPTConstants::get_rate_limit_key( $user_id );
+		$transient_key = Constants::get_rate_limit_key( $user_id );
 		$requests      = get_transient( $transient_key );
 
-		return $requests >= TTVGPTConstants::RATE_LIMIT_MAX_REQUESTS;
+		return $requests >= Constants::RATE_LIMIT_MAX_REQUESTS;
 	}
 
 	/**
@@ -35,13 +35,13 @@ class TTVGPTRateLimiter {
 	 * @return void
 	 */
 	public static function increment( int $user_id ): void {
-		$transient_key = TTVGPTConstants::get_rate_limit_key( $user_id );
+		$transient_key = Constants::get_rate_limit_key( $user_id );
 		$requests      = get_transient( $transient_key );
 
 		if ( false === $requests ) {
-			set_transient( $transient_key, 1, TTVGPTConstants::RATE_LIMIT_WINDOW );
+			set_transient( $transient_key, 1, Constants::RATE_LIMIT_WINDOW );
 		} else {
-			set_transient( $transient_key, $requests + 1, TTVGPTConstants::RATE_LIMIT_WINDOW );
+			set_transient( $transient_key, $requests + 1, Constants::RATE_LIMIT_WINDOW );
 		}
 	}
 }

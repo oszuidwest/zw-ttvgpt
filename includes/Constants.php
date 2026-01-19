@@ -14,7 +14,7 @@ namespace ZW_TTVGPT_Core;
  *
  * @package ZW_TTVGPT
  */
-class TTVGPTConstants {
+class Constants {
 	/**
 	 * WordPress option name for plugin settings.
 	 */
@@ -157,7 +157,9 @@ class TTVGPTConstants {
 	/**
 	 * Get default plugin settings
 	 *
-	 * @return array Default settings configuration
+	 * @return array Default settings configuration.
+	 *
+	 * @phpstan-return PluginSettings
 	 */
 	public static function get_default_settings(): array {
 		return array(

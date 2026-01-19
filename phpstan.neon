@@ -1,13 +1,26 @@
 parameters:
-    level: max
-    paths:
-        - zw-ttvgpt.php
-        - includes/
-    bootstrapFiles:
-        - phpstan-bootstrap.php
-    excludePaths:
-        - vendor/
-    treatPhpDocTypesAsCertain: false
-    ignoreErrors:
-        -
-            identifier: missingType.iterableValue
+  level: 6
+  phpVersion: 80300
+  paths:
+    - zw-ttvgpt.php
+    - includes
+  excludePaths:
+    - vendor
+  bootstrapFiles:
+    - phpstan-bootstrap.php
+  parallel:
+    maximumNumberOfProcesses: 1
+  typeAliases:
+    # Settings types
+    PluginSettings: 'array{api_key: string, model: string, word_limit: int, system_prompt: string, debug_mode: bool}'
+    # Audit types
+    FilterParams: 'array{year: int|null, month: int|null, status_filter: string, change_filter: string}'
+    MonthData: 'array{year: int, month: int}'
+    PostAnalysis: 'array{status: ZW_TTVGPT_Core\AuditStatus, ai_content: string, human_content: string, change_percentage: int}'
+    DiffResult: 'array{before: string, after: string}'
+    # OpenAI types
+    ChatMessage: 'array{role: string, content: string}'
+    # Training/Fine-tuning types
+    TrainingFilters: 'array{start_date?: string, end_date?: string, limit?: int}'
+    # Logger types
+    LogContext: 'array<string, mixed>'

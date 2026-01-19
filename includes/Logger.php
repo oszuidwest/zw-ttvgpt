@@ -14,7 +14,7 @@ namespace ZW_TTVGPT_Core;
  * Debug messages are only logged when debug mode is enabled.
  * Error messages are always logged but with limited context in production.
  */
-class TTVGPTLogger {
+class Logger {
 	/**
 	 * Log prefix
 	 */
@@ -33,6 +33,8 @@ class TTVGPTLogger {
 	 * @param string $message Debug message to log.
 	 * @param array  $context Additional context data.
 	 * @return void
+	 *
+	 * @phpstan-param LogContext $context
 	 */
 	public function debug( string $message, array $context = array() ): void {
 		if ( $this->debug_mode ) {
@@ -46,6 +48,8 @@ class TTVGPTLogger {
 	 * @param string $message Error message to log.
 	 * @param array  $context Additional context data.
 	 * @return void
+	 *
+	 * @phpstan-param LogContext $context
 	 */
 	public function error( string $message, array $context = array() ): void {
 		$this->write_log( 'ERROR', $message, $this->debug_mode ? $context : array() );
@@ -59,6 +63,8 @@ class TTVGPTLogger {
 	 * @param string $message Message to log.
 	 * @param array  $context Additional context data.
 	 * @return void
+	 *
+	 * @phpstan-param LogContext $context
 	 */
 	private function write_log( string $level, string $message, array $context = array() ): void {
 		$timestamp   = current_time( 'Y-m-d H:i:s' );
@@ -68,7 +74,7 @@ class TTVGPTLogger {
 			$log_message .= ' | Context: ' . wp_json_encode( $context );
 		}
 
-		// Log to PHP error log for consistent error tracking
+		// Log to PHP error log for consistent error tracking.
 		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Design choice for error tracking
 		error_log( $log_message );
 	}

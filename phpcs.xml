@@ -40,14 +40,9 @@
 	<rule ref="WordPress-Extra">
 		<!-- Allow short array syntax -->
 		<exclude name="Universal.Arrays.DisallowShortArraySyntax"/>
-		<!-- Allow existing file naming convention -->
+		<!-- PSR-4 autoloading requires PascalCase filenames matching class names -->
 		<exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
 		<exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
-	</rule>
-
-	<!-- Disable inline comment punctuation rules -->
-	<rule ref="Squiz.Commenting.InlineComment.InvalidEndChar">
-		<severity>0</severity>
 	</rule>
 
 	<!-- PHP Compatibility -->

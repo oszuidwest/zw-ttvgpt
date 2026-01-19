@@ -14,7 +14,7 @@ namespace ZW_TTVGPT_Core;
  *
  * @package ZW_TTVGPT
  */
-trait TTVGPTAjaxSecurity {
+trait AjaxSecurity {
 	/**
 	 * Validate AJAX nonce and capabilities
 	 *

@@ -14,7 +14,7 @@ namespace ZW_TTVGPT_Core;
  *
  * @package ZW_TTVGPT
  */
-class TTVGPTHelper {
+class Helper {
 
 	/**
 	 * Remove all plugin-related transients from database
@@ -22,20 +22,20 @@ class TTVGPTHelper {
 	 * @return void
 	 */
 	public static function cleanup_transients(): void {
-		// Get all users to clean their rate limit transients
+		// Get all users to clean their rate limit transients.
 		$users = get_users( array( 'fields' => 'ID' ) );
 
 		foreach ( $users as $user_id ) {
-			$transient_key = TTVGPTConstants::get_rate_limit_key( $user_id );
+			$transient_key = Constants::get_rate_limit_key( $user_id );
 			delete_transient( $transient_key );
 		}
 
-		// Clean up orphaned transients from deleted users using direct query
+		// Clean up orphaned transients from deleted users using direct query.
 		global $wpdb;
 		$wpdb->query(
 			$wpdb->prepare(
 				"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
-				'_transient_' . TTVGPTConstants::RATE_LIMIT_PREFIX . '%'
+				'_transient_' . Constants::RATE_LIMIT_PREFIX . '%'
 			)
 		);
 	}
@@ -46,7 +46,7 @@ class TTVGPTHelper {
 	 * @return void
 	 */
 	public static function cleanup_plugin_data(): void {
-		TTVGPTSettingsManager::delete_settings();
+		SettingsManager::delete_settings();
 		self::cleanup_transients();
 	}
 
@@ -54,11 +54,13 @@ class TTVGPTHelper {
 	 * Generate ACF field selectors for JavaScript usage
 	 *
 	 * @return array Field selector mappings for client-side access.
+	 *
+	 * @phpstan-return array{summary: string, gpt_marker: string}
 	 */
 	public static function get_acf_field_ids(): array {
 		return array(
-			'summary'    => 'acf-' . TTVGPTConstants::ACF_SUMMARY_FIELD,
-			'gpt_marker' => 'acf-' . TTVGPTConstants::ACF_GPT_MARKER_FIELD,
+			'summary'    => 'acf-' . Constants::ACF_SUMMARY_FIELD,
+			'gpt_marker' => 'acf-' . Constants::ACF_GPT_MARKER_FIELD,
 		);
 	}
 
@@ -101,7 +103,7 @@ class TTVGPTHelper {
 	 * @return string Version string for asset enqueuing.
 	 */
 	public static function get_asset_version(): string {
-		return ZW_TTVGPT_VERSION . ( TTVGPTSettingsManager::is_debug_mode() ? '.' . time() : '' );
+		return ZW_TTVGPT_VERSION . ( SettingsManager::is_debug_mode() ? '.' . time() : '' );
 	}
 
 	/**
@@ -120,8 +122,8 @@ class TTVGPTHelper {
 	public static function is_gpt5_model( string $model ): bool {
 		$model_lower = strtolower( $model );
 
-		// Accept any gpt-5* model for Responses API (forward compatibility)
-		// gpt-5 (without .1) is deprecated - use gpt-5.1 instead
+		// Accept any gpt-5* model for Responses API (forward compatibility).
+		// Note: gpt-5 (without .1) is deprecated - use gpt-5.1 instead.
 		return str_starts_with( $model_lower, 'gpt-5' );
 	}
 

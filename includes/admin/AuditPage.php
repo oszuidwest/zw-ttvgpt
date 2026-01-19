@@ -5,7 +5,11 @@
  * @package ZW_TTVGPT
  */
 
-namespace ZW_TTVGPT_Core;
+namespace ZW_TTVGPT_Core\Admin;
+
+use ZW_TTVGPT_Core\AuditHelper;
+use ZW_TTVGPT_Core\AuditStatus;
+use ZW_TTVGPT_Core\Helper;
 
 /**
  * Audit Page class
@@ -14,21 +18,23 @@ namespace ZW_TTVGPT_Core;
  *
  * @package ZW_TTVGPT
  */
-class TTVGPTAuditPage {
+class AuditPage {
 	/**
 	 * Initialize audit page
 	 */
 	public function __construct() {
-		// Constructor logic if needed
+		// Constructor logic if needed.
 	}
 
 	/**
 	 * Get validated filter parameters from GET request
 	 *
 	 * @return array Validated parameters including year, month, status_filter, and change_filter.
+	 *
+	 * @phpstan-return FilterParams
 	 */
 	private function get_filter_params(): array {
-		// Read-only page - nonce verification not required for display filters
+		// Read-only page - nonce verification not required for display filters.
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended
 		return array(
 			'year'          => isset( $_GET['year'] ) ? absint( $_GET['year'] ) : null,
@@ -52,7 +58,7 @@ class TTVGPTAuditPage {
 		$change_filter = $params['change_filter'];
 
 		if ( ! $year || ! $month ) {
-			$most_recent = TTVGPTAuditHelper::get_most_recent_month();
+			$most_recent = AuditHelper::get_most_recent_month();
 			if ( $most_recent ) {
 				$year  = $most_recent['year'];
 				$month = $most_recent['month'];
@@ -69,29 +75,29 @@ class TTVGPTAuditPage {
 			}
 		}
 
-		// Clean implementation - no benchmarking needed
+		// Clean implementation - no benchmarking needed.
 
-		$posts  = TTVGPTAuditHelper::get_posts( $year, $month );
+		$posts  = AuditHelper::get_posts( $year, $month );
 		$counts = array(
 			AuditStatus::FullyHumanWritten->value  => 0,
 			AuditStatus::AiWrittenNotEdited->value => 0,
 			AuditStatus::AiWrittenEdited->value    => 0,
 		);
 
-		// Bulk fetch all meta data in one query to avoid N+1 problem
+		// Bulk fetch all meta data in one query to avoid N+1 problem.
 		$post_ids   = array_map( static fn( $post ) => $post->ID, $posts );
-		$meta_cache = TTVGPTAuditHelper::get_bulk_meta_data( $post_ids );
+		$meta_cache = AuditHelper::get_bulk_meta_data( $post_ids );
 
 		$categorized_posts = array();
 		foreach ( $posts as $post ) {
-			$analysis = TTVGPTAuditHelper::categorize_post( $post, $meta_cache );
+			$analysis = AuditHelper::categorize_post( $post, $meta_cache );
 			$status   = $analysis['status'];
 			++$counts[ $status->value ];
 
-			// Apply status filter if set
+			// Apply status filter if set.
 			$status_match = empty( $status_filter ) || $status->value === $status_filter;
 
-			// Apply change filter if set (using match expression)
+			// Apply change filter if set (using match expression).
 			$change_match = match ( true ) {
 				empty( $change_filter )                       => true,
 				AuditStatus::AiWrittenEdited !== $status      => false,
@@ -108,14 +114,14 @@ class TTVGPTAuditPage {
 			}
 		}
 
-		$available_months = TTVGPTAuditHelper::get_months();
+		$available_months = AuditHelper::get_months();
 
-		// Load audit CSS for improved card spacing
-		$version = TTVGPTHelper::get_asset_version();
+		// Load audit CSS for improved card spacing.
+		$version = Helper::get_asset_version();
 		wp_enqueue_style( 'zw-ttvgpt-audit', ZW_TTVGPT_URL . 'assets/audit.css', array(), $version );
 		wp_print_styles( array( 'zw-ttvgpt-audit' ) );
 
-		// Enqueue WordPress ThickBox for modal functionality
+		// Enqueue WordPress ThickBox for modal functionality.
 		add_thickbox();
 		?>
 		<div class="wrap">
@@ -145,6 +151,8 @@ class TTVGPTAuditPage {
 	 * @param string $status_filter Current status filter value.
 	 * @param array  $counts        Statistics counts for each category.
 	 * @return void
+	 *
+	 * @phpstan-param array<string, int> $counts
 	 */
 	private function render_status_links( int $year, int $month, string $status_filter, array $counts ): void {
 		$total          = array_sum( $counts );
@@ -224,6 +232,9 @@ class TTVGPTAuditPage {
 	 * @param array  $counts           Statistics counts for each category.
 	 * @param string $which            Position of navigation ('top' or 'bottom').
 	 * @return void
+	 *
+	 * @phpstan-param array<int, MonthData> $available_months
+	 * @phpstan-param array<string, int> $counts
 	 */
 	private function render_tablenav(
 		int $year,
@@ -301,6 +312,9 @@ class TTVGPTAuditPage {
 	 * @param array $categorized_posts Array of categorized posts with analysis data.
 	 * @param array $meta_cache        Meta data cache to avoid N+1 queries.
 	 * @return void
+	 *
+	 * @phpstan-param array<int, array<string, mixed>> $categorized_posts
+	 * @phpstan-param array<int, array<string, string>> $meta_cache
 	 */
 	private function render_audit_table( array $categorized_posts, array $meta_cache ): void {
 		?>
@@ -408,7 +422,7 @@ class TTVGPTAuditPage {
 								</button>
 							</td>
 							<td class="author column-author" data-colname="<?php esc_attr_e( 'Auteur', 'zw-ttvgpt' ); ?>">
-								<?php echo esc_html( $author_data?->display_name ?? __( 'Onbekend', 'zw-ttvgpt' ) ); ?>
+								<?php echo esc_html( $author_data ? $author_data->display_name : __( 'Onbekend', 'zw-ttvgpt' ) ); ?>
 							</td>
 							<td class="editor column-editor" data-colname="<?php esc_attr_e( 'Eindredacteur', 'zw-ttvgpt' ); ?>">
 								<?php if ( $editor_data && $editor_data->ID !== $post->post_author ) : ?>
@@ -462,7 +476,7 @@ class TTVGPTAuditPage {
 			<?php if ( AuditStatus::AiWrittenEdited === $item['status'] ) : ?>
 				<?php
 				$post = $item['post'];
-				$diff = TTVGPTAuditHelper::generate_word_diff( $item['ai_content'], $item['human_content'] );
+				$diff = AuditHelper::generate_word_diff( $item['ai_content'], $item['human_content'] );
 				?>
 				<div id="zw-diff-modal-<?php echo esc_attr( $post->ID ); ?>" style="display: none;">
 					<div class="wrap">

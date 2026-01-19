@@ -14,7 +14,7 @@ namespace ZW_TTVGPT_Core;
  *
  * @package ZW_TTVGPT
  */
-class TTVGPTApiErrorHandler {
+class ApiErrorHandler {
 	/**
 	 * Convert HTTP status codes to localized error messages
 	 *

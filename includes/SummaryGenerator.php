@@ -12,20 +12,20 @@ namespace ZW_TTVGPT_Core;
  *
  * Core functionality for generating summaries
  */
-class TTVGPTSummaryGenerator {
-	use TTVGPTAjaxSecurity;
+class SummaryGenerator {
+	use AjaxSecurity;
 
 	/**
 	 * Initialize summary generator with dependencies and register AJAX handler
 	 *
-	 * @param TTVGPTApiHandler $api_handler API handler for OpenAI communication.
-	 * @param int              $word_limit  Maximum words allowed in summaries.
-	 * @param TTVGPTLogger     $logger      Logger instance for debugging.
+	 * @param ApiHandler $api_handler API handler for OpenAI communication.
+	 * @param int        $word_limit  Maximum words allowed in summaries.
+	 * @param Logger     $logger      Logger instance for debugging.
 	 */
 	public function __construct(
-		private readonly TTVGPTApiHandler $api_handler,
+		private readonly ApiHandler $api_handler,
 		private readonly int $word_limit,
-		private readonly TTVGPTLogger $logger
+		private readonly Logger $logger
 	) {
 		add_action( 'wp_ajax_zw_ttvgpt_generate', $this->handle_ajax_request( ... ) );
 	}
@@ -36,10 +36,10 @@ class TTVGPTSummaryGenerator {
 	 * @return never
 	 */
 	public function handle_ajax_request(): never {
-		// Nonce is verified in validate_ajax_request() method
-		$this->validate_ajax_request( 'zw_ttvgpt_nonce', TTVGPTConstants::EDIT_CAPABILITY );
+		// Nonce is verified in validate_ajax_request() method.
+		$this->validate_ajax_request( 'zw_ttvgpt_nonce', Constants::EDIT_CAPABILITY );
 
-		if ( empty( TTVGPTSettingsManager::get_api_key() ) ) {
+		if ( empty( SettingsManager::get_api_key() ) ) {
 			wp_send_json_error(
 				array( 'message' => __( 'Geen API-sleutel - ga naar Instellingen > Tekst TV GPT', 'zw-ttvgpt' ) ),
 				400
@@ -58,12 +58,12 @@ class TTVGPTSummaryGenerator {
 		$clean_content = $this->api_handler->prepare_content( $content );
 		$word_count    = str_word_count( $clean_content );
 
-		if ( $word_count < TTVGPTConstants::MIN_WORD_COUNT ) {
+		if ( $word_count < Constants::MIN_WORD_COUNT ) {
 			wp_send_json_error(
 				sprintf(
 					/* translators: 1: Minimum required word count, 2: Found word count */
 					__( 'Te weinig woorden. Minimaal %1$d vereist, %2$d gevonden.', 'zw-ttvgpt' ),
-					TTVGPTConstants::MIN_WORD_COUNT,
+					Constants::MIN_WORD_COUNT,
 					$word_count
 				),
 				400
@@ -71,7 +71,7 @@ class TTVGPTSummaryGenerator {
 		}
 
 		$user_id = get_current_user_id();
-		if ( TTVGPTRateLimiter::is_limited( $user_id ) ) {
+		if ( RateLimiter::is_limited( $user_id ) ) {
 			wp_send_json_error( __( 'Wacht even - max 10 per minuut', 'zw-ttvgpt' ), 429 );
 		}
 
@@ -89,7 +89,7 @@ class TTVGPTSummaryGenerator {
 		}
 
 		$this->save_to_acf( $post_id, $summary );
-		TTVGPTRateLimiter::increment( $user_id );
+		RateLimiter::increment( $user_id );
 		$this->logger->debug( 'Summary generated for post ' . $post_id );
 
 		wp_send_json_success(
@@ -110,14 +110,14 @@ class TTVGPTSummaryGenerator {
 	private function generate_summary_with_retry( string $content, int $word_limit ): string|\WP_Error {
 		$attempt = 0;
 
-		while ( $attempt < TTVGPTConstants::MAX_RETRY_ATTEMPTS ) {
+		while ( $attempt < Constants::MAX_RETRY_ATTEMPTS ) {
 			++$attempt;
 
 			$this->logger->debug(
 				sprintf(
 					'Generating summary (attempt %d/%d, target: %d words)',
 					$attempt,
-					TTVGPTConstants::MAX_RETRY_ATTEMPTS,
+					Constants::MAX_RETRY_ATTEMPTS,
 					$word_limit
 				)
 			);
@@ -128,7 +128,7 @@ class TTVGPTSummaryGenerator {
 				return $result;
 			}
 
-			$word_count = TTVGPTHelper::count_words( $result );
+			$word_count = Helper::count_words( $result );
 
 			$this->logger->debug(
 				sprintf(
@@ -138,7 +138,7 @@ class TTVGPTSummaryGenerator {
 				)
 			);
 
-			// Accept if within limit
+			// Accept if within limit.
 			if ( $word_count <= $word_limit ) {
 				if ( $attempt > 1 ) {
 					$this->logger->debug( sprintf( 'Summary accepted after %d attempts', $attempt ) );
@@ -146,7 +146,7 @@ class TTVGPTSummaryGenerator {
 				return $result;
 			}
 
-			// Log excessive word count
+			// Log excessive word count.
 			$this->logger->debug(
 				sprintf(
 					'Summary too long (%d words, limit: %d). Retrying...',
@@ -156,11 +156,11 @@ class TTVGPTSummaryGenerator {
 			);
 		}
 
-		// All attempts exhausted
+		// All attempts exhausted.
 		$this->logger->error(
 			sprintf(
 				'Failed to generate summary within word limit after %d attempts',
-				TTVGPTConstants::MAX_RETRY_ATTEMPTS
+				Constants::MAX_RETRY_ATTEMPTS
 			)
 		);
 
@@ -169,7 +169,7 @@ class TTVGPTSummaryGenerator {
 			sprintf(
 				/* translators: %d: Maximum number of retry attempts */
 				__( 'Kon na %d pogingen geen samenvatting binnen de woordlimiet genereren. Probeer het opnieuw.', 'zw-ttvgpt' ),
-				TTVGPTConstants::MAX_RETRY_ATTEMPTS
+				Constants::MAX_RETRY_ATTEMPTS
 			)
 		);
 	}
@@ -187,8 +187,8 @@ class TTVGPTSummaryGenerator {
 			return;
 		}
 
-		update_field( TTVGPTConstants::ACF_SUMMARY_FIELD, $summary, $post_id );
-		update_field( TTVGPTConstants::ACF_GPT_MARKER_FIELD, $summary, $post_id );
+		update_field( Constants::ACF_SUMMARY_FIELD, $summary, $post_id );
+		update_field( Constants::ACF_GPT_MARKER_FIELD, $summary, $post_id );
 
 		$this->logger->debug(
 			'Saved summary to ACF fields',

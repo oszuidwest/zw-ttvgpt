@@ -12,7 +12,7 @@ namespace ZW_TTVGPT_Core;
  *
  * Handles communication with OpenAI API
  */
-class TTVGPTApiHandler {
+class ApiHandler {
 	/**
 	 * OpenAI Chat Completions API endpoint (for GPT-4.1 family: gpt-4.1, gpt-4.1-mini, gpt-4.1-nano)
 	 */
@@ -36,14 +36,14 @@ class TTVGPTApiHandler {
 	/**
 	 * Initialize API handler with credentials and dependencies
 	 *
-	 * @param string       $api_key API key for OpenAI authentication (marked sensitive for stack trace protection).
-	 * @param string       $model   Model identifier to use for requests.
-	 * @param TTVGPTLogger $logger  Logger instance for debugging and errors.
+	 * @param string $api_key API key for OpenAI authentication (marked sensitive for stack trace protection).
+	 * @param string $model   Model identifier to use for requests.
+	 * @param Logger $logger  Logger instance for debugging and errors.
 	 */
 	public function __construct(
 		#[\SensitiveParameter] private readonly string $api_key,
 		private readonly string $model,
-		private readonly TTVGPTLogger $logger
+		private readonly Logger $logger
 	) {}
 
 	/**
@@ -53,7 +53,7 @@ class TTVGPTApiHandler {
 	 * @return string System prompt text
 	 */
 	public function get_system_prompt( int $word_limit ): string {
-		$prompt_template = TTVGPTSettingsManager::get_system_prompt();
+		$prompt_template = SettingsManager::get_system_prompt();
 		return sprintf( $prompt_template, $word_limit );
 	}
 
@@ -72,7 +72,9 @@ class TTVGPTApiHandler {
 	 *
 	 * @param string $content    Cleaned content to summarize.
 	 * @param int    $word_limit Maximum words for summary.
-	 * @return array Messages array for OpenAI API
+	 * @return array Messages array for OpenAI API.
+	 *
+	 * @phpstan-return array<int, ChatMessage>
 	 */
 	public function build_messages( string $content, int $word_limit ): array {
 		return array(
@@ -93,7 +95,7 @@ class TTVGPTApiHandler {
 	 * @return string API endpoint URL
 	 */
 	private function get_api_endpoint(): string {
-		if ( TTVGPTHelper::is_gpt5_model( $this->model ) ) {
+		if ( Helper::is_gpt5_model( $this->model ) ) {
 			return self::RESPONSES_ENDPOINT;
 		}
 
@@ -105,7 +107,9 @@ class TTVGPTApiHandler {
 	 *
 	 * @param string $content    Cleaned content to summarize.
 	 * @param int    $word_limit Maximum words for summary.
-	 * @return array Request body array
+	 * @return array Request body array.
+	 *
+	 * @phpstan-return array<string, mixed>
 	 */
 	private function build_chat_completions_request( string $content, int $word_limit ): array {
 		return array(
@@ -121,13 +125,15 @@ class TTVGPTApiHandler {
 	 *
 	 * @param string $content    Cleaned content to summarize.
 	 * @param int    $word_limit Maximum words for summary.
-	 * @return array Request body array
+	 * @return array Request body array.
+	 *
+	 * @phpstan-return array<string, mixed>
 	 */
 	private function build_responses_request( string $content, int $word_limit ): array {
-		// The Responses API accepts messages array in the input parameter
+		// The Responses API accepts messages array in the input parameter.
 		// Note: GPT-5.1 does not support temperature parameter
-		// Using 'low' reasoning effort for quality summaries while maintaining speed
-		// Using 'medium' verbosity for balanced response length
+		// Using 'low' reasoning effort for quality summaries while maintaining speed.
+		// Using 'medium' verbosity for balanced response length.
 		return array(
 			'model'             => $this->model,
 			'input'             => $this->build_messages( $content, $word_limit ),
@@ -147,6 +153,8 @@ class TTVGPTApiHandler {
 	 *
 	 * @param array $data Response data from API.
 	 * @return string|\WP_Error Summary text or WP_Error if invalid.
+	 *
+	 * @phpstan-param array<string, mixed> $data
 	 */
 	private function extract_chat_completions_summary( array $data ): string|\WP_Error {
 		if ( ! isset( $data['choices'][0]['message']['content'] ) ) {
@@ -165,21 +173,23 @@ class TTVGPTApiHandler {
 	 *
 	 * @param array $data Response data from API.
 	 * @return string|\WP_Error Summary text or WP_Error if invalid.
+	 *
+	 * @phpstan-param array<string, mixed> $data
 	 */
 	private function extract_responses_summary( array $data ): string|\WP_Error {
-		// Check if output_text helper is available
+		// Check if output_text helper is available.
 		if ( isset( $data['output_text'] ) && is_string( $data['output_text'] ) ) {
 			return trim( $data['output_text'] );
 		}
 
-		// Parse output array to find message items
+		// Parse output array to find message items.
 		if ( isset( $data['output'] ) && is_array( $data['output'] ) ) {
 			foreach ( $data['output'] as $item ) {
 				if ( ! isset( $item['type'] ) ) {
 					continue;
 				}
 
-				// Look for message items
+				// Look for message items.
 				if ( 'message' === $item['type'] && isset( $item['content'] ) && is_array( $item['content'] ) ) {
 					foreach ( $item['content'] as $content_item ) {
 						if ( isset( $content_item['type'] ) && 'output_text' === $content_item['type'] && isset( $content_item['text'] ) ) {
@@ -205,10 +215,10 @@ class TTVGPTApiHandler {
 	 * @return string|\WP_Error Summary string on success, WP_Error on failure.
 	 */
 	public function generate_summary( string $content, int $word_limit ): string|\WP_Error {
-		$is_gpt5  = TTVGPTHelper::is_gpt5_model( $this->model );
+		$is_gpt5  = Helper::is_gpt5_model( $this->model );
 		$api_type = $is_gpt5 ? 'Responses' : 'Chat Completions';
 		$endpoint = $this->get_api_endpoint();
-		$timeout  = TTVGPTConstants::API_TIMEOUT;
+		$timeout  = Constants::API_TIMEOUT;
 
 		$this->logger->debug(
 			'Starting API request',
@@ -228,7 +238,7 @@ class TTVGPTApiHandler {
 			);
 		}
 
-		// Build request based on API type
+		// Build request based on API type.
 		if ( $is_gpt5 ) {
 			$request_data = $this->build_responses_request( $content, $word_limit );
 		} else {
@@ -275,7 +285,7 @@ class TTVGPTApiHandler {
 			$this->logger->error( 'API error: HTTP ' . $status_code );
 			return new \WP_Error(
 				'api_error',
-				TTVGPTApiErrorHandler::get_error_message( (int) $status_code ),
+				ApiErrorHandler::get_error_message( (int) $status_code ),
 				array( 'status_code' => $status_code )
 			);
 		}
@@ -289,7 +299,7 @@ class TTVGPTApiHandler {
 			);
 		}
 
-		// Extract summary based on API type
+		// Extract summary based on API type.
 		if ( $is_gpt5 ) {
 			$summary = $this->extract_responses_summary( $data );
 		} else {

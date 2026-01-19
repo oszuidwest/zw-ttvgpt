@@ -5,7 +5,12 @@
  * @package ZW_TTVGPT
  */
 
-namespace ZW_TTVGPT_Core;
+namespace ZW_TTVGPT_Core\Admin;
+
+use ZW_TTVGPT_Core\AjaxSecurity;
+use ZW_TTVGPT_Core\Constants;
+use ZW_TTVGPT_Core\FineTuningExport;
+use ZW_TTVGPT_Core\Logger;
 
 /**
  * Fine Tuning Page class
@@ -14,20 +19,20 @@ namespace ZW_TTVGPT_Core;
  *
  * @package ZW_TTVGPT
  */
-class TTVGPTFineTuningPage {
-	use TTVGPTAjaxSecurity;
+class FineTuningPage {
+	use AjaxSecurity;
 
 	/**
 	 * Initialize fine tuning page with dependencies
 	 *
-	 * @param TTVGPTFineTuningExport $export Export functionality instance.
-	 * @param TTVGPTLogger           $logger Logger instance for debugging.
+	 * @param FineTuningExport $export Export functionality instance.
+	 * @param Logger           $logger Logger instance for debugging.
 	 */
 	public function __construct(
-		private readonly TTVGPTFineTuningExport $export,
-		private readonly TTVGPTLogger $logger
+		private readonly FineTuningExport $export,
+		private readonly Logger $logger
 	) {
-		// Register AJAX handler
+		// Register AJAX handler.
 		add_action( 'wp_ajax_zw_ttvgpt_export_training_data', $this->handle_export_ajax( ... ) );
 	}
 
@@ -37,7 +42,7 @@ class TTVGPTFineTuningPage {
 	 * @return void
 	 */
 	public function render(): void {
-		$this->validate_page_access( TTVGPTConstants::REQUIRED_CAPABILITY );
+		$this->validate_page_access( Constants::REQUIRED_CAPABILITY );
 
 		?>
 		<div class="wrap">
@@ -120,7 +125,7 @@ class TTVGPTFineTuningPage {
 
 		<script>
 		jQuery(document).ready(function($) {
-			// Export training data handler
+			// Export training data handler.
 			$('#export-training-data').on('click', function() {
 				const button = $(this);
 				const originalText = button.text();
@@ -272,10 +277,10 @@ class TTVGPTFineTuningPage {
 	 * @return never
 	 */
 	public function handle_export_ajax(): never {
-		// Nonce is verified in validate_ajax_request() method
-		$this->validate_ajax_request( 'zw_ttvgpt_fine_tuning_nonce', TTVGPTConstants::REQUIRED_CAPABILITY );
+		// Nonce is verified in validate_ajax_request() method.
+		$this->validate_ajax_request( 'zw_ttvgpt_fine_tuning_nonce', Constants::REQUIRED_CAPABILITY );
 
-		// Get filters from POST data
+		// Get filters from POST data.
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce verified in validate_ajax_request()
 		$filters = array();
 		if ( ! empty( $_POST['start_date'] ) ) {
@@ -289,19 +294,19 @@ class TTVGPTFineTuningPage {
 		}
 		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
-		// Generate training data
+		// Generate training data.
 		$this->logger->debug( 'Export training data requested with filters: ' . wp_json_encode( $filters ) );
 		$result = $this->export->generate_training_data( $filters );
 
-		if ( ! $result['success'] ) {
-			wp_send_json_error( array( 'message' => $result['message'] ) );
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
 		}
 
-		// Export to JSONL file
+		// Export to JSONL file.
 		$export_result = $this->export->export_to_jsonl( $result['data'] );
 
-		if ( ! $export_result['success'] ) {
-			wp_send_json_error( array( 'message' => $export_result['message'] ) );
+		if ( is_wp_error( $export_result ) ) {
+			wp_send_json_error( array( 'message' => $export_result->get_error_message() ) );
 		}
 
 		wp_send_json_success(
