@@ -5,11 +5,11 @@
  * @package ZW_TTVGPT
  */
 
+namespace ZW_TTVGPT_Core;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
-
-namespace ZW_TTVGPT_Core;
 
 /**
  * Settings Manager class
