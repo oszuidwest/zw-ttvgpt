@@ -87,15 +87,13 @@ class TTVGPTFineTuningExport {
 					// Track date range
 					$post_date = get_the_date( 'Y-m-d', $post->ID );
 					if ( empty( $stats['date_range'] ) ) {
-						$stats['date_range']['start'] = $post_date;
-						$stats['date_range']['end']   = $post_date;
+						$stats['date_range'] = array(
+							'start' => $post_date,
+							'end'   => $post_date,
+						);
 					} else {
-						if ( $post_date < $stats['date_range']['start'] ) {
-							$stats['date_range']['start'] = $post_date;
-						}
-						if ( $post_date > $stats['date_range']['end'] ) {
-							$stats['date_range']['end'] = $post_date;
-						}
+						$stats['date_range']['start'] = min( $stats['date_range']['start'], $post_date );
+						$stats['date_range']['end']   = max( $stats['date_range']['end'], $post_date );
 					}
 				} else {
 					++$stats['skipped'];
@@ -247,8 +245,6 @@ class TTVGPTFineTuningExport {
 
 		return $training_entry;
 	}
-
-
 
 	/**
 	 * Export training data as JSONL file
@@ -427,22 +423,17 @@ class TTVGPTFineTuningExport {
 			return false;
 		}
 
-		// Check for system and user messages
-		$has_system = false;
-		$has_user   = false;
+		// Validate all messages have required fields and collect roles
+		$roles = array();
 		foreach ( $messages as $message ) {
 			if ( ! isset( $message['role'] ) || ! isset( $message['content'] ) ) {
 				return false;
 			}
-			if ( 'system' === $message['role'] ) {
-				$has_system = true;
-			}
-			if ( 'user' === $message['role'] ) {
-				$has_user = true;
-			}
+			$roles[] = $message['role'];
 		}
 
-		if ( ! $has_system || ! $has_user ) {
+		// Check for required system and user messages
+		if ( ! in_array( 'system', $roles, true ) || ! in_array( 'user', $roles, true ) ) {
 			return false;
 		}
 
