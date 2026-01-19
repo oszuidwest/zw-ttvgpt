@@ -101,77 +101,50 @@ class TTVGPTSummaryGenerator {
 	}
 
 	/**
-	 * Generate summary with automatic retry if word count exceeds limit
+	 * Generate summary with automatic retry for invalid responses.
+	 *
+	 * Retries when response is too short (< 20% of limit) or too long (> limit).
+	 * Returns the last attempt if all retries fail, allowing user to manually adjust.
 	 *
 	 * @param string $content    Content to summarize.
 	 * @param int    $word_limit Maximum words allowed.
 	 * @return string|\WP_Error Summary text or error.
 	 */
 	private function generate_summary_with_retry( string $content, int $word_limit ): string|\WP_Error {
-		$attempt = 0;
+		$min_words   = (int) ( $word_limit * TTVGPTConstants::MIN_RESPONSE_RATIO );
+		$last_result = '';
+		$retry_count = 0;
 
-		while ( $attempt < TTVGPTConstants::MAX_RETRY_ATTEMPTS ) {
-			++$attempt;
-
-			$this->logger->debug(
-				sprintf(
-					'Generating summary (attempt %d/%d, target: %d words)',
-					$attempt,
-					TTVGPTConstants::MAX_RETRY_ATTEMPTS,
-					$word_limit
-				)
-			);
-
+		for ( $attempt = 1; $attempt <= TTVGPTConstants::MAX_RETRY_ATTEMPTS; $attempt++ ) {
 			$result = $this->api_handler->generate_summary( $content, $word_limit );
 
 			if ( is_wp_error( $result ) ) {
 				return $result;
 			}
 
-			$word_count = TTVGPTHelper::count_words( $result );
+			$last_result = $result;
+			$word_count  = TTVGPTHelper::count_words( $result );
 
-			$this->logger->debug(
-				sprintf(
-					'Summary generated with %d words (limit: %d)',
-					$word_count,
-					$word_limit
-				)
-			);
+			// Check if response is valid (within min/max bounds)
+			$too_short = $word_count < $min_words;
+			$too_long  = $word_count > $word_limit;
 
-			// Accept if within limit
-			if ( $word_count <= $word_limit ) {
-				if ( $attempt > 1 ) {
-					$this->logger->debug( sprintf( 'Summary accepted after %d attempts', $attempt ) );
+			if ( ! $too_short && ! $too_long ) {
+				// Valid response
+				if ( $retry_count > 0 ) {
+					$this->logger->debug( sprintf( 'Summary accepted after %d retries', $retry_count ) );
 				}
 				return $result;
 			}
 
-			// Log excessive word count
-			$this->logger->debug(
-				sprintf(
-					'Summary too long (%d words, limit: %d). Retrying...',
-					$word_count,
-					$word_limit
-				)
-			);
+			// Invalid response - retry if attempts remaining
+			++$retry_count;
 		}
 
-		// All attempts exhausted
-		$this->logger->error(
-			sprintf(
-				'Failed to generate summary within word limit after %d attempts',
-				TTVGPTConstants::MAX_RETRY_ATTEMPTS
-			)
-		);
+		// All attempts exhausted - return last attempt for user to manually adjust
+		$this->logger->debug( sprintf( 'Summary retry limit reached (%d retries), returning last attempt', $retry_count ) );
 
-		return new \WP_Error(
-			'word_limit_exceeded',
-			sprintf(
-				/* translators: %d: Maximum number of retry attempts */
-				__( 'Kon na %d pogingen geen samenvatting binnen de woordlimiet genereren. Probeer het opnieuw.', 'zw-ttvgpt' ),
-				TTVGPTConstants::MAX_RETRY_ATTEMPTS
-			)
-		);
+		return $last_result;
 	}
 
 	/**
