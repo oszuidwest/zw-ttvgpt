@@ -116,6 +116,7 @@ class AdminMenu {
 			'nonce'          => wp_create_nonce( 'zw_ttvgpt_nonce' ),
 			'acfFields'      => Helper::get_acf_field_ids(),
 			'debugMode'      => SettingsManager::is_debug_mode(),
+			'wordLimit'      => SettingsManager::get_word_limit(),
 			'animationDelay' => array(
 				'min'   => 20,
 				'max'   => 50,
@@ -142,16 +143,16 @@ class AdminMenu {
 			),
 		);
 
-		// Add inline script before module (wp_add_inline_script doesn't work with modules).
-		wp_register_script( 'zw-ttvgpt-data', false, array(), $version, false );
-		wp_enqueue_script( 'zw-ttvgpt-data' );
-		wp_add_inline_script(
-			'zw-ttvgpt-data',
-			'window.zwTTVGPT = ' . wp_json_encode( $inline_data ) . ';',
-			'before'
+		// Print inline config data before module loads.
+		add_action(
+			'admin_print_footer_scripts',
+			static function () use ( $inline_data ): void {
+				wp_print_inline_script_tag( 'window.zwTTVGPT = ' . wp_json_encode( $inline_data ) . ';' );
+			},
+			5
 		);
 
 		// Enqueue ES module (WordPress 6.5+).
-		wp_enqueue_script_module( 'zw-ttvgpt-admin', ZW_TTVGPT_URL . 'assets/admin.mjs', array(), $version );
+		wp_enqueue_script_module( 'zw-ttvgpt-admin', ZW_TTVGPT_URL . 'assets/admin.js', array(), $version );
 	}
 }

@@ -1,6 +1,5 @@
 {
   "name": "zw-ttvgpt",
-  "version": "0.15.0",
   "description": "JavaScript assets for ZW TTVGPT WordPress plugin",
   "private": true,
   "scripts": {
