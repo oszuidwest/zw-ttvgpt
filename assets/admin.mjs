@@ -9,8 +9,6 @@
 
 const SELECTORS = {
     contentEditor: '.wp-editor-area',
-    acfSummaryField: `#${window.zwTTVGPT.acfFields.summary}`,
-    acfGptField: `#${window.zwTTVGPT.acfFields.gpt_marker}`,
     regionCheckboxes: '#regiochecklist input[type="checkbox"]:checked',
 };
 
@@ -22,9 +20,20 @@ const TYPING_DELAYS = {
     space: [1, 2],
     default: [0.5, 1.5],
 };
+const MESSAGE_TIMING = {
+    firstMessageDelay: 1200,
+    messageInterval: 2500,
+    transitionSpeed: 20,
+    waitForBothMessages: 1700,
+    waitForSecondMessage: 700,
+    transitionBuffer: 500,
+    typeStartDelay: 100,
+};
 
 let cachedAcfField = null;
 let cachedGptField = null;
+
+const elementState = new WeakMap();
 
 /**
  * Fisher-Yates shuffle algorithm (replaces _.shuffle)
@@ -68,8 +77,13 @@ function $$(selector, context = document) {
  */
 function init() {
     document.addEventListener('DOMContentLoaded', () => {
-        cachedAcfField = $(SELECTORS.acfSummaryField);
-        cachedGptField = $(SELECTORS.acfGptField);
+        const config = window.zwTTVGPT;
+        if (!config?.acfFields) {
+            return;
+        }
+
+        cachedAcfField = $(`#${config.acfFields.summary}`);
+        cachedGptField = $(`#${config.acfFields.gpt_marker}`);
 
         injectGenerateButton();
     });
@@ -393,51 +407,28 @@ function startThinkingAnimation(element, text = '') {
  * @param {Element} button Generate button element.
  */
 function handleSuccess(data, button) {
-    // Get current message count
-    const messageCountGetter = cachedAcfField._messageCount;
-    const currentMessageCount =
-        messageCountGetter && typeof messageCountGetter === 'function'
-            ? messageCountGetter()
-            : 0;
+    const state = elementState.get(cachedAcfField) || {};
+    const currentMessageCount = state.messageCount || 0;
 
     // Ensure at least 2 messages have been shown
     const minMessages = 2;
     const messagesNeeded = minMessages - currentMessageCount;
 
+    let waitTime = MESSAGE_TIMING.transitionBuffer;
     if (messagesNeeded > 0) {
-        /*
-         * Calculate proper wait time
-         * First message shows immediately (0ms)
-         * Second message shows after 1200ms
-         */
-        let waitTime = 0;
         if (currentMessageCount === 0) {
-            // Need to wait for both messages
-            waitTime = 1700; // 1200ms for second message + 500ms buffer
+            waitTime = MESSAGE_TIMING.waitForBothMessages;
         } else if (currentMessageCount === 1) {
-            // Only need to wait for second message to finish
-            waitTime = 700; // Buffer for transition to complete
+            waitTime = MESSAGE_TIMING.waitForSecondMessage;
         }
-
-        setTimeout(() => {
-            // Update ACF fields with animation
-            animateText(cachedAcfField, data.summary, button);
-            if (cachedGptField) {
-                cachedGptField.value = data.summary;
-            }
-        }, waitTime);
-    } else {
-        /*
-         * Already shown enough messages
-         * Add small delay to ensure last transition completes
-         */
-        setTimeout(() => {
-            animateText(cachedAcfField, data.summary, button);
-            if (cachedGptField) {
-                cachedGptField.value = data.summary;
-            }
-        }, 500);
     }
+
+    setTimeout(() => {
+        animateText(cachedAcfField, data.summary, button);
+        if (cachedGptField) {
+            cachedGptField.value = data.summary;
+        }
+    }, waitTime);
 }
 
 /**
@@ -451,9 +442,10 @@ function animateText(element, text, button) {
     let index = 0;
 
     // Clear any loading messages interval
-    if (element._messageInterval) {
-        clearInterval(element._messageInterval);
-        delete element._messageInterval;
+    const state = elementState.get(element);
+    if (state?.messageInterval) {
+        clearInterval(state.messageInterval);
+        elementState.delete(element);
     }
 
     // Small delay to prevent collision with loading messages
@@ -461,7 +453,7 @@ function animateText(element, text, button) {
         element.value = '';
         element.disabled = true;
         typeCharacter();
-    }, 100);
+    }, MESSAGE_TIMING.typeStartDelay);
 
     function typeCharacter() {
         if (index < text.length) {
@@ -518,12 +510,13 @@ function setLoadingState(button, isLoading) {
             button,
             window.zwTTVGPT.strings.generating,
         );
-        button._thinkingInterval = interval;
+        elementState.set(button, { thinkingInterval: interval });
     } else {
         // Clear thinking animation
-        if (button._thinkingInterval) {
-            clearInterval(button._thinkingInterval);
-            delete button._thinkingInterval;
+        const state = elementState.get(button);
+        if (state?.thinkingInterval) {
+            clearInterval(state.thinkingInterval);
+            elementState.delete(button);
         }
 
         button.disabled = false;
@@ -580,30 +573,20 @@ function clearLoadingMessages() {
         return;
     }
 
-    if (cachedAcfField._messageInterval) {
-        clearInterval(cachedAcfField._messageInterval);
-        delete cachedAcfField._messageInterval;
+    const state = elementState.get(cachedAcfField);
+    if (!state) {
+        return;
     }
 
-    // Clear any active transition
-    if (cachedAcfField._activeTransition) {
-        const activeTransition =
-            typeof cachedAcfField._activeTransition === 'function'
-                ? cachedAcfField._activeTransition()
-                : cachedAcfField._activeTransition;
-        if (activeTransition) {
-            clearInterval(activeTransition);
-        }
-        delete cachedAcfField._activeTransition;
+    if (state.messageInterval) {
+        clearInterval(state.messageInterval);
     }
 
-    // Clear count data
-    delete cachedAcfField._messageCount;
+    if (state.activeTransition) {
+        clearInterval(state.activeTransition);
+    }
 
-    /*
-     * Don't clear the value or re-enable here - let animateText handle it
-     * This prevents the collision between loading messages and typed text
-     */
+    elementState.delete(cachedAcfField);
 }
 
 /**
@@ -629,6 +612,15 @@ function showLoadingMessages() {
     messageIndex++;
     messageCount++;
 
+    // Update state helper
+    function updateState() {
+        elementState.set(cachedAcfField, {
+            messageInterval,
+            activeTransition,
+            messageCount,
+        });
+    }
+
     // Function to show next message
     function showNextMessage() {
         if (messageIndex >= messages.length) {
@@ -650,27 +642,30 @@ function showLoadingMessages() {
         activeTransition = setInterval(() => {
             if (charIndex <= nextMessage.length) {
                 cachedAcfField.value = nextMessage.substring(0, charIndex);
-                charIndex += 2; // Type 2 chars at a time for smooth transition
+                charIndex += 2;
             } else {
                 clearInterval(activeTransition);
                 activeTransition = null;
+                updateState();
             }
-        }, 20);
+        }, MESSAGE_TIMING.transitionSpeed);
 
         messageIndex++;
         messageCount++;
+        updateState();
     }
 
     // Show second message quickly, then normal speed for rest
-    setTimeout(showNextMessage, 1200); // Show second message after 1.2s
+    setTimeout(showNextMessage, MESSAGE_TIMING.firstMessageDelay);
 
     // Then cycle through remaining messages at normal speed
-    const messageInterval = setInterval(showNextMessage, 2500);
+    const messageInterval = setInterval(
+        showNextMessage,
+        MESSAGE_TIMING.messageInterval,
+    );
 
-    // Store intervals and count getter for cleanup
-    cachedAcfField._messageInterval = messageInterval;
-    cachedAcfField._activeTransition = () => activeTransition;
-    cachedAcfField._messageCount = () => messageCount;
+    // Store initial state
+    updateState();
 }
 
 // Initialize when ready
