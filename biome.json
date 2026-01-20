@@ -31,7 +31,6 @@
 	"files": {
 		"includes": [
 			"**/assets/**/*.js",
-			"**/assets/**/*.mjs",
 			"**/assets/**/*.css",
 			"!**/vendor/**",
 			"!**/node_modules/**"

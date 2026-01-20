@@ -32,6 +32,7 @@ const MESSAGE_TIMING = {
 
 let cachedAcfField = null;
 let cachedGptField = null;
+let cachedWordCounter = null;
 
 const elementState = new WeakMap();
 
@@ -76,17 +77,69 @@ function $$(selector, context = document) {
  * Initialize plugin components and cache DOM elements.
  */
 function init() {
-    document.addEventListener('DOMContentLoaded', () => {
-        const config = window.zwTTVGPT;
-        if (!config?.acfFields) {
-            return;
-        }
+    // ES modules are deferred, so DOMContentLoaded may have already fired
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', onReady);
+    } else {
+        onReady();
+    }
+}
 
-        cachedAcfField = $(`#${config.acfFields.summary}`);
-        cachedGptField = $(`#${config.acfFields.gpt_marker}`);
+/**
+ * DOM ready handler - cache elements and inject button.
+ */
+function onReady() {
+    const config = window.zwTTVGPT;
+    if (!config?.acfFields) {
+        return;
+    }
 
-        injectGenerateButton();
-    });
+    cachedAcfField = $(`#${config.acfFields.summary}`);
+    cachedGptField = $(`#${config.acfFields.gpt_marker}`);
+
+    injectGenerateButton();
+}
+
+/**
+ * Count words in text (matches PHP str_word_count behavior).
+ *
+ * @param {string} text Text to count words in.
+ * @return {number} Word count.
+ */
+function countWords(text) {
+    if (!text || typeof text !== 'string') {
+        return 0;
+    }
+    let count = 0;
+    const regex = /[\p{L}]+([-'][\p{L}]+)*/gu;
+    while (regex.exec(text)) {
+        count++;
+    }
+    return count;
+}
+
+/**
+ * Update word counter display with current word count.
+ */
+function updateWordCounter() {
+    if (!cachedWordCounter || !cachedAcfField) {
+        return;
+    }
+
+    const text = cachedAcfField.value || '';
+    const wordCount = countWords(text);
+    const wordLimit = window.zwTTVGPT.wordLimit || 100;
+    const isOverLimit = wordCount > wordLimit;
+
+    cachedWordCounter.textContent = `${wordCount} / ${wordLimit} woorden`;
+    cachedWordCounter.classList.toggle(
+        'zw-ttvgpt-word-counter--over',
+        isOverLimit,
+    );
+    cachedWordCounter.classList.toggle(
+        'zw-ttvgpt-word-counter--ok',
+        !isOverLimit && wordCount > 0,
+    );
 }
 
 /**
@@ -97,16 +150,37 @@ function injectGenerateButton() {
         return;
     }
 
+    // Create container for button and word counter
+    const container = document.createElement('div');
+    container.className = 'zw-ttvgpt-controls';
+    container.style.cssText =
+        'display:flex;align-items:center;gap:12px;margin-top:8px';
+
     const postIdField = $('#post_ID');
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'button button-secondary zw-ttvgpt-inline-generate';
     button.dataset.postId = postIdField ? postIdField.value : '';
     button.textContent = window.zwTTVGPT.strings.buttonText;
-    button.style.marginTop = '8px';
 
-    cachedAcfField.parentElement.appendChild(button);
+    // Create word counter element
+    cachedWordCounter = document.createElement('span');
+    cachedWordCounter.className = 'zw-ttvgpt-word-counter';
+    cachedWordCounter.setAttribute('aria-live', 'polite');
+
+    container.appendChild(button);
+    container.appendChild(cachedWordCounter);
+    cachedAcfField.parentElement.appendChild(container);
+
     button.addEventListener('click', handleGenerateClick);
+
+    // Bind input events for real-time word count updates
+    cachedAcfField.addEventListener('input', updateWordCounter);
+    cachedAcfField.addEventListener('change', updateWordCounter);
+    cachedAcfField.addEventListener('keyup', updateWordCounter);
+
+    // Initial word count update
+    updateWordCounter();
 }
 
 /**
@@ -164,6 +238,10 @@ async function handleGenerateClick(e) {
             credentials: 'same-origin',
             body: formData,
         });
+
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+        }
 
         const data = await response.json();
 
@@ -484,6 +562,9 @@ function animateText(element, text, button) {
         } else {
             // Re-enable field immediately when done
             element.disabled = false;
+
+            // Update word counter with final text
+            updateWordCounter();
 
             // Ensure button is re-enabled when typing completes
             if (button && button.dataset.isGenerating === 'true') {
