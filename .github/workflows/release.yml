@@ -4,10 +4,6 @@ on:
   push:
     tags: ['v*']
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version without v prefix (e.g., 1.0.0 or 1.0.0-beta.1)'
-        required: true
 
 permissions:
   contents: write
@@ -26,11 +22,16 @@ jobs:
         run: |
           if [[ "${{ github.ref_type }}" == "tag" ]]; then
             echo "version=${{ github.ref_name }}" >> $GITHUB_OUTPUT
-            echo "is_release=true" >> $GITHUB_OUTPUT
           else
-            TAG="v${{ inputs.version }}"
+            # Extract version from plugin header
+            VERSION=$(sed -n 's/.*Version:\s*\([0-9a-zA-Z.-]\+\).*/\1/p' zw-ttvgpt.php | head -1)
+            if [[ ! "$VERSION" =~ ^[0-9]+(\.[0-9]+)+(-(alpha|beta|rc)\.[0-9]+)?$ ]]; then
+              echo "Error: Invalid version format - $VERSION"
+              echo "Expected: X.Y.Z or X.Y.Z-beta.N, X.Y.Z-alpha.N, X.Y.Z-rc.N"
+              exit 1
+            fi
+            TAG="v$VERSION"
             echo "version=$TAG" >> $GITHUB_OUTPUT
-            echo "is_release=true" >> $GITHUB_OUTPUT
             git config --global user.email "github-actions[bot]@users.noreply.github.com"
             git config --global user.name "github-actions[bot]"
             git tag "$TAG"
@@ -82,7 +83,6 @@ jobs:
           echo "zip_file=${PLUGIN_NAME}-${VERSION#v}.zip" >> $GITHUB_OUTPUT
 
       - name: Create Release
-        if: steps.version.outputs.is_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.version }}
