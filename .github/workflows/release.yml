@@ -1,18 +1,19 @@
-name: Publish Plugin Release
+name: Release
+
 on:
+  push:
+    tags: ['v*']
   workflow_dispatch:
     inputs:
-      force_release:
-        description: 'Force release even if version unchanged'
-        type: boolean
-        default: false
-        required: false
+      version:
+        description: 'Version without v prefix (e.g., 1.0.0 or 1.0.0-beta.1)'
+        required: true
 
 permissions:
   contents: write
 
 jobs:
-  validate-and-release:
+  release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -20,53 +21,21 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Extract Version from Main Plugin File
-        id: extract_version
+      - name: Set version
+        id: version
         run: |
-          VERSION=$(sed -n 's/.*Version:\s*\([0-9.]\+\).*/\1/p' zw-ttvgpt.php | head -1)
-          if [[ ! "$VERSION" =~ ^[0-9]+(\.[0-9]+)+$ ]]; then
-            echo "Error: Invalid version format - $VERSION"
-            exit 1
-          fi
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Fetch and Validate Latest Tag
-        id: tag_validation
-        run: |
-          LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null || echo "")
-          echo "LATEST_TAG=${LATEST_TAG}" >> $GITHUB_ENV
-
-      - name: Compare Versions and Decide Release
-        id: release_decision
-        env:
-          FORCE_RELEASE: ${{ github.event.inputs.force_release }}
-        run: |
-          version_gt() { test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1"; }
-          RELEASE_NEEDED=false
-          if [[ "$FORCE_RELEASE" == "true" ]]; then
-            RELEASE_NEEDED=true
-          elif [[ -z "$LATEST_TAG" ]]; then
-            RELEASE_NEEDED=true
-          elif version_gt "$VERSION" "$LATEST_TAG"; then
-            RELEASE_NEEDED=true
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            echo "version=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+            echo "is_release=true" >> $GITHUB_OUTPUT
           else
-            RELEASE_NEEDED=false
+            TAG="v${{ inputs.version }}"
+            echo "version=$TAG" >> $GITHUB_OUTPUT
+            echo "is_release=true" >> $GITHUB_OUTPUT
+            git config --global user.email "github-actions[bot]@users.noreply.github.com"
+            git config --global user.name "github-actions[bot]"
+            git tag "$TAG"
+            git push origin "$TAG"
           fi
-          echo "RELEASE_NEEDED=$RELEASE_NEEDED" >> $GITHUB_ENV
-
-      - name: Stop if No Release Needed
-        if: env.RELEASE_NEEDED == 'false'
-        run: |
-          echo "Skipping release: No new version detected"
-          exit 0
-
-      - name: Tag the New Version
-        run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git tag ${{ env.VERSION }}
-          git push origin ${{ env.VERSION }}
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -77,15 +46,12 @@ jobs:
       - name: Install Production Dependencies
         run: composer install --no-dev --optimize-autoloader
 
-      - name: Set Plugin Name
-        run: |
-          PLUGIN_NAME="zw-ttvgpt"
-          echo "PLUGIN_NAME=$PLUGIN_NAME" >> $GITHUB_ENV
-
       - name: Prepare Release Directory
+        env:
+          PLUGIN_NAME: zw-ttvgpt
         run: |
-          mkdir -p release/${{ env.PLUGIN_NAME }}
-          rsync -av --progress . ./release/${{ env.PLUGIN_NAME }} \
+          mkdir -p release/$PLUGIN_NAME
+          rsync -av --progress . ./release/$PLUGIN_NAME \
             --include 'README.md' \
             --exclude '*.md' \
             --exclude release \
@@ -105,16 +71,22 @@ jobs:
             --exclude '.gitignore'
 
       - name: Create Zip Package
-        run: |
-          cd release
-          zip -r "../${{ env.PLUGIN_NAME }}-${{ env.VERSION }}.zip" ${{ env.PLUGIN_NAME }}
-          cd ..
-
-      - name: Create GitHub Release
+        id: package
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PLUGIN_NAME: zw-ttvgpt
         run: |
-          gh release create ${{ env.VERSION }} \
-            "${{ env.PLUGIN_NAME }}-${{ env.VERSION }}.zip" \
-            --title "${{ env.VERSION }}" \
-            --notes "Automated release for version ${{ env.VERSION }}"
+          VERSION="${{ steps.version.outputs.version }}"
+          cd release
+          zip -r "../${PLUGIN_NAME}-${VERSION#v}.zip" $PLUGIN_NAME
+          cd ..
+          echo "zip_file=${PLUGIN_NAME}-${VERSION#v}.zip" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        if: steps.version.outputs.is_release == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: ${{ steps.version.outputs.version }}
+          prerelease: ${{ contains(steps.version.outputs.version, '-') }}
+          files: ${{ steps.package.outputs.zip_file }}
+          generate_release_notes: true
