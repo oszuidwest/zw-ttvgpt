@@ -239,6 +239,10 @@ async function handleGenerateClick(e) {
             body: formData,
         });
 
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+        }
+
         const data = await response.json();
 
         // Debug: log API response
