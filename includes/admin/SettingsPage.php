@@ -333,6 +333,34 @@ class SettingsPage {
 	}
 
 	/**
+	 * Gets the appropriate error message for an invalid model.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $model Invalid model identifier.
+	 * @return string Translated error message.
+	 */
+	private function get_model_error_message( string $model ): string {
+		$model_lower       = strtolower( $model );
+		$is_fine_tuned     = str_starts_with( $model_lower, 'ft:' );
+		$fine_tunable_list = implode( ', ', Constants::FINE_TUNABLE_MODELS );
+		$supported_list    = implode( ', ', Constants::SUPPORTED_BASE_MODELS );
+
+		if ( $is_fine_tuned && str_contains( $model_lower, 'gpt-5' ) ) {
+			/* translators: %s: List of fine-tunable models */
+			return sprintf( __( 'GPT-5 modellen kunnen niet gefinetuned worden. Fine-tuning is alleen beschikbaar voor: %s', 'zw-ttvgpt' ), $fine_tunable_list ); // phpcs:ignore Generic.Files.LineLength.TooLong -- Translation string must remain intact.
+		}
+
+		if ( $is_fine_tuned ) {
+			/* translators: %s: List of fine-tunable models */
+			return sprintf( __( 'Fine-tuned model moet gebaseerd zijn op: %s', 'zw-ttvgpt' ), $fine_tunable_list );
+		}
+
+		/* translators: 1: Invalid model name, 2: List of supported models */
+		return sprintf( __( 'Model "%1$s" wordt niet ondersteund. Kies uit: %2$s', 'zw-ttvgpt' ), $model, $supported_list );
+	}
+
+	/**
 	 * Sanitizes and validates all plugin settings before saving.
 	 *
 	 * @since 1.0.0
@@ -363,43 +391,8 @@ class SettingsPage {
 		if ( isset( $input['model'] ) ) {
 			$model = sanitize_text_field( $input['model'] );
 			if ( ! empty( $model ) && ! Constants::is_supported_model( $model ) ) {
-				$is_fine_tuned = str_starts_with( strtolower( $model ), 'ft:' );
-
-				if ( $is_fine_tuned ) {
-					// Check if it's a GPT-5 fine-tuned model (not supported).
-					if ( str_contains( strtolower( $model ), 'gpt-5' ) ) {
-						add_settings_error(
-							Constants::SETTINGS_OPTION_NAME,
-							'invalid_model',
-							sprintf(
-								/* translators: %s: List of fine-tunable models */
-								__( 'GPT-5 modellen kunnen niet gefinetuned worden. Fine-tuning is alleen beschikbaar voor: %s', 'zw-ttvgpt' ),
-								implode( ', ', Constants::FINE_TUNABLE_MODELS )
-							)
-						);
-					} else {
-						add_settings_error(
-							Constants::SETTINGS_OPTION_NAME,
-							'invalid_model',
-							sprintf(
-								/* translators: %s: List of fine-tunable models */
-								__( 'Fine-tuned model moet gebaseerd zijn op: %s', 'zw-ttvgpt' ),
-								implode( ', ', Constants::FINE_TUNABLE_MODELS )
-							)
-						);
-					}
-				} else {
-					add_settings_error(
-						Constants::SETTINGS_OPTION_NAME,
-						'invalid_model',
-						sprintf(
-							/* translators: 1: Invalid model name, 2: List of supported models */
-							__( 'Model "%1$s" wordt niet ondersteund. Kies uit: %2$s', 'zw-ttvgpt' ),
-							$model,
-							implode( ', ', Constants::SUPPORTED_BASE_MODELS )
-						)
-					);
-				}
+				$error_message = $this->get_model_error_message( $model );
+				add_settings_error( Constants::SETTINGS_OPTION_NAME, 'invalid_model', $error_message );
 				$model = Constants::DEFAULT_MODEL;
 			}
 			$sanitized['model'] = $model;
@@ -407,19 +400,23 @@ class SettingsPage {
 
 		// Word limit.
 		if ( isset( $input['word_limit'] ) ) {
-			$word_limit = absint( $input['word_limit'] );
+			$original_word_limit = absint( $input['word_limit'] );
+			$word_limit          = $original_word_limit;
 			if ( $word_limit < Constants::MIN_WORD_LIMIT || $word_limit > Constants::MAX_WORD_LIMIT ) {
+				$word_limit = max( Constants::MIN_WORD_LIMIT, min( $word_limit, Constants::MAX_WORD_LIMIT ) );
 				add_settings_error(
 					Constants::SETTINGS_OPTION_NAME,
 					'invalid_word_limit',
 					sprintf(
-						/* translators: 1: Minimum word limit, 2: Maximum word limit */
-						__( 'Woordlimiet moet tussen %1$d en %2$d liggen.', 'zw-ttvgpt' ),
+						/* translators: 1: Original word limit entered, 2: Adjusted word limit, 3: Minimum word limit, 4: Maximum word limit */
+						__( 'Woordlimiet %1$d is ongeldig. Waarde aangepast naar %2$d (bereik: %3$d-%4$d).', 'zw-ttvgpt' ),
+						$original_word_limit,
+						$word_limit,
 						Constants::MIN_WORD_LIMIT,
 						Constants::MAX_WORD_LIMIT
-					)
+					),
+					'warning'
 				);
-				$word_limit = max( Constants::MIN_WORD_LIMIT, min( $word_limit, Constants::MAX_WORD_LIMIT ) );
 			}
 			$sanitized['word_limit'] = $word_limit;
 		}

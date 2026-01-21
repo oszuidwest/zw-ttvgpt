@@ -354,16 +354,13 @@ class Constants {
 	 * @return string Base model identifier.
 	 */
 	public static function get_base_model( string $model ): string {
-		$model_lower = strtolower( $model );
-
-		if ( str_starts_with( $model_lower, 'ft:' ) ) {
-			// Extract base model from ft:base-model:org:suffix:id.
-			$parts = explode( ':', $model, 3 );
-			if ( count( $parts ) >= 2 ) {
-				return $parts[1];
-			}
+		if ( ! str_starts_with( strtolower( $model ), 'ft:' ) ) {
+			return $model;
 		}
 
-		return $model;
+		// Extract base model from ft:base-model:org:suffix:id.
+		$parts = explode( ':', $model, 3 );
+
+		return count( $parts ) >= 2 ? $parts[1] : $model;
 	}
 }

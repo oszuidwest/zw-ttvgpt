@@ -156,11 +156,7 @@ class Helper {
 	 * @return int Number of words.
 	 */
 	public static function count_words( string $text ): int {
-		$text = trim( $text );
-		if ( empty( $text ) ) {
-			return 0;
-		}
-		return str_word_count( $text );
+		return str_word_count( trim( $text ) );
 	}
 
 	/**

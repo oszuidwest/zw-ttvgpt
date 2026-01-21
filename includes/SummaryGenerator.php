@@ -107,23 +107,36 @@ class SummaryGenerator {
 		}
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified in validate_ajax_request()
-		$regions = isset( $_POST['regions'] ) ? array_map( 'sanitize_text_field', (array) $_POST['regions'] ) : array();
-		$summary = $result;
+		$regions   = isset( $_POST['regions'] ) ? array_map( 'sanitize_text_field', (array) $_POST['regions'] ) : array();
+		$summary   = $result['summary'];
+		$validated = $result['validated'];
 
 		if ( ! empty( $regions ) ) {
 			$summary = implode( ' / ', array_map( 'strtoupper', $regions ) ) . ' - ' . $summary;
 		}
 
-		$this->save_to_acf( $post_id, $summary );
+		$saved = $this->save_to_acf( $post_id, $summary );
+		if ( ! $saved ) {
+			AjaxResponse::error(
+				'save_failed',
+				__( 'Samenvatting gegenereerd maar kon niet worden opgeslagen. Controleer of ACF actief is.', 'zw-ttvgpt' ),
+				500
+			);
+		}
+
 		RateLimiter::increment( $user_id );
 		$this->logger->debug( 'Summary generated for post ' . $post_id );
 
-		AjaxResponse::success(
-			array(
-				'summary'    => $summary,
-				'word_count' => str_word_count( $summary ),
-			)
+		$response = array(
+			'summary'    => $summary,
+			'word_count' => str_word_count( $summary ),
 		);
+
+		if ( ! $validated ) {
+			$response['warning'] = __( 'Samenvatting kon niet worden geoptimaliseerd naar de gewenste lengte. Controleer handmatig.', 'zw-ttvgpt' );
+		}
+
+		AjaxResponse::success( $response );
 	}
 
 	/**
@@ -136,9 +149,11 @@ class SummaryGenerator {
 	 *
 	 * @param string $content    Content to summarize.
 	 * @param int    $word_limit Maximum words allowed.
-	 * @return string|\WP_Error Summary text or error.
+	 * @return array{summary: string, validated: bool}|\WP_Error Summary data or error.
+	 *
+	 * @phpstan-return array{summary: string, validated: bool}|\WP_Error
 	 */
-	private function generate_summary_with_retry( string $content, int $word_limit ): string|\WP_Error {
+	private function generate_summary_with_retry( string $content, int $word_limit ): array|\WP_Error {
 		$min_words   = (int) ( $word_limit * Constants::MIN_RESPONSE_RATIO );
 		$last_result = '';
 
@@ -152,14 +167,14 @@ class SummaryGenerator {
 			$last_result = $result;
 			$word_count  = Helper::count_words( $result );
 
-			// Check if response is valid (within min/max bounds).
-			$is_valid = $word_count >= $min_words && $word_count <= $word_limit;
-
-			if ( $is_valid ) {
+			if ( $word_count >= $min_words && $word_count <= $word_limit ) {
 				if ( $attempt > 1 ) {
 					$this->logger->debug( sprintf( 'Summary accepted after %d retries', $attempt - 1 ) );
 				}
-				return $result;
+				return array(
+					'summary'   => $result,
+					'validated' => true,
+				);
 			}
 		}
 
@@ -168,7 +183,10 @@ class SummaryGenerator {
 			sprintf( 'Summary retry limit reached (%d attempts), returning last attempt', Constants::MAX_RETRY_ATTEMPTS )
 		);
 
-		return $last_result;
+		return array(
+			'summary'   => $last_result,
+			'validated' => false,
+		);
 	}
 
 	/**
@@ -178,21 +196,30 @@ class SummaryGenerator {
 	 *
 	 * @param int    $post_id Post ID to update.
 	 * @param string $summary Generated summary text.
+	 * @return bool True on success, false on failure.
 	 */
-	private function save_to_acf( int $post_id, string $summary ): void {
+	private function save_to_acf( int $post_id, string $summary ): bool {
 		if ( ! function_exists( 'update_field' ) ) {
-			$this->logger->error( 'ACF not available' );
-			return;
+			$this->logger->error( 'ACF not available - summary not saved' );
+			return false;
 		}
 
-		update_field( Constants::ACF_SUMMARY_FIELD, $summary, $post_id );
-		update_field( Constants::ACF_GPT_MARKER_FIELD, $summary, $post_id );
+		$summary_saved = update_field( Constants::ACF_SUMMARY_FIELD, $summary, $post_id );
+		$marker_saved  = update_field( Constants::ACF_GPT_MARKER_FIELD, $summary, $post_id );
+
+		if ( false === $summary_saved ) {
+			$this->logger->error( 'Failed to save summary to ACF field', array( 'post_id' => $post_id ) );
+			return false;
+		}
 
 		$this->logger->debug(
 			'Saved summary to ACF fields',
 			array(
-				'post_id' => $post_id,
+				'post_id'      => $post_id,
+				'marker_saved' => $marker_saved,
 			)
 		);
+
+		return true;
 	}
 }

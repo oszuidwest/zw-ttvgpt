@@ -490,23 +490,18 @@ function startThinkingAnimation(element, text = '') {
  */
 function handleSuccess(data, button) {
     const state = elementState.get(cachedAcfField) || {};
-    const currentMessageCount = state.messageCount || 0;
+    const messageCount = state.messageCount || 0;
 
-    // Ensure at least 2 messages have been shown
-    const minMessages = 2;
-    const messagesNeeded = minMessages - currentMessageCount;
-
-    let waitTime = MESSAGE_TIMING.transitionBuffer;
-    if (messagesNeeded > 0) {
-        if (currentMessageCount === 0) {
-            waitTime = MESSAGE_TIMING.waitForBothMessages;
-        } else if (currentMessageCount === 1) {
-            waitTime = MESSAGE_TIMING.waitForSecondMessage;
-        }
-    }
+    // Calculate wait time based on how many loading messages have been shown.
+    // We want at least 2 messages displayed before showing the result.
+    const waitTimes = {
+        0: MESSAGE_TIMING.waitForBothMessages,
+        1: MESSAGE_TIMING.waitForSecondMessage,
+    };
+    const waitTime = waitTimes[messageCount] ?? MESSAGE_TIMING.transitionBuffer;
 
     setTimeout(() => {
-        animateText(cachedAcfField, data.summary, button);
+        animateText(cachedAcfField, data.summary, button, data.warning);
         if (cachedGptField) {
             cachedGptField.value = data.summary;
         }
@@ -516,11 +511,12 @@ function handleSuccess(data, button) {
 /**
  * Animate text typing effect with ChatGPT-style character animation.
  *
- * @param {Element} element Target element to type into.
- * @param {string}  text    Text to animate.
- * @param {Element} button  Generate button to re-enable after completion.
+ * @param {Element}     element Target element to type into.
+ * @param {string}      text    Text to animate.
+ * @param {Element}     button  Generate button to re-enable after completion.
+ * @param {string|null} warning Optional warning message to display after animation.
  */
-function animateText(element, text, button) {
+function animateText(element, text, button, warning = null) {
     let index = 0;
 
     // Clear any loading messages interval
@@ -570,6 +566,11 @@ function animateText(element, text, button) {
             // Update word counter with final text
             updateWordCounter();
 
+            // Show warning if validation failed
+            if (warning) {
+                showStatus('warning', warning);
+            }
+
             // Ensure button is re-enabled when typing completes
             if (button && button.dataset.isGenerating === 'true') {
                 setLoadingState(button, false);
@@ -613,7 +614,7 @@ function setLoadingState(button, isLoading) {
 /**
  * Show status message to user.
  *
- * @param {string} type    Message type ('error' or 'success').
+ * @param {string} type    Message type ('error', 'warning', or 'success').
  * @param {string} message Message text to display.
  */
 function showStatus(type, message) {
@@ -628,7 +629,12 @@ function showStatus(type, message) {
         existingStatus.remove();
     }
 
-    const cssClass = type === 'error' ? 'notice-error' : 'notice-success';
+    const cssClasses = {
+        error: 'notice-error',
+        warning: 'notice-warning',
+        success: 'notice-success',
+    };
+    const cssClass = cssClasses[type] || 'notice-info';
     const status = document.createElement('div');
     status.className = `notice ${cssClass} zw-ttvgpt-status`;
     status.style.margin = '10px 0';
@@ -640,13 +646,17 @@ function showStatus(type, message) {
 
     cachedAcfField.parentElement.insertBefore(status, cachedAcfField);
 
-    // Auto-hide success messages
-    if (type === 'success') {
+    // Auto-hide success and warning messages
+    if (type === 'success' || type === 'warning') {
+        const timeouts = {
+            warning: 8000,
+            success: window.zwTTVGPT.timeouts.successMessage || 3000,
+        };
         setTimeout(() => {
             status.style.transition = 'opacity 0.3s';
             status.style.opacity = '0';
             setTimeout(() => status.remove(), 300);
-        }, window.zwTTVGPT.timeouts.successMessage || 3000);
+        }, timeouts[type]);
     }
 }
 
