@@ -84,11 +84,6 @@ add_action( 'init', 'zw_ttvgpt_init' );
  * @since 1.0.0
  */
 function zw_ttvgpt_activate(): void {
-	if ( version_compare( PHP_VERSION, '8.3', '<' ) ) {
-		deactivate_plugins( plugin_basename( __FILE__ ) );
-		wp_die( 'Deze plugin vereist minimaal PHP versie 8.3.' );
-	}
-
 	if ( ! get_option( Constants::SETTINGS_OPTION_NAME ) ) {
 		add_option(
 			Constants::SETTINGS_OPTION_NAME,
