@@ -130,13 +130,17 @@ class Helper {
 	 * compatibility with potential future GPT-5 variants, but currently only
 	 * gpt-5.1 is tested and recommended.
 	 *
+	 * Also supports fine-tuned models by extracting the base model first.
+	 *
 	 * @since 1.0.0
 	 *
 	 * @param string $model Model identifier to check.
 	 * @return bool True if model uses Responses API (GPT-5.* family), false otherwise.
 	 */
 	public static function is_gpt5_model( string $model ): bool {
-		$model_lower = strtolower( $model );
+		// Use base model for fine-tuned models.
+		$base_model  = Constants::get_base_model( $model );
+		$model_lower = strtolower( $base_model );
 
 		// Accept any gpt-5* model for Responses API (forward compatibility).
 		// Note: gpt-5 (without .1) is deprecated - use gpt-5.1 instead.

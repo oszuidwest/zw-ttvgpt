@@ -294,9 +294,9 @@ class ApiHandler {
 		);
 
 		if ( empty( $this->api_key ) ) {
-			$this->logger->error( 'API key is missing' );
+			$this->logger->error( 'API key is missing - this should be validated before calling ApiHandler' );
 			return new \WP_Error(
-				'missing_api_key',
+				'missing_config',
 				__( 'API-sleutel niet geconfigureerd', 'zw-ttvgpt' )
 			);
 		}

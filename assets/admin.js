@@ -256,10 +256,14 @@ async function handleGenerateClick(e) {
         } else {
             clearLoadingMessages();
             const errorMessage =
-                typeof data.data === 'string'
-                    ? data.data
-                    : data.data?.message || window.zwTTVGPT.strings.error;
+                data.data?.message || window.zwTTVGPT.strings.error;
             showStatus('error', errorMessage);
+
+            // Log error code for debugging.
+            if (window.zwTTVGPT.debugMode && data.data?.code) {
+                console.error('ZW TTVGPT Error Code:', data.data.code);
+            }
+
             setLoadingState(button, false);
             button.dataset.isGenerating = 'false';
         }

@@ -52,9 +52,10 @@ class SummaryGenerator {
 		$this->validate_ajax_request( 'zw_ttvgpt_nonce', Constants::EDIT_CAPABILITY );
 
 		if ( empty( SettingsManager::get_api_key() ) ) {
-			wp_send_json_error(
-				array( 'message' => __( 'Geen API-sleutel - ga naar Instellingen > Tekst TV GPT', 'zw-ttvgpt' ) ),
-				400
+			AjaxResponse::error(
+				'missing_config',
+				__( 'Geen API-sleutel - ga naar Instellingen > Tekst TV GPT', 'zw-ttvgpt' ),
+				503
 			);
 		}
 
@@ -64,14 +65,19 @@ class SummaryGenerator {
 		$post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
 
 		if ( empty( $content ) || ! $post_id || ! get_post( $post_id ) ) {
-			wp_send_json_error( __( 'Ongeldige gegevens - controleer artikel', 'zw-ttvgpt' ), 400 );
+			AjaxResponse::error(
+				'invalid_input',
+				__( 'Ongeldige gegevens - controleer artikel', 'zw-ttvgpt' ),
+				400
+			);
 		}
 
 		$clean_content = $this->api_handler->prepare_content( $content );
 		$word_count    = str_word_count( $clean_content );
 
 		if ( $word_count < Constants::MIN_WORD_COUNT ) {
-			wp_send_json_error(
+			AjaxResponse::error(
+				'invalid_input',
 				sprintf(
 					/* translators: 1: Minimum required word count, 2: Found word count */
 					__( 'Te weinig woorden. Minimaal %1$d vereist, %2$d gevonden.', 'zw-ttvgpt' ),
@@ -84,12 +90,20 @@ class SummaryGenerator {
 
 		$user_id = get_current_user_id();
 		if ( RateLimiter::is_limited( $user_id ) ) {
-			wp_send_json_error( __( 'Wacht even - max 10 per minuut', 'zw-ttvgpt' ), 429 );
+			AjaxResponse::error(
+				'rate_limited',
+				__( 'Wacht even - max 10 per minuut', 'zw-ttvgpt' ),
+				429
+			);
 		}
 
 		$result = $this->generate_summary_with_retry( $clean_content, $this->word_limit );
 		if ( is_wp_error( $result ) ) {
-			wp_send_json_error( $result->get_error_message(), 500 );
+			AjaxResponse::error(
+				$result->get_error_code(),
+				$result->get_error_message(),
+				502
+			);
 		}
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified in validate_ajax_request()
@@ -104,7 +118,7 @@ class SummaryGenerator {
 		RateLimiter::increment( $user_id );
 		$this->logger->debug( 'Summary generated for post ' . $post_id );
 
-		wp_send_json_success(
+		AjaxResponse::success(
 			array(
 				'summary'    => $summary,
 				'word_count' => str_word_count( $summary ),
