@@ -70,52 +70,9 @@ class SettingsManager {
 	 * @param mixed  $default_value Default value if setting not found.
 	 * @return mixed Setting value or default.
 	 */
-	public static function get_setting( string $key, $default_value = null ) {
+	private static function get_setting( string $key, $default_value = null ) {
 		$settings = self::get_settings();
 		return $settings[ $key ] ?? $default_value;
-	}
-
-	/**
-	 * Updates plugin settings and refreshes cache.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array $new_settings Settings to merge with existing values.
-	 * @return bool True if settings were successfully updated.
-	 *
-	 * @phpstan-param PluginSettings $new_settings
-	 */
-	public static function update_settings( array $new_settings ): bool {
-		$settings = self::get_settings();
-		$settings = array_merge( $settings, $new_settings );
-
-		$result = update_option( Constants::SETTINGS_OPTION_NAME, $settings );
-
-		if ( $result ) {
-			wp_cache_set( self::CACHE_KEY, $settings, self::CACHE_GROUP );
-		}
-
-		return $result;
-	}
-
-	/**
-	 * Resets all settings to default values and clears cache.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return bool True if settings were successfully reset.
-	 */
-	public static function reset_settings(): bool {
-		$result = update_option(
-			Constants::SETTINGS_OPTION_NAME,
-			Constants::get_default_settings()
-		);
-
-		if ( $result ) {
-			wp_cache_delete( self::CACHE_KEY, self::CACHE_GROUP );
-		}
-
-		return $result;
 	}
 
 	/**

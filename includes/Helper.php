@@ -130,13 +130,17 @@ class Helper {
 	 * compatibility with potential future GPT-5 variants, but currently only
 	 * gpt-5.1 is tested and recommended.
 	 *
+	 * Also supports fine-tuned models by extracting the base model first.
+	 *
 	 * @since 1.0.0
 	 *
 	 * @param string $model Model identifier to check.
 	 * @return bool True if model uses Responses API (GPT-5.* family), false otherwise.
 	 */
 	public static function is_gpt5_model( string $model ): bool {
-		$model_lower = strtolower( $model );
+		// Use base model for fine-tuned models.
+		$base_model  = Constants::get_base_model( $model );
+		$model_lower = strtolower( $base_model );
 
 		// Accept any gpt-5* model for Responses API (forward compatibility).
 		// Note: gpt-5 (without .1) is deprecated - use gpt-5.1 instead.
@@ -152,52 +156,6 @@ class Helper {
 	 * @return int Number of words.
 	 */
 	public static function count_words( string $text ): int {
-		$text = trim( $text );
-		if ( empty( $text ) ) {
-			return 0;
-		}
-		return str_word_count( $text );
-	}
-
-	/**
-	 * Checks if plugin translations are available.
-	 *
-	 * Uses has_translation() to check if translations exist without loading
-	 * them first. This improves performance by avoiding unnecessary translation
-	 * file loading.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return bool True if translations are available, false otherwise.
-	 */
-	public static function has_plugin_translation(): bool {
-		return has_translation( 'zw-ttvgpt' );
-	}
-
-	/**
-	 * Gets localized strings with fallback if no translations available.
-	 *
-	 * Uses has_translation() to optimize performance by skipping translation
-	 * loading when not needed. Returns original strings if no translations exist.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array<string, string> $strings Array of strings to translate (key => original text).
-	 * @return array<string, string> Translated strings or originals if no translation available.
-	 */
-	public static function get_localized_strings( array $strings ): array {
-		// Check if translations are available before processing.
-		if ( ! self::has_plugin_translation() ) {
-			return $strings;
-		}
-
-		$translated = array();
-		foreach ( $strings as $key => $text ) {
-			// Use __() for translation when available.
-			// phpcs:ignore WordPress.WP.I18n.NonSingularStringLiteralText
-			$translated[ $key ] = __( $text, 'zw-ttvgpt' );
-		}
-
-		return $translated;
+		return str_word_count( trim( $text ) );
 	}
 }

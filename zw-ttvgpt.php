@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: ZuidWest TV Tekst TV GPT
+ * Plugin Name: ZuidWest Tekst TV GPT
  * Plugin URI: https://github.com/oszuidwest/zw-ttvgpt
  * Description: Genereert automatisch samenvattingen voor Tekst TV met behulp van OpenAI GPT-modellen
  * Version: 0.2.1-beta.2
@@ -84,12 +84,6 @@ add_action( 'init', 'zw_ttvgpt_init' );
  * @since 1.0.0
  */
 function zw_ttvgpt_activate(): void {
-	// @phpstan-ignore if.alwaysFalse (Defensive runtime check, phpstan assumes PHP 8.3+)
-	if ( version_compare( PHP_VERSION, '8.3', '<' ) ) {
-		deactivate_plugins( plugin_basename( __FILE__ ) );
-		wp_die( 'Deze plugin vereist minimaal PHP versie 8.3.' );
-	}
-
 	if ( ! get_option( Constants::SETTINGS_OPTION_NAME ) ) {
 		add_option(
 			Constants::SETTINGS_OPTION_NAME,

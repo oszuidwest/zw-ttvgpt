@@ -52,9 +52,10 @@ class SummaryGenerator {
 		$this->validate_ajax_request( 'zw_ttvgpt_nonce', Constants::EDIT_CAPABILITY );
 
 		if ( empty( SettingsManager::get_api_key() ) ) {
-			wp_send_json_error(
-				array( 'message' => __( 'Geen API-sleutel - ga naar Instellingen > Tekst TV GPT', 'zw-ttvgpt' ) ),
-				400
+			AjaxResponse::error(
+				'missing_config',
+				__( 'Geen API-sleutel - ga naar Instellingen > Tekst TV GPT', 'zw-ttvgpt' ),
+				503
 			);
 		}
 
@@ -64,14 +65,19 @@ class SummaryGenerator {
 		$post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
 
 		if ( empty( $content ) || ! $post_id || ! get_post( $post_id ) ) {
-			wp_send_json_error( __( 'Ongeldige gegevens - controleer artikel', 'zw-ttvgpt' ), 400 );
+			AjaxResponse::error(
+				'invalid_input',
+				__( 'Ongeldige gegevens - controleer artikel', 'zw-ttvgpt' ),
+				400
+			);
 		}
 
 		$clean_content = $this->api_handler->prepare_content( $content );
 		$word_count    = str_word_count( $clean_content );
 
 		if ( $word_count < Constants::MIN_WORD_COUNT ) {
-			wp_send_json_error(
+			AjaxResponse::error(
+				'invalid_input',
 				sprintf(
 					/* translators: 1: Minimum required word count, 2: Found word count */
 					__( 'Te weinig woorden. Minimaal %1$d vereist, %2$d gevonden.', 'zw-ttvgpt' ),
@@ -84,32 +90,53 @@ class SummaryGenerator {
 
 		$user_id = get_current_user_id();
 		if ( RateLimiter::is_limited( $user_id ) ) {
-			wp_send_json_error( __( 'Wacht even - max 10 per minuut', 'zw-ttvgpt' ), 429 );
+			AjaxResponse::error(
+				'rate_limited',
+				__( 'Wacht even - max 10 per minuut', 'zw-ttvgpt' ),
+				429
+			);
 		}
 
 		$result = $this->generate_summary_with_retry( $clean_content, $this->word_limit );
 		if ( is_wp_error( $result ) ) {
-			wp_send_json_error( $result->get_error_message(), 500 );
+			AjaxResponse::error(
+				$result->get_error_code(),
+				$result->get_error_message(),
+				502
+			);
 		}
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified in validate_ajax_request()
-		$regions = isset( $_POST['regions'] ) ? array_map( 'sanitize_text_field', (array) $_POST['regions'] ) : array();
-		$summary = $result;
+		$regions   = isset( $_POST['regions'] ) ? array_map( 'sanitize_text_field', (array) $_POST['regions'] ) : array();
+		$summary   = $result['summary'];
+		$validated = $result['validated'];
 
 		if ( ! empty( $regions ) ) {
 			$summary = implode( ' / ', array_map( 'strtoupper', $regions ) ) . ' - ' . $summary;
 		}
 
-		$this->save_to_acf( $post_id, $summary );
+		$saved = $this->save_to_acf( $post_id, $summary );
+		if ( ! $saved ) {
+			AjaxResponse::error(
+				'save_failed',
+				__( 'Samenvatting gegenereerd maar kon niet worden opgeslagen. Controleer of ACF actief is.', 'zw-ttvgpt' ),
+				500
+			);
+		}
+
 		RateLimiter::increment( $user_id );
 		$this->logger->debug( 'Summary generated for post ' . $post_id );
 
-		wp_send_json_success(
-			array(
-				'summary'    => $summary,
-				'word_count' => str_word_count( $summary ),
-			)
+		$response = array(
+			'summary'    => $summary,
+			'word_count' => str_word_count( $summary ),
 		);
+
+		if ( ! $validated ) {
+			$response['warning'] = __( 'Samenvatting kon niet worden geoptimaliseerd naar de gewenste lengte. Controleer handmatig.', 'zw-ttvgpt' );
+		}
+
+		AjaxResponse::success( $response );
 	}
 
 	/**
@@ -122,9 +149,11 @@ class SummaryGenerator {
 	 *
 	 * @param string $content    Content to summarize.
 	 * @param int    $word_limit Maximum words allowed.
-	 * @return string|\WP_Error Summary text or error.
+	 * @return array{summary: string, validated: bool}|\WP_Error Summary data or error.
+	 *
+	 * @phpstan-return array{summary: string, validated: bool}|\WP_Error
 	 */
-	private function generate_summary_with_retry( string $content, int $word_limit ): string|\WP_Error {
+	private function generate_summary_with_retry( string $content, int $word_limit ): array|\WP_Error {
 		$min_words   = (int) ( $word_limit * Constants::MIN_RESPONSE_RATIO );
 		$last_result = '';
 
@@ -138,14 +167,14 @@ class SummaryGenerator {
 			$last_result = $result;
 			$word_count  = Helper::count_words( $result );
 
-			// Check if response is valid (within min/max bounds).
-			$is_valid = $word_count >= $min_words && $word_count <= $word_limit;
-
-			if ( $is_valid ) {
+			if ( $word_count >= $min_words && $word_count <= $word_limit ) {
 				if ( $attempt > 1 ) {
 					$this->logger->debug( sprintf( 'Summary accepted after %d retries', $attempt - 1 ) );
 				}
-				return $result;
+				return array(
+					'summary'   => $result,
+					'validated' => true,
+				);
 			}
 		}
 
@@ -154,7 +183,10 @@ class SummaryGenerator {
 			sprintf( 'Summary retry limit reached (%d attempts), returning last attempt', Constants::MAX_RETRY_ATTEMPTS )
 		);
 
-		return $last_result;
+		return array(
+			'summary'   => $last_result,
+			'validated' => false,
+		);
 	}
 
 	/**
@@ -164,21 +196,30 @@ class SummaryGenerator {
 	 *
 	 * @param int    $post_id Post ID to update.
 	 * @param string $summary Generated summary text.
+	 * @return bool True on success, false on failure.
 	 */
-	private function save_to_acf( int $post_id, string $summary ): void {
+	private function save_to_acf( int $post_id, string $summary ): bool {
 		if ( ! function_exists( 'update_field' ) ) {
-			$this->logger->error( 'ACF not available' );
-			return;
+			$this->logger->error( 'ACF not available - summary not saved' );
+			return false;
 		}
 
-		update_field( Constants::ACF_SUMMARY_FIELD, $summary, $post_id );
-		update_field( Constants::ACF_GPT_MARKER_FIELD, $summary, $post_id );
+		$summary_saved = update_field( Constants::ACF_SUMMARY_FIELD, $summary, $post_id );
+		$marker_saved  = update_field( Constants::ACF_GPT_MARKER_FIELD, $summary, $post_id );
+
+		if ( false === $summary_saved ) {
+			$this->logger->error( 'Failed to save summary to ACF field', array( 'post_id' => $post_id ) );
+			return false;
+		}
 
 		$this->logger->debug(
 			'Saved summary to ACF fields',
 			array(
-				'post_id' => $post_id,
+				'post_id'      => $post_id,
+				'marker_saved' => $marker_saved,
 			)
 		);
+
+		return true;
 	}
 }

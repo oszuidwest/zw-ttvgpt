@@ -43,10 +43,10 @@ class SettingsPage {
 	 * @since 1.0.0
 	 *
 	 * @param string $field_key Field key within settings array.
-	 * @return string Escaped name attribute value.
+	 * @return string Name attribute value (not escaped - caller must escape for context).
 	 */
 	private function get_field_name( string $field_key ): string {
-		return esc_attr( Constants::SETTINGS_OPTION_NAME . '[' . $field_key . ']' );
+		return Constants::SETTINGS_OPTION_NAME . '[' . $field_key . ']';
 	}
 
 	/**
@@ -134,7 +134,8 @@ class SettingsPage {
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
-			
+			<?php settings_errors(); ?>
+
 			<form method="post" action="options.php">
 				<?php
 				settings_fields( Constants::SETTINGS_GROUP );
@@ -195,23 +196,64 @@ class SettingsPage {
 	}
 
 	/**
-	 * Renders the model field.
+	 * Renders the model field as dropdown with fine-tuned option.
 	 *
 	 * @since 1.0.0
 	 */
 	public function render_model_field(): void {
 		$current_model = SettingsManager::get_model();
 		$field_name    = $this->get_field_name( 'model' );
+		$is_fine_tuned = str_starts_with( strtolower( $current_model ), 'ft:' );
 		?>
-		<input type="text"
-				id="zw_ttvgpt_model"
-				name="<?php echo esc_attr( $field_name ); ?>"
-				value="<?php echo esc_attr( $current_model ); ?>"
+		<select id="zw_ttvgpt_model_select" <?php echo $is_fine_tuned ? '' : 'name="' . esc_attr( $field_name ) . '"'; ?>>
+			<?php foreach ( Constants::SUPPORTED_BASE_MODELS as $model ) : ?>
+				<option value="<?php echo esc_attr( $model ); ?>" <?php selected( ! $is_fine_tuned && $current_model === $model ); ?>>
+					<?php echo esc_html( $model ); ?>
+				</option>
+			<?php endforeach; ?>
+			<option value="fine-tuned" <?php selected( $is_fine_tuned ); ?>>
+				<?php esc_html_e( 'Fine-tuned model...', 'zw-ttvgpt' ); ?>
+			</option>
+		</select>
+
+		<div id="zw_ttvgpt_fine_tuned_wrapper" style="margin-top: 8px; <?php echo $is_fine_tuned ? '' : 'display: none;'; ?>">
+			<input type="text"
+				id="zw_ttvgpt_fine_tuned_model"
+				<?php echo $is_fine_tuned ? 'name="' . esc_attr( $field_name ) . '"' : ''; ?>
+				value="<?php echo $is_fine_tuned ? esc_attr( $current_model ) : ''; ?>"
 				class="regular-text"
-				placeholder="gpt-5.1" />
+				placeholder="ft:gpt-4.1:org:suffix:id" />
+			<p class="description">
+				<?php esc_html_e( 'Fine-tuning is alleen beschikbaar voor GPT-4.1 modellen (bijv. ft:gpt-4.1:my-org:custom:abc123)', 'zw-ttvgpt' ); ?>
+			</p>
+		</div>
+
 		<p class="description">
-			<?php esc_html_e( 'Aanbevolen: gpt-5.1 (beste kwaliteit). Alternatieven: gpt-4.1, gpt-4.1-mini, gpt-4.1-nano', 'zw-ttvgpt' ); ?>
+			<?php esc_html_e( 'Aanbevolen: gpt-5.2 (beste kwaliteit/snelheid)', 'zw-ttvgpt' ); ?>
 		</p>
+
+		<script>
+		(function() {
+			const select = document.getElementById('zw_ttvgpt_model_select');
+			const wrapper = document.getElementById('zw_ttvgpt_fine_tuned_wrapper');
+			const fineTunedInput = document.getElementById('zw_ttvgpt_fine_tuned_model');
+			const fieldName = <?php echo wp_json_encode( $field_name ); ?>;
+
+			select.addEventListener('change', function() {
+				const isFineTuned = this.value === 'fine-tuned';
+				wrapper.style.display = isFineTuned ? 'block' : 'none';
+
+				// Toggle name attribute for form submission.
+				if (isFineTuned) {
+					select.removeAttribute('name');
+					fineTunedInput.setAttribute('name', fieldName);
+				} else {
+					select.setAttribute('name', fieldName);
+					fineTunedInput.removeAttribute('name');
+				}
+			});
+		})();
+		</script>
 		<?php
 	}
 
@@ -291,6 +333,34 @@ class SettingsPage {
 	}
 
 	/**
+	 * Gets the appropriate error message for an invalid model.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $model Invalid model identifier.
+	 * @return string Translated error message.
+	 */
+	private function get_model_error_message( string $model ): string {
+		$model_lower       = strtolower( $model );
+		$is_fine_tuned     = str_starts_with( $model_lower, 'ft:' );
+		$fine_tunable_list = implode( ', ', Constants::FINE_TUNABLE_MODELS );
+		$supported_list    = implode( ', ', Constants::SUPPORTED_BASE_MODELS );
+
+		if ( $is_fine_tuned && str_contains( $model_lower, 'gpt-5' ) ) {
+			/* translators: %s: List of fine-tunable models */
+			return sprintf( __( 'GPT-5 modellen kunnen niet gefinetuned worden. Fine-tuning is alleen beschikbaar voor: %s', 'zw-ttvgpt' ), $fine_tunable_list ); // phpcs:ignore Generic.Files.LineLength.TooLong -- Translation string must remain intact.
+		}
+
+		if ( $is_fine_tuned ) {
+			/* translators: %s: List of fine-tunable models */
+			return sprintf( __( 'Fine-tuned model moet gebaseerd zijn op: %s', 'zw-ttvgpt' ), $fine_tunable_list );
+		}
+
+		/* translators: 1: Invalid model name, 2: List of supported models */
+		return sprintf( __( 'Model "%1$s" wordt niet ondersteund. Kies uit: %2$s', 'zw-ttvgpt' ), $model, $supported_list );
+	}
+
+	/**
 	 * Sanitizes and validates all plugin settings before saving.
 	 *
 	 * @since 1.0.0
@@ -319,13 +389,35 @@ class SettingsPage {
 
 		// Model.
 		if ( isset( $input['model'] ) ) {
-			$model              = sanitize_text_field( $input['model'] );
+			$model = sanitize_text_field( $input['model'] );
+			if ( ! empty( $model ) && ! Constants::is_supported_model( $model ) ) {
+				$error_message = $this->get_model_error_message( $model );
+				add_settings_error( Constants::SETTINGS_OPTION_NAME, 'invalid_model', $error_message );
+				$model = Constants::DEFAULT_MODEL;
+			}
 			$sanitized['model'] = $model;
 		}
 
 		// Word limit.
 		if ( isset( $input['word_limit'] ) ) {
-			$word_limit              = absint( $input['word_limit'] );
+			$original_word_limit = absint( $input['word_limit'] );
+			$word_limit          = $original_word_limit;
+			if ( $word_limit < Constants::MIN_WORD_LIMIT || $word_limit > Constants::MAX_WORD_LIMIT ) {
+				$word_limit = max( Constants::MIN_WORD_LIMIT, min( $word_limit, Constants::MAX_WORD_LIMIT ) );
+				add_settings_error(
+					Constants::SETTINGS_OPTION_NAME,
+					'invalid_word_limit',
+					sprintf(
+						/* translators: 1: Original word limit entered, 2: Adjusted word limit, 3: Minimum word limit, 4: Maximum word limit */
+						__( 'Woordlimiet %1$d is ongeldig. Waarde aangepast naar %2$d (bereik: %3$d-%4$d).', 'zw-ttvgpt' ),
+						$original_word_limit,
+						$word_limit,
+						Constants::MIN_WORD_LIMIT,
+						Constants::MAX_WORD_LIMIT
+					),
+					'warning'
+				);
+			}
 			$sanitized['word_limit'] = $word_limit;
 		}
 

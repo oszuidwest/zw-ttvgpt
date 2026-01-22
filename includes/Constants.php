@@ -115,7 +115,33 @@ class Constants {
 	 * @since 1.0.0
 	 * @var string
 	 */
-	public const string DEFAULT_MODEL = 'gpt-5.1';
+	public const string DEFAULT_MODEL = 'gpt-5.2';
+
+	/**
+	 * Base models that are supported.
+	 *
+	 * @since 1.0.0
+	 * @var array<string>
+	 */
+	public const array SUPPORTED_BASE_MODELS = array(
+		'gpt-5.2',
+		'gpt-5.1',
+		'gpt-4.1',
+		'gpt-4.1-mini',
+		'gpt-4.1-nano',
+	);
+
+	/**
+	 * Models that can be fine-tuned (GPT-5 does not support fine-tuning).
+	 *
+	 * @since 1.0.0
+	 * @var array<string>
+	 */
+	public const array FINE_TUNABLE_MODELS = array(
+		'gpt-4.1',
+		'gpt-4.1-mini',
+		'gpt-4.1-nano',
+	);
 
 	/**
 	 * Maximum requests allowed per user in rate limit window.
@@ -211,38 +237,6 @@ class Constants {
 	public const float MIN_RESPONSE_RATIO = 0.2;
 
 	/**
-	 * Success message display duration in milliseconds.
-	 *
-	 * @since 1.0.0
-	 * @var int
-	 */
-	public const int SUCCESS_MESSAGE_TIMEOUT = 3000;
-
-	/**
-	 * Minimum typing animation delay in milliseconds.
-	 *
-	 * @since 1.0.0
-	 * @var int
-	 */
-	public const int ANIMATION_DELAY_MIN = 20;
-
-	/**
-	 * Maximum typing animation delay in milliseconds.
-	 *
-	 * @since 1.0.0
-	 * @var int
-	 */
-	public const int ANIMATION_DELAY_MAX = 50;
-
-	/**
-	 * Space character typing delay in milliseconds.
-	 *
-	 * @since 1.0.0
-	 * @var int
-	 */
-	public const int ANIMATION_DELAY_SPACE = 30;
-
-	/**
 	 * Default system prompt for AI summary generation.
 	 *
 	 * Optimized for GPT-5.1 with reasoning_effort='low'.
@@ -283,5 +277,58 @@ class Constants {
 	 */
 	public static function get_rate_limit_key( int $user_id ): string {
 		return self::RATE_LIMIT_PREFIX . $user_id;
+	}
+
+	/**
+	 * Checks if a model is supported.
+	 *
+	 * Supports both base models and fine-tuned variants (ft:gpt-4.1:...).
+	 * Note: GPT-5 models cannot be fine-tuned.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $model Model identifier to check.
+	 * @return bool True if model is supported, false otherwise.
+	 */
+	public static function is_supported_model( string $model ): bool {
+		$model_lower = strtolower( $model );
+
+		// Check base models.
+		if ( in_array( $model_lower, self::SUPPORTED_BASE_MODELS, true ) ) {
+			return true;
+		}
+
+		// Check fine-tuned models (format: ft:base-model:org:suffix:id).
+		// Only GPT-4.1 family supports fine-tuning.
+		if ( str_starts_with( $model_lower, 'ft:' ) ) {
+			foreach ( self::FINE_TUNABLE_MODELS as $base ) {
+				if ( str_starts_with( $model_lower, 'ft:' . $base . ':' ) ) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Gets the base model from a model string.
+	 *
+	 * For fine-tuned models (ft:gpt-4.1:...) this returns gpt-4.1.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $model Model identifier.
+	 * @return string Base model identifier.
+	 */
+	public static function get_base_model( string $model ): string {
+		if ( ! str_starts_with( strtolower( $model ), 'ft:' ) ) {
+			return $model;
+		}
+
+		// Extract base model from ft:base-model:org:suffix:id.
+		$parts = explode( ':', $model, 3 );
+
+		return count( $parts ) >= 2 ? $parts[1] : $model;
 	}
 }

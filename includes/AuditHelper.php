@@ -203,8 +203,7 @@ class AuditHelper {
 		global $wpdb;
 
 		// Sanitize post IDs to integers only.
-		$post_ids   = array_map( 'intval', $post_ids );
-		$ids_string = implode( ',', $post_ids );
+		$post_ids = array_map( 'intval', $post_ids );
 
 		// Single query to get all meta data for all posts.
 		$meta_keys = array(
@@ -404,8 +403,7 @@ class AuditHelper {
 		}
 
 		// Calculate similarity using simple word matching.
-		$matching_words = 0;
-		$max_words      = max( $ai_word_count, $human_word_count );
+		$max_words = max( $ai_word_count, $human_word_count );
 
 		// Find words that appear in both versions.
 		$common_words   = array_intersect( $ai_words, $human_words );

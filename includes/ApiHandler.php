@@ -76,7 +76,7 @@ class ApiHandler {
 	 * @param int $word_limit Maximum words for summary.
 	 * @return string System prompt text.
 	 */
-	public function get_system_prompt( int $word_limit ): string {
+	private function get_system_prompt( int $word_limit ): string {
 		$prompt_template = SettingsManager::get_system_prompt();
 		return sprintf( $prompt_template, $word_limit );
 	}
@@ -294,9 +294,9 @@ class ApiHandler {
 		);
 
 		if ( empty( $this->api_key ) ) {
-			$this->logger->error( 'API key is missing' );
+			$this->logger->error( 'API key is missing - this should be validated before calling ApiHandler' );
 			return new \WP_Error(
-				'missing_api_key',
+				'missing_config',
 				__( 'API-sleutel niet geconfigureerd', 'zw-ttvgpt' )
 			);
 		}

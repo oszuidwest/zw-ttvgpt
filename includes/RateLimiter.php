@@ -33,7 +33,12 @@ class RateLimiter {
 		$transient_key = Constants::get_rate_limit_key( $user_id );
 		$requests      = get_transient( $transient_key );
 
-		return $requests >= Constants::RATE_LIMIT_MAX_REQUESTS;
+		// false = transient not set, int = request count.
+		if ( false === $requests ) {
+			return false;
+		}
+
+		return (int) $requests >= Constants::RATE_LIMIT_MAX_REQUESTS;
 	}
 
 	/**

@@ -26,15 +26,6 @@ use ZW_TTVGPT_Core\Helper;
  */
 class AuditPage {
 	/**
-	 * Initializes the audit page.
-	 *
-	 * @since 1.0.0
-	 */
-	public function __construct() {
-		// Constructor logic if needed.
-	}
-
-	/**
 	 * Gets validated filter parameters from GET request.
 	 *
 	 * @since 1.0.0
