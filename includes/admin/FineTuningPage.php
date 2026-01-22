@@ -43,7 +43,7 @@ class FineTuningPage {
 		// Register AJAX handler.
 		add_action( 'wp_ajax_zw_ttvgpt_export_training_data', array( $this, 'handle_export_ajax' ) );
 		// Register download handler (runs early to send headers before any output).
-		// @phpstan-ignore deadCode.unreachable (false positive: add_action registers callback, doesn't call it).
+		// @phpstan-ignore-next-line deadCode.unreachable -- False positive: add_action registers callback.
 		add_action( 'admin_init', array( $this, 'handle_download_request' ) );
 	}
 
