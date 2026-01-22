@@ -1,4 +1,4 @@
-# ZuidWest TV Tekst TV GPT
+# ZuidWest Tekst TV GPT
 
 [![Code Quality](https://github.com/oszuidwest/zw-ttvgpt/actions/workflows/lint.yml/badge.svg)](https://github.com/oszuidwest/zw-ttvgpt/actions/workflows/lint.yml)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
