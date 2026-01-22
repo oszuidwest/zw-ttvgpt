@@ -43,10 +43,10 @@ class SettingsPage {
 	 * @since 1.0.0
 	 *
 	 * @param string $field_key Field key within settings array.
-	 * @return string Escaped name attribute value.
+	 * @return string Name attribute value (not escaped - caller must escape for context).
 	 */
 	private function get_field_name( string $field_key ): string {
-		return esc_attr( Constants::SETTINGS_OPTION_NAME . '[' . $field_key . ']' );
+		return Constants::SETTINGS_OPTION_NAME . '[' . $field_key . ']';
 	}
 
 	/**

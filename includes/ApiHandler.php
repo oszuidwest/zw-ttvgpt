@@ -76,7 +76,7 @@ class ApiHandler {
 	 * @param int $word_limit Maximum words for summary.
 	 * @return string System prompt text.
 	 */
-	public function get_system_prompt( int $word_limit ): string {
+	private function get_system_prompt( int $word_limit ): string {
 		$prompt_template = SettingsManager::get_system_prompt();
 		return sprintf( $prompt_template, $word_limit );
 	}

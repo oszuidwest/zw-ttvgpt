@@ -190,15 +190,6 @@ class FineTuningPage {
 					'</ul>' +
 					'</div>';
 			}
-
-			function generateFileInfoHTML(fileInfo) {
-				return '<div class="file-info">' +
-					'<h4><?php esc_html_e( 'Geëxporteerd bestand', 'zw-ttvgpt' ); ?></h4>' +
-					'<p><strong><?php esc_html_e( 'Bestandsnaam:', 'zw-ttvgpt' ); ?></strong> <a href="' + fileInfo.file_url + '" target="_blank">' + fileInfo.filename + '</a></p>' +
-					'<p><strong><?php esc_html_e( 'Records:', 'zw-ttvgpt' ); ?></strong> ' + fileInfo.line_count + '</p>' +
-					'<p><strong><?php esc_html_e( 'Bestandsgrootte:', 'zw-ttvgpt' ); ?></strong> ' + Math.round(fileInfo.file_size / 1024) + ' KB</p>' +
-					'</div>';
-			}
 			<?php // phpcs:enable Generic.Files.LineLength.TooLong ?>
 		});
 		</script>

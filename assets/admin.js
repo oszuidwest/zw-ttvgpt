@@ -494,11 +494,14 @@ function handleSuccess(data, button) {
 
     // Calculate wait time based on how many loading messages have been shown.
     // We want at least 2 messages displayed before showing the result.
-    const waitTimes = {
-        0: MESSAGE_TIMING.waitForBothMessages,
-        1: MESSAGE_TIMING.waitForSecondMessage,
-    };
-    const waitTime = waitTimes[messageCount] ?? MESSAGE_TIMING.transitionBuffer;
+    let waitTime;
+    if (messageCount === 0) {
+        waitTime = MESSAGE_TIMING.waitForBothMessages;
+    } else if (messageCount === 1) {
+        waitTime = MESSAGE_TIMING.waitForSecondMessage;
+    } else {
+        waitTime = MESSAGE_TIMING.transitionBuffer;
+    }
 
     setTimeout(() => {
         animateText(cachedAcfField, data.summary, button, data.warning);

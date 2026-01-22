@@ -237,38 +237,6 @@ class Constants {
 	public const float MIN_RESPONSE_RATIO = 0.2;
 
 	/**
-	 * Success message display duration in milliseconds.
-	 *
-	 * @since 1.0.0
-	 * @var int
-	 */
-	public const int SUCCESS_MESSAGE_TIMEOUT = 3000;
-
-	/**
-	 * Minimum typing animation delay in milliseconds.
-	 *
-	 * @since 1.0.0
-	 * @var int
-	 */
-	public const int ANIMATION_DELAY_MIN = 20;
-
-	/**
-	 * Maximum typing animation delay in milliseconds.
-	 *
-	 * @since 1.0.0
-	 * @var int
-	 */
-	public const int ANIMATION_DELAY_MAX = 50;
-
-	/**
-	 * Space character typing delay in milliseconds.
-	 *
-	 * @since 1.0.0
-	 * @var int
-	 */
-	public const int ANIMATION_DELAY_SPACE = 30;
-
-	/**
 	 * Default system prompt for AI summary generation.
 	 *
 	 * Optimized for GPT-5.1 with reasoning_effort='low'.

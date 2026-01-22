@@ -104,15 +104,6 @@
     animation: zw-ttvgpt-shimmer 1.5s infinite;
 }
 
-/* Settings page */
-.zw-ttvgpt-settings-section {
-    margin-top: 20px;
-}
-
-.zw-ttvgpt-settings-section th {
-    padding-left: 0;
-}
-
 /* Hide the GPT marker field */
 .acf-field-66ad2a3105371 {
     display: none !important;
