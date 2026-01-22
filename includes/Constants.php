@@ -298,11 +298,14 @@ class Constants {
 			return true;
 		}
 
-		// Check fine-tuned models (format: ft:base-model:org:suffix:id).
+		// Check fine-tuned models.
+		// Format: ft:base-model-YYYY-MM-DD:org:suffix:id (OpenAI includes date in model name).
 		// Only GPT-4.1 family supports fine-tuning.
 		if ( str_starts_with( $model_lower, 'ft:' ) ) {
 			foreach ( self::FINE_TUNABLE_MODELS as $base ) {
-				if ( str_starts_with( $model_lower, 'ft:' . $base . ':' ) ) {
+				$prefix = 'ft:' . $base;
+				// Match ft:gpt-4.1-mini: or ft:gpt-4.1-mini-2025-04-14: (with date suffix).
+				if ( str_starts_with( $model_lower, $prefix . ':' ) || str_starts_with( $model_lower, $prefix . '-' ) ) {
 					return true;
 				}
 			}
@@ -314,7 +317,7 @@ class Constants {
 	/**
 	 * Gets the base model from a model string.
 	 *
-	 * For fine-tuned models (ft:gpt-4.1:...) this returns gpt-4.1.
+	 * For fine-tuned models (ft:gpt-4.1-mini-2025-04-14:...) this returns gpt-4.1-mini.
 	 *
 	 * @since 1.0.0
 	 *
@@ -326,9 +329,21 @@ class Constants {
 			return $model;
 		}
 
-		// Extract base model from ft:base-model:org:suffix:id.
+		// Extract base model from ft:base-model-YYYY-MM-DD:org:suffix:id.
 		$parts = explode( ':', $model, 3 );
+		if ( count( $parts ) < 2 ) {
+			return $model;
+		}
 
-		return count( $parts ) >= 2 ? $parts[1] : $model;
+		$model_part = $parts[1];
+
+		// Strip date suffix (e.g., -2025-04-14) if present.
+		foreach ( self::FINE_TUNABLE_MODELS as $base ) {
+			if ( str_starts_with( strtolower( $model_part ), $base ) ) {
+				return $base;
+			}
+		}
+
+		return $model_part;
 	}
 }
