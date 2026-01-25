@@ -348,7 +348,7 @@ class ApiHandler {
 			return $summary;
 		}
 
-		$this->logger->debug( 'Summary generated', array( 'word_count' => str_word_count( $summary ) ) );
+		$this->logger->debug( 'Summary generated', array( 'word_count' => Helper::count_words( $summary ) ) );
 
 		return $summary;
 	}

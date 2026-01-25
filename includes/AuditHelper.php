@@ -370,13 +370,7 @@ class AuditHelper {
 
 		$ai_words    = preg_split( '/\s+/', trim( $ai_content ) );
 		$human_words = preg_split( '/\s+/', trim( $human_content ) );
-		$ai_words    = false !== $ai_words ? $ai_words : array();
-		$human_words = false !== $human_words ? $human_words : array();
 		$max_words   = max( count( $ai_words ), count( $human_words ) );
-
-		if ( 0 === $max_words ) {
-			return 0.0;
-		}
 
 		$matching_words    = count( array_intersect( $ai_words, $human_words ) );
 		$change_percentage = ( 1 - $matching_words / $max_words ) * 100;

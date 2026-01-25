@@ -231,15 +231,11 @@ class AuditPage {
 					<label for="filter-by-status" class="screen-reader-text"><?php esc_html_e( 'Op type filteren', 'zw-ttvgpt' ); ?></label>
 					<select name="status" id="filter-by-status">
 						<option value=""><?php esc_html_e( 'Alle types', 'zw-ttvgpt' ); ?></option>
-						<option value="fully_human_written" <?php selected( $status_filter, 'fully_human_written' ); ?>>
-							<?php esc_html_e( 'Handgeschreven', 'zw-ttvgpt' ); ?>
-						</option>
-						<option value="ai_written_not_edited" <?php selected( $status_filter, 'ai_written_not_edited' ); ?>>
-							<?php esc_html_e( 'AI-gegenereerd', 'zw-ttvgpt' ); ?>
-						</option>
-						<option value="ai_written_edited" <?php selected( $status_filter, 'ai_written_edited' ); ?>>
-							<?php esc_html_e( 'AI-bewerkt', 'zw-ttvgpt' ); ?>
-						</option>
+						<?php foreach ( AuditStatus::cases() as $status ) : ?>
+							<option value="<?php echo esc_attr( $status->value ); ?>" <?php selected( $status_filter, $status->value ); ?>>
+								<?php echo esc_html( $status->get_label() ); ?>
+							</option>
+						<?php endforeach; ?>
 					</select>
 
 					<label for="filter-by-change" class="screen-reader-text"><?php esc_html_e( 'Op wijzigingspercentage filteren', 'zw-ttvgpt' ); ?></label>

@@ -381,8 +381,7 @@ function cleanupWhitespace(text) {
  * @return {boolean} True if Block Editor checkbox.
  */
 function isBlockEditorCheckbox(checkbox) {
-    const id = checkbox.id;
-    return id?.startsWith('inspector-checkbox-control') ?? false;
+    return checkbox.id?.startsWith('inspector-checkbox-control') ?? false;
 }
 
 /**

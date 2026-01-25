@@ -58,7 +58,7 @@ class SettingsManager {
 			wp_cache_set( self::CACHE_KEY, $settings, self::CACHE_GROUP );
 		}
 
-		return is_array( $settings ) ? $settings : Constants::get_default_settings();
+		return $settings;
 	}
 
 	/**
