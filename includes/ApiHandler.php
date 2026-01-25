@@ -30,7 +30,7 @@ class ApiHandler {
 	private const string CHAT_COMPLETIONS_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 
 	/**
-	 * OpenAI Responses API endpoint (GPT-5.1 only).
+	 * OpenAI Responses API endpoint (GPT-5.x models).
 	 *
 	 * @since 1.0.0
 	 * @var string

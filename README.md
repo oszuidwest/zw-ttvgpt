@@ -3,7 +3,7 @@
 [![Code Quality](https://github.com/oszuidwest/zw-ttvgpt/actions/workflows/lint.yml/badge.svg)](https://github.com/oszuidwest/zw-ttvgpt/actions/workflows/lint.yml)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![PHP Version](https://img.shields.io/badge/PHP-8.3%2B-blue.svg)](https://php.net)
-[![WordPress](https://img.shields.io/badge/WordPress-6.5%2B-blue.svg)](https://wordpress.org)
+[![WordPress](https://img.shields.io/badge/WordPress-6.8%2B-blue.svg)](https://wordpress.org)
 
 WordPress-plugin die de GPT-modellen van OpenAI gebruikt om automatisch korte samenvattingen van artikelen te genereren voor tekst-tv-uitzendingen ('kabelkrant') of teletekst.
 
@@ -23,7 +23,7 @@ WordPress-plugin die de GPT-modellen van OpenAI gebruikt om automatisch korte sa
 ## Installatie en configuratie
 
 ### Vereisten
-- WordPress 6.5 of hoger
+- WordPress 6.8 of hoger
 - PHP 8.3 of hoger
 - Advanced Custom Fields (ACF) plugin
 - OpenAI API key
@@ -63,6 +63,7 @@ Ondersteunde formaten:
 - `ft:gpt-4.1:my-org:custom-suffix:id`
 - `ft:gpt-4.1-mini:my-org:custom-suffix:id`
 - `ft:gpt-4.1-nano:my-org:custom-suffix:id`
+- Modellen met date suffix worden ook ondersteund (bijv. `ft:gpt-4.1-mini-2025-04-14:my-org:custom-suffix:id`)
 
 Selecteer "Fine-tuned model..." in de dropdown op de instellingenpagina en voer je model-ID in.
 
