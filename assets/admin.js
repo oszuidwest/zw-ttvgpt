@@ -239,10 +239,15 @@ async function handleGenerateClick(e) {
             body: formData,
         });
 
-        const data = await response.json();
+        let data;
+        try {
+            data = await response.json();
+        } catch (parseError) {
+            throw new Error(`Server error: ${response.status}`);
+        }
 
         // Check for HTTP errors, but use server message if available
-        if (!response.ok && !data) {
+        if (!response.ok && !data?.data?.message) {
             throw new Error(`Server error: ${response.status}`);
         }
 
