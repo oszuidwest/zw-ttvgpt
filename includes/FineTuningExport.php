@@ -312,7 +312,15 @@ class FineTuningExport {
 		);
 
 		$transient_key = self::EXPORT_TRANSIENT_PREFIX . $download_key;
-		set_transient( $transient_key, $transient_data, self::EXPORT_TRANSIENT_EXPIRATION );
+		$stored        = set_transient( $transient_key, $transient_data, self::EXPORT_TRANSIENT_EXPIRATION );
+
+		if ( false === $stored ) {
+			$this->logger->error( "Failed to store export transient ({$file_size} bytes). Database or object cache limit may be exceeded." );
+			return new \WP_Error(
+				'transient_failed',
+				__( 'Export data kon niet worden opgeslagen. Probeer met minder berichten of neem contact op met de beheerder.', 'zw-ttvgpt' )
+			);
+		}
 
 		$this->logger->debug( "Export prepared: {$filename} ({$line_count} lines, {$file_size} bytes)" );
 
@@ -347,6 +355,16 @@ class FineTuningExport {
 			return new \WP_Error(
 				'invalid_download',
 				__( 'Download link is verlopen of ongeldig. Genereer de export opnieuw.', 'zw-ttvgpt' )
+			);
+		}
+
+		// Validate required keys exist.
+		if ( ! isset( $transient_data['content'] ) || ! isset( $transient_data['filename'] ) ) {
+			$this->logger->error( 'Corrupted transient data for download key: ' . $download_key );
+			delete_transient( $transient_key );
+			return new \WP_Error(
+				'corrupted_download',
+				__( 'Export data is beschadigd. Genereer de export opnieuw.', 'zw-ttvgpt' )
 			);
 		}
 

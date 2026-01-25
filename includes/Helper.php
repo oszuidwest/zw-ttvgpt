@@ -36,12 +36,22 @@ class Helper {
 			delete_transient( $transient_key );
 		}
 
-		// Clean up orphaned transients from deleted users using direct query.
+		// Clean up orphaned transients using direct query.
 		global $wpdb;
+
+		// Clean rate limit transients.
 		$wpdb->query(
 			$wpdb->prepare(
 				"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
 				'_transient_' . Constants::RATE_LIMIT_PREFIX . '%'
+			)
+		);
+
+		// Clean export transients (prefix: zw_ttvgpt_export_).
+		$wpdb->query(
+			$wpdb->prepare(
+				"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
+				'_transient_zw_ttvgpt_export_%'
 			)
 		);
 	}

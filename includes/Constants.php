@@ -134,13 +134,16 @@ class Constants {
 	/**
 	 * Models that can be fine-tuned (GPT-5 does not support fine-tuning).
 	 *
+	 * IMPORTANT: Ordered by length descending to ensure longest match first
+	 * in str_starts_with() comparisons (e.g., gpt-4.1-mini before gpt-4.1).
+	 *
 	 * @since 1.0.0
 	 * @var array<string>
 	 */
 	public const array FINE_TUNABLE_MODELS = array(
-		'gpt-4.1',
 		'gpt-4.1-mini',
 		'gpt-4.1-nano',
+		'gpt-4.1',
 	);
 
 	/**
