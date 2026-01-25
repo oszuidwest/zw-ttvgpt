@@ -124,16 +124,13 @@ class AuditHelper {
 			)
 		);
 
-		// Convert database results to array format.
-		$unique_months = array();
-		foreach ( $results as $row ) {
-			$unique_months[] = array(
+		return array_map(
+			static fn( $row ) => array(
 				'year'  => (int) $row->year,
 				'month' => (int) $row->month,
-			);
-		}
-
-		return $unique_months;
+			),
+			$results
+		);
 	}
 
 	/**
@@ -183,7 +180,6 @@ class AuditHelper {
 		return $query->posts;
 	}
 
-
 	/**
 	 * Retrieves metadata for multiple posts in a single query.
 	 *
@@ -202,41 +198,30 @@ class AuditHelper {
 
 		global $wpdb;
 
-		// Sanitize post IDs to integers only.
 		$post_ids = array_map( 'intval', $post_ids );
 
-		// Single query to get all meta data for all posts.
 		$meta_keys = array(
 			Constants::ACF_FIELD_AI_CONTENT,
 			Constants::ACF_FIELD_HUMAN_CONTENT,
 			'_edit_last',
 		);
 
-		// Build WHERE clause for post IDs.
-		$where_post_ids = array();
-		foreach ( $post_ids as $id ) {
-			$where_post_ids[] = $wpdb->prepare( 'post_id = %d', $id );
-		}
+		$id_placeholders  = implode( ',', array_fill( 0, count( $post_ids ), '%d' ) );
+		$key_placeholders = implode( ',', array_fill( 0, count( $meta_keys ), '%s' ) );
 
-		// Build WHERE clause for meta keys.
-		$where_meta_keys = array();
-		foreach ( $meta_keys as $key ) {
-			$where_meta_keys[] = $wpdb->prepare( 'meta_key = %s', $key );
-		}
-
-		// Combine conditions.
-		$where_post_clause = '(' . implode( ' OR ', $where_post_ids ) . ')';
-		$where_key_clause  = '(' . implode( ' OR ', $where_meta_keys ) . ')';
-
-		// Build final query.
-		$query = "SELECT post_id, meta_key, meta_value 
-			FROM {$wpdb->postmeta} 
-			WHERE {$where_post_clause}
-			AND {$where_key_clause}
-			ORDER BY post_id";
-
-		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Query is built from individually prepared fragments above
-		$meta_data = $wpdb->get_results( $query );
+		// Dynamic IN() placeholders built from array_fill, safe for interpolation.
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders
+		$meta_data = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT post_id, meta_key, meta_value
+				FROM {$wpdb->postmeta}
+				WHERE post_id IN ({$id_placeholders})
+				AND meta_key IN ({$key_placeholders})
+				ORDER BY post_id",
+				...array_merge( $post_ids, $meta_keys )
+			)
+		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders
 
 		// Organize data by post_id for fast lookup.
 		$meta_cache = array();
@@ -258,8 +243,7 @@ class AuditHelper {
 	public static function strip_region_prefix( string $content ): string {
 		// Remove region prefixes like "LEIDEN - ", "DEN HAAG - ", "ROOSENDAAL/OUDENBOSCH - ", "ETTEN-LEUR - ".
 		// Matches: uppercase letters, spaces, forward slashes, hyphens, followed by " - ".
-		$result = preg_replace( '/^[A-Z][A-Z\s\/\-]*\s-\s/', '', trim( $content ) );
-		return null !== $result ? $result : trim( $content );
+		return preg_replace( '/^[A-Z][A-Z\s\/\-]*\s-\s/', '', trim( $content ) ) ?? trim( $content );
 	}
 
 	/**
@@ -286,9 +270,9 @@ class AuditHelper {
 
 		// Determine status based on content analysis using enum.
 		$status = match ( true ) {
-			empty( $ai_content ) || '' === trim( $ai_content ) => AuditStatus::FullyHumanWritten,
-			$ai_clean === $human_clean                         => AuditStatus::AiWrittenNotEdited,
-			default                                            => AuditStatus::AiWrittenEdited,
+			'' === trim( $ai_content ) => AuditStatus::FullyHumanWritten,
+			$ai_clean === $human_clean => AuditStatus::AiWrittenNotEdited,
+			default                    => AuditStatus::AiWrittenEdited,
 		};
 
 		// Calculate percentage change for AI+ articles.
@@ -353,16 +337,12 @@ class AuditHelper {
 		);
 
 		// Split the diff into before/after by removing the opposite tags.
-		$before = preg_replace( '/<span class="zw-diff-added">.*?<\/span>/s', '', $diff_html );
-		$after  = preg_replace( '/<span class="zw-diff-removed">.*?<\/span>/s', '', $diff_html );
+		$before = preg_replace( '/<span class="zw-diff-added">.*?<\/span>/s', '', $diff_html ) ?? $diff_html;
+		$after  = preg_replace( '/<span class="zw-diff-removed">.*?<\/span>/s', '', $diff_html ) ?? $diff_html;
 
-		// Clean up any double spaces - handle potential null from preg_replace.
-		$before = is_string( $before ) ? preg_replace( '/\s+/', ' ', $before ) : $diff_html;
-		$after  = is_string( $after ) ? preg_replace( '/\s+/', ' ', $after ) : $diff_html;
-
-		// Ensure before and after are strings before trimming.
-		$before = is_string( $before ) ? $before : '';
-		$after  = is_string( $after ) ? $after : '';
+		// Clean up any double spaces.
+		$before = preg_replace( '/\s+/', ' ', $before ) ?? $before;
+		$after  = preg_replace( '/\s+/', ' ', $after ) ?? $after;
 
 		return array(
 			'before' => trim( $before ),
@@ -388,30 +368,12 @@ class AuditHelper {
 			return 100.0;
 		}
 
-		// Split into words for comparison.
-		$ai_words_result    = preg_split( '/\s+/', trim( $ai_content ) );
-		$human_words_result = preg_split( '/\s+/', trim( $human_content ) );
+		$ai_words    = preg_split( '/\s+/', trim( $ai_content ) );
+		$human_words = preg_split( '/\s+/', trim( $human_content ) );
+		$max_words   = max( count( $ai_words ), count( $human_words ) );
 
-		$ai_words    = false !== $ai_words_result ? $ai_words_result : array();
-		$human_words = false !== $human_words_result ? $human_words_result : array();
-
-		$ai_word_count    = count( $ai_words );
-		$human_word_count = count( $human_words );
-
-		if ( 0 === $ai_word_count ) {
-			return 100.0;
-		}
-
-		// Calculate similarity using simple word matching.
-		$max_words = max( $ai_word_count, $human_word_count );
-
-		// Find words that appear in both versions.
-		$common_words   = array_intersect( $ai_words, $human_words );
-		$matching_words = count( $common_words );
-
-		// Calculate change percentage.
-		$similarity_ratio  = $matching_words / $max_words;
-		$change_percentage = ( 1 - $similarity_ratio ) * 100;
+		$matching_words    = count( array_intersect( $ai_words, $human_words ) );
+		$change_percentage = ( 1 - $matching_words / $max_words ) * 100;
 
 		return round( $change_percentage, 1 );
 	}

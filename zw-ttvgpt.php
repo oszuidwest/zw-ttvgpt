@@ -38,7 +38,7 @@ use ZW_TTVGPT_Core\Helper;
 use ZW_TTVGPT_Core\Logger;
 use ZW_TTVGPT_Core\SettingsManager;
 use ZW_TTVGPT_Core\SummaryGenerator;
-use ZW_TTVGPT_Core\Admin\Admin;
+use ZW_TTVGPT_Core\Admin\AdminMenu;
 use ZW_TTVGPT_Core\Admin\FineTuningPage;
 
 /**
@@ -55,14 +55,13 @@ function zw_ttvgpt_init(): void {
 		$logger
 	);
 
-	$generator = new SummaryGenerator(
+	new SummaryGenerator(
 		$api_handler,
 		SettingsManager::get_word_limit(),
 		$logger
 	);
 
 	if ( is_admin() ) {
-		// Initialize fine tuning export.
 		$fine_tuning_export = new FineTuningExport(
 			$logger,
 			$api_handler,
@@ -73,7 +72,7 @@ function zw_ttvgpt_init(): void {
 			$logger
 		);
 
-		new Admin( $logger, $fine_tuning_page );
+		new AdminMenu( $logger, $fine_tuning_page );
 	}
 }
 add_action( 'init', 'zw_ttvgpt_init' );

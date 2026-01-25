@@ -62,7 +62,7 @@ class FineTuningExport {
 
 		$training_data = array();
 		$stats         = array(
-			'total_posts' => 0,
+			'total_posts' => count( $posts ),
 			'processed'   => 0,
 			'skipped'     => 0,
 			'errors'      => 0,
@@ -72,29 +72,16 @@ class FineTuningExport {
 			),
 		);
 
-		foreach ( $posts as $post ) {
-			++$stats['total_posts'];
+		$processed_dates = array();
 
+		foreach ( $posts as $post ) {
 			try {
 				$training_entry = $this->create_training_entry( $post );
 
 				if ( $training_entry ) {
-					$training_data[] = $training_entry;
+					$training_data[]   = $training_entry;
+					$processed_dates[] = get_the_date( 'Y-m-d', $post->ID );
 					++$stats['processed'];
-
-					// Track date range.
-					$post_date = get_the_date( 'Y-m-d', $post->ID );
-					if ( '' === $stats['date_range']['start'] ) {
-						$stats['date_range']['start'] = $post_date;
-						$stats['date_range']['end']   = $post_date;
-					} else {
-						if ( $post_date < $stats['date_range']['start'] ) {
-							$stats['date_range']['start'] = $post_date;
-						}
-						if ( $post_date > $stats['date_range']['end'] ) {
-							$stats['date_range']['end'] = $post_date;
-						}
-					}
 				} else {
 					++$stats['skipped'];
 				}
@@ -102,6 +89,11 @@ class FineTuningExport {
 				++$stats['errors'];
 				$this->logger->debug( 'Error processing post ' . $post->ID . ': ' . $e->getMessage() );
 			}
+		}
+
+		if ( ! empty( $processed_dates ) ) {
+			$stats['date_range']['start'] = min( $processed_dates );
+			$stats['date_range']['end']   = max( $processed_dates );
 		}
 
 		$this->logger->debug( 'Training data generation completed. Stats: ' . wp_json_encode( $stats ) );
@@ -132,23 +124,11 @@ class FineTuningExport {
 	private function get_suitable_posts( array $filters ): array {
 		global $wpdb;
 
-		$date_filter  = Helper::build_date_filter_clause(
+		$date_filter = Helper::build_date_filter_clause(
 			$filters['start_date'] ?? '',
 			$filters['end_date'] ?? ''
 		);
-		$limit_clause = '';
 
-		// Apply limit.
-		if ( ! empty( $filters['limit'] ) ) {
-			$limit_clause = $wpdb->prepare( 'LIMIT %d', $filters['limit'] );
-		}
-
-		// Query for posts with AI content that has been edited by humans.
-		$ai_field         = Constants::ACF_FIELD_AI_CONTENT;
-		$human_field      = Constants::ACF_FIELD_HUMAN_CONTENT;
-		$kabelkrant_field = Constants::ACF_FIELD_IN_KABELKRANT;
-
-		// Build base query.
 		$base_query = $wpdb->prepare(
 			"SELECT p.ID, p.post_title, p.post_content, p.post_date,
 			       pm1.meta_value as ai_content,
@@ -165,22 +145,19 @@ class FineTuningExport {
 			  AND p.post_type = 'post'
 			  AND pm1.meta_value != ''
 			  AND pm1.meta_value != pm2.meta_value",
-			$ai_field,
-			$human_field,
-			$kabelkrant_field
+			Constants::ACF_FIELD_AI_CONTENT,
+			Constants::ACF_FIELD_HUMAN_CONTENT,
+			Constants::ACF_FIELD_IN_KABELKRANT
 		);
 
-		// Add date filter if provided.
 		if ( ! empty( $date_filter ) ) {
 			$base_query .= ' ' . $date_filter;
 		}
 
-		// Add order by.
 		$base_query .= ' ORDER BY p.post_date DESC';
 
-		// Add limit if provided.
-		if ( ! empty( $limit_clause ) ) {
-			$base_query .= ' ' . $limit_clause;
+		if ( ! empty( $filters['limit'] ) ) {
+			$base_query .= ' ' . $wpdb->prepare( ' LIMIT %d', $filters['limit'] );
 		}
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Base query is prepared above, date/limit clauses are also prepared
@@ -206,22 +183,15 @@ class FineTuningExport {
 	 * @phpstan-return array<string, mixed>|null
 	 */
 	private function create_training_entry( \stdClass $post ): ?array {
-		// Validate required properties exist.
-		if ( ! isset( $post->ID ) || ! isset( $post->ai_content ) || ! isset( $post->human_content ) || ! isset( $post->post_content ) ) {
-			return null;
-		}
-
-		// Validate content.
 		if ( empty( $post->ai_content ) || empty( $post->human_content ) ) {
 			$this->logger->debug( 'Skipping post ' . $post->ID . ': missing AI or human content' );
 			return null;
 		}
 
-		// Strip region prefixes for comparison (reuse audit helper logic).
+		// Strip region prefixes for comparison.
 		$ai_clean    = AuditHelper::strip_region_prefix( $post->ai_content );
 		$human_clean = AuditHelper::strip_region_prefix( $post->human_content );
 
-		// Double-check that content is actually different.
 		if ( $ai_clean === $human_clean ) {
 			$this->logger->debug( 'Skipping post ' . $post->ID . ': AI and human content are identical after cleaning' );
 			return null;
@@ -230,8 +200,7 @@ class FineTuningExport {
 		// Prepare content using the exact same logic as production.
 		$cleaned_content = $this->api_handler->prepare_content( $post->post_content );
 
-		// Create DPO training entry using exact production message format.
-		$training_entry = array(
+		return array(
 			'input'                => array(
 				'messages'            => $this->api_handler->build_messages( $cleaned_content, $this->word_limit ),
 				'tools'               => array(),
@@ -240,21 +209,17 @@ class FineTuningExport {
 			'preferred_output'     => array(
 				array(
 					'role'    => 'assistant',
-					'content' => $human_clean, // Cleaned version without region prefix.
+					'content' => $human_clean,
 				),
 			),
 			'non_preferred_output' => array(
 				array(
 					'role'    => 'assistant',
-					'content' => $ai_clean, // Cleaned version without region prefix.
+					'content' => $ai_clean,
 				),
 			),
 		);
-
-		return $training_entry;
 	}
-
-
 
 	/**
 	 * Transient key prefix for temporary export data.
@@ -296,14 +261,13 @@ class FineTuningExport {
 		$filename     = 'dpo_training_data_' . gmdate( 'Y-m-d_H-i-s' ) . '.jsonl';
 
 		// Build JSONL content.
-		$jsonl_content = '';
-		$line_count    = 0;
-		foreach ( $training_data as $entry ) {
-			$jsonl_content .= wp_json_encode( $entry, JSON_UNESCAPED_UNICODE ) . "\n";
-			++$line_count;
-		}
-
-		$file_size = strlen( $jsonl_content );
+		$jsonl_lines   = array_map(
+			static fn( $entry ) => wp_json_encode( $entry, JSON_UNESCAPED_UNICODE ),
+			$training_data
+		);
+		$jsonl_content = implode( "\n", $jsonl_lines ) . "\n";
+		$line_count    = count( $jsonl_lines );
+		$file_size     = strlen( $jsonl_content );
 
 		// Store in transient for temporary access.
 		$transient_data = array(
@@ -359,7 +323,7 @@ class FineTuningExport {
 		}
 
 		// Validate required keys exist.
-		if ( ! isset( $transient_data['content'] ) || ! isset( $transient_data['filename'] ) ) {
+		if ( ! isset( $transient_data['content'], $transient_data['filename'] ) ) {
 			$this->logger->error( 'Corrupted transient data for download key: ' . $download_key );
 			delete_transient( $transient_key );
 			return new \WP_Error(

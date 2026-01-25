@@ -173,7 +173,3 @@
 .change-percentage.high-change {
     background: #dc3232;
 }
-
-.zw-audit-table .column-change .change-percentage {
-    display: inline-block;
-}

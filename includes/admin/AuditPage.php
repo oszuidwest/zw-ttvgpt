@@ -14,7 +14,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use ZW_TTVGPT_Core\AuditHelper;
 use ZW_TTVGPT_Core\AuditStatus;
-use ZW_TTVGPT_Core\Helper;
 
 /**
  * Audit Page class.
@@ -79,11 +78,7 @@ class AuditPage {
 		// Clean implementation - no benchmarking needed.
 
 		$posts  = AuditHelper::get_posts( $year, $month );
-		$counts = array(
-			AuditStatus::FullyHumanWritten->value  => 0,
-			AuditStatus::AiWrittenNotEdited->value => 0,
-			AuditStatus::AiWrittenEdited->value    => 0,
-		);
+		$counts = array_fill_keys( array_column( AuditStatus::cases(), 'value' ), 0 );
 
 		// Bulk fetch all meta data in one query to avoid N+1 problem.
 		$post_ids   = array_map( static fn( $post ) => $post->ID, $posts );
@@ -117,11 +112,6 @@ class AuditPage {
 
 		$available_months = AuditHelper::get_months();
 
-		// Load audit CSS for improved card spacing.
-		$version = Helper::get_asset_version();
-		wp_enqueue_style( 'zw-ttvgpt-audit', ZW_TTVGPT_URL . 'assets/audit.css', array(), $version );
-		wp_print_styles( array( 'zw-ttvgpt-audit' ) );
-
 		// Enqueue WordPress ThickBox for modal functionality.
 		add_thickbox();
 		?>
@@ -140,9 +130,6 @@ class AuditPage {
 		</div>
 		<?php
 	}
-
-
-
 
 	/**
 	 * Renders WordPress-style status filter links.
@@ -163,10 +150,6 @@ class AuditPage {
 			'year'  => $year,
 			'month' => $month,
 		);
-
-		$human_status = AuditStatus::FullyHumanWritten;
-		$ai_unedited  = AuditStatus::AiWrittenNotEdited;
-		$ai_edited    = AuditStatus::AiWrittenEdited;
 		?>
 		<h2 class="screen-reader-text"><?php esc_html_e( 'Auditlog filteren', 'zw-ttvgpt' ); ?></h2>
 		<ul class="subsubsub">
@@ -177,48 +160,21 @@ class AuditPage {
 					<?php esc_html_e( 'Alle', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( (string) $total ); ?>)</span>
 				</a>
 			</li>
-			<li class="<?php echo esc_attr( $human_status->get_css_class() ); ?>">
+			<?php foreach ( AuditStatus::cases() as $status ) : ?>
 				<?php
-				$human_params   = array_merge( $current_params, array( 'status' => $human_status->value ) );
-				$human_url      = add_query_arg( $human_params, $base_url );
-				$human_selected = $human_status->value === $status_filter;
+				$url         = add_query_arg( array_merge( $current_params, array( 'status' => $status->value ) ), $base_url );
+				$is_selected = $status->value === $status_filter;
 				?>
-				<a href="<?php echo esc_url( $human_url ); ?>"
-					<?php if ( $human_selected ) : ?>
-					class="current" aria-current="page"
-					<?php endif; ?>>
-					<?php echo esc_html( $human_status->get_label() ); ?>
-					<span class="count">(<?php echo esc_html( (string) $counts[ $human_status->value ] ); ?>)</span>
-				</a>
-			</li>
-			<li class="<?php echo esc_attr( $ai_unedited->get_css_class() ); ?>">
-				<?php
-				$unedited_params   = array_merge( $current_params, array( 'status' => $ai_unedited->value ) );
-				$unedited_url      = add_query_arg( $unedited_params, $base_url );
-				$unedited_selected = $ai_unedited->value === $status_filter;
-				?>
-				<a href="<?php echo esc_url( $unedited_url ); ?>"
-					<?php if ( $unedited_selected ) : ?>
-					class="current" aria-current="page"
-					<?php endif; ?>>
-					<?php echo esc_html( $ai_unedited->get_label() ); ?>
-					<span class="count">(<?php echo esc_html( (string) $counts[ $ai_unedited->value ] ); ?>)</span>
-				</a>
-			</li>
-			<li class="<?php echo esc_attr( $ai_edited->get_css_class() ); ?>">
-				<?php
-				$edited_params   = array_merge( $current_params, array( 'status' => $ai_edited->value ) );
-				$edited_url      = add_query_arg( $edited_params, $base_url );
-				$edited_selected = $ai_edited->value === $status_filter;
-				?>
-				<a href="<?php echo esc_url( $edited_url ); ?>"
-					<?php if ( $edited_selected ) : ?>
-					class="current" aria-current="page"
-					<?php endif; ?>>
-					<?php echo esc_html( $ai_edited->get_label() ); ?>
-					<span class="count">(<?php echo esc_html( (string) $counts[ $ai_edited->value ] ); ?>)</span>
-				</a>
-			</li>
+				<li class="<?php echo esc_attr( $status->get_css_class() ); ?>">
+					<a href="<?php echo esc_url( $url ); ?>"
+						<?php if ( $is_selected ) : ?>
+						class="current" aria-current="page"
+						<?php endif; ?>>
+						<?php echo esc_html( $status->get_label() ); ?>
+						<span class="count">(<?php echo esc_html( (string) $counts[ $status->value ] ); ?>)</span>
+					</a>
+				</li>
+			<?php endforeach; ?>
 		</ul>
 		<?php
 	}
@@ -271,15 +227,11 @@ class AuditPage {
 					<label for="filter-by-status" class="screen-reader-text"><?php esc_html_e( 'Op type filteren', 'zw-ttvgpt' ); ?></label>
 					<select name="status" id="filter-by-status">
 						<option value=""><?php esc_html_e( 'Alle types', 'zw-ttvgpt' ); ?></option>
-						<option value="fully_human_written" <?php selected( $status_filter, 'fully_human_written' ); ?>>
-							<?php esc_html_e( 'Handgeschreven', 'zw-ttvgpt' ); ?>
-						</option>
-						<option value="ai_written_not_edited" <?php selected( $status_filter, 'ai_written_not_edited' ); ?>>
-							<?php esc_html_e( 'AI-gegenereerd', 'zw-ttvgpt' ); ?>
-						</option>
-						<option value="ai_written_edited" <?php selected( $status_filter, 'ai_written_edited' ); ?>>
-							<?php esc_html_e( 'AI-bewerkt', 'zw-ttvgpt' ); ?>
-						</option>
+						<?php foreach ( AuditStatus::cases() as $status ) : ?>
+							<option value="<?php echo esc_attr( $status->value ); ?>" <?php selected( $status_filter, $status->value ); ?>>
+								<?php echo esc_html( $status->get_label() ); ?>
+							</option>
+						<?php endforeach; ?>
 					</select>
 
 					<label for="filter-by-change" class="screen-reader-text"><?php esc_html_e( 'Op wijzigingspercentage filteren', 'zw-ttvgpt' ); ?></label>
@@ -348,6 +300,7 @@ class AuditPage {
 						$status        = $item['status'];
 						$ai_content    = $item['ai_content'];
 						$human_content = $item['human_content'];
+						$post_title    = get_the_title( $post->ID );
 						$author_data   = get_userdata( $post->post_author );
 						$edit_last     = $meta_cache[ $post->ID ]['_edit_last'] ?? '';
 						$editor_data   = is_numeric( $edit_last ) ? get_userdata( (int) $edit_last ) : null;
@@ -374,20 +327,20 @@ class AuditPage {
 									<?php if ( $post_url ) : ?>
 										<?php
 										/* translators: %s is the post title. */
-										$edit_label = sprintf( __( '"%s" (bewerken)', 'zw-ttvgpt' ), get_the_title( $post->ID ) );
+										$edit_label = sprintf( __( '"%s" (bewerken)', 'zw-ttvgpt' ), $post_title );
 										?>
 									<a class="row-title" href="<?php echo esc_url( $post_url ); ?>" aria-label="<?php echo esc_attr( $edit_label ); ?>">
-											<?php echo esc_html( get_the_title( $post->ID ) ); ?>
+											<?php echo esc_html( $post_title ); ?>
 										</a>
 									<?php else : ?>
-										<?php echo esc_html( get_the_title( $post->ID ) ); ?>
+										<?php echo esc_html( $post_title ); ?>
 									<?php endif; ?>
 								</strong>
 								<div class="row-actions">
 									<span class="edit">
 										<?php
 										/* translators: %s is the post title. */
-										$edit_aria_label = sprintf( __( 'Bewerk "%s"', 'zw-ttvgpt' ), get_the_title( $post->ID ) );
+										$edit_aria_label = sprintf( __( 'Bewerk "%s"', 'zw-ttvgpt' ), $post_title );
 										?>
 										<a href="<?php echo esc_url( (string) $post_url ); ?>"
 											aria-label="<?php echo esc_attr( $edit_aria_label ); ?>">
@@ -397,7 +350,7 @@ class AuditPage {
 									<span class="view">
 										<?php
 										/* translators: %s is the post title. */
-										$view_aria_label = sprintf( __( '"%s" bekijken', 'zw-ttvgpt' ), get_the_title( $post->ID ) );
+										$view_aria_label = sprintf( __( '"%s" bekijken', 'zw-ttvgpt' ), $post_title );
 										?>
 										<a href="<?php echo esc_url( (string) get_permalink( $post->ID ) ); ?>"
 											rel="bookmark"
@@ -441,8 +394,12 @@ class AuditPage {
 								<?php if ( AuditStatus::AiWrittenEdited === $status && isset( $item['change_percentage'] ) ) : ?>
 									<?php
 									$pct       = $item['change_percentage'];
-									$pct_class = $pct > 50 ? 'high-change' : ( $pct > 20 ? 'medium-change' : 'low-change' );
-									?>
+									$pct_class = match ( true ) {
+										$pct > 50 => 'high-change',
+										$pct > 20 => 'medium-change',
+										default   => 'low-change',
+									};
+	?>
 									<span class="change-percentage <?php echo esc_attr( $pct_class ); ?>">
 										<?php echo esc_html( $pct . '%' ); ?>
 									</span>
