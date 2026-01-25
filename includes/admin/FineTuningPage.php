@@ -29,7 +29,7 @@ class FineTuningPage {
 	use AjaxSecurity;
 
 	/**
-	 * Initializes the fine tuning page with dependencies.
+	 * Creates a fine tuning page instance.
 	 *
 	 * @since 1.0.0
 	 *
@@ -41,10 +41,9 @@ class FineTuningPage {
 		private readonly Logger $logger
 	) {
 		// Register AJAX handler.
-		add_action( 'wp_ajax_zw_ttvgpt_export_training_data', array( $this, 'handle_export_ajax' ) );
+		add_action( 'wp_ajax_zw_ttvgpt_export_training_data', $this->handle_export_ajax( ... ) );
 		// Register download handler (runs early to send headers before any output).
-		// @phpstan-ignore-next-line deadCode.unreachable -- False positive: add_action registers callback.
-		add_action( 'admin_init', array( $this, 'handle_download_request' ) );
+		add_action( 'admin_init', $this->handle_download_request( ... ) );
 	}
 
 	/**

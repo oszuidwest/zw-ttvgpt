@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Audit Helper class.
  *
- * Handles audit-specific functionality for content analysis.
+ * Provides content analysis and comparison for audit functionality.
  *
  * @package ZW_TTVGPT
  * @since   1.0.0
@@ -81,7 +81,7 @@ class AuditHelper {
 	}
 
 	/**
-	 * Retrieves all months with audit data for navigation.
+	 * Retrieves months containing auditable posts.
 	 *
 	 * @since 1.0.0
 	 *
@@ -137,7 +137,7 @@ class AuditHelper {
 	}
 
 	/**
-	 * Retrieves all posts for audit analysis from specific month and year.
+	 * Retrieves published posts eligible for audit from a given month.
 	 *
 	 * @since 1.0.0
 	 *
@@ -185,7 +185,7 @@ class AuditHelper {
 
 
 	/**
-	 * Retrieves bulk meta data for multiple posts to avoid N+1 queries.
+	 * Retrieves metadata for multiple posts in a single query.
 	 *
 	 * @since 1.0.0
 	 *
@@ -248,7 +248,7 @@ class AuditHelper {
 	}
 
 	/**
-	 * Strips region prefix from content for comparison.
+	 * Removes the regional location prefix from content text.
 	 *
 	 * @since 1.0.0
 	 *
@@ -263,12 +263,12 @@ class AuditHelper {
 	}
 
 	/**
-	 * Categorizes a post based on its AI and human content.
+	 * Determines the audit status of a post.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @param \WP_Post $post       Post object to categorize.
-	 * @param array    $meta_cache Optional. Meta data cache to avoid N+1 queries. Default empty array.
+	 * @param array    $meta_cache Optional. Pre-fetched meta data cache. Default empty array.
 	 * @return array Analysis result with status (AuditStatus enum), ai_content, human_content, and change_percentage.
 	 *
 	 * @phpstan-param array<int, array<string, string>> $meta_cache
@@ -306,7 +306,7 @@ class AuditHelper {
 	}
 
 	/**
-	 * Generates word-level diff highlighting for content comparison.
+	 * Creates highlighted diff markup showing changes between content versions.
 	 *
 	 * @since 1.0.0
 	 *
@@ -371,7 +371,7 @@ class AuditHelper {
 	}
 
 	/**
-	 * Calculates percentage of change between AI and human content.
+	 * Determines the percentage difference between AI-generated and human-edited content.
 	 *
 	 * @since 1.0.0
 	 *

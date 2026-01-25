@@ -15,14 +15,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Rate Limiter class.
  *
- * Handles API rate limiting functionality.
+ * Enforces request limits per user to prevent API abuse.
  *
  * @package ZW_TTVGPT
  * @since   1.0.0
  */
 class RateLimiter {
 	/**
-	 * Checks if current user has exceeded rate limit for API requests.
+	 * Determines whether a user is currently rate limited.
 	 *
 	 * @since 1.0.0
 	 *
@@ -42,11 +42,12 @@ class RateLimiter {
 	}
 
 	/**
-	 * Increments the rate limit counter for a specific user.
+	 * Records an API request for rate limiting purposes.
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param int $user_id User ID to increment rate limit for.
+	 * @param int $user_id User ID to record request for.
+	 * @return void
 	 */
 	public static function increment( int $user_id ): void {
 		$transient_key = Constants::get_rate_limit_key( $user_id );

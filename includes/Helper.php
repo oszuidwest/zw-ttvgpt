@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Helper class.
  *
- * Provides common utility functions for the plugin.
+ * Provides utility functions for transients, ACF fields, and validation.
  *
  * @package ZW_TTVGPT
  * @since   1.0.0
@@ -70,7 +70,7 @@ class Helper {
 	}
 
 	/**
-	 * Generates ACF field selectors for JavaScript usage.
+	 * Retrieves ACF field CSS selector IDs for client-side access.
 	 *
 	 * @since 1.0.0
 	 *
@@ -98,7 +98,7 @@ class Helper {
 	}
 
 	/**
-	 * Builds SQL date filter clause for post queries.
+	 * Creates a SQL WHERE clause for filtering posts by date range.
 	 *
 	 * @since 1.0.0
 	 *
@@ -123,7 +123,7 @@ class Helper {
 	}
 
 	/**
-	 * Gets asset version string with cache busting in debug mode.
+	 * Retrieves the version string for asset cache management.
 	 *
 	 * @since 1.0.0
 	 *
@@ -134,16 +134,7 @@ class Helper {
 	}
 
 	/**
-	 * Checks if a model requires the Responses API (GPT-5.1 only).
-	 *
-	 * Only gpt-5.1 is supported. The older gpt-5 model (without .1) is deprecated
-	 * and replaced by gpt-5.1.
-	 *
-	 * Note: This function accepts any model starting with 'gpt-5' for forward
-	 * compatibility with potential future GPT-5 variants, but currently only
-	 * gpt-5.1 is tested and recommended.
-	 *
-	 * Also supports fine-tuned models by extracting the base model first.
+	 * Determines whether a model uses the Responses API.
 	 *
 	 * @since 1.0.0
 	 *
@@ -161,7 +152,7 @@ class Helper {
 	}
 
 	/**
-	 * Counts words in a string.
+	 * Retrieves the word count for a text string.
 	 *
 	 * @since 1.0.0
 	 *

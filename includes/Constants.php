@@ -132,14 +132,12 @@ class Constants {
 	);
 
 	/**
-	 * Models that can be fine-tuned (GPT-5 does not support fine-tuning).
-	 *
-	 * IMPORTANT: Ordered by length descending to ensure longest match first
-	 * in str_starts_with() comparisons (e.g., gpt-4.1-mini before gpt-4.1).
+	 * Models that support fine-tuning.
 	 *
 	 * @since 1.0.0
 	 * @var array<string>
 	 */
+	// Ordered by length descending for str_starts_with() matching.
 	public const array FINE_TUNABLE_MODELS = array(
 		'gpt-4.1-mini',
 		'gpt-4.1-nano',
@@ -211,9 +209,7 @@ class Constants {
 	public const int WORD_LIMIT_STEP = 10;
 
 	/**
-	 * API request timeout in seconds for all models.
-	 *
-	 * GPT-5.1 uses reasoning_effort='low' for quality responses with good speed.
+	 * Maximum seconds to wait for API responses.
 	 *
 	 * @since 1.0.0
 	 * @var int
@@ -242,7 +238,6 @@ class Constants {
 	/**
 	 * Default system prompt for AI summary generation.
 	 *
-	 * Optimized for GPT-5.1 with reasoning_effort='low'.
 	 * Use %d as placeholder for word limit.
 	 *
 	 * @since 1.0.0
@@ -271,7 +266,7 @@ class Constants {
 	}
 
 	/**
-	 * Generates rate limit transient key for specific user.
+	 * Retrieves the transient key for user rate limiting.
 	 *
 	 * @since 1.0.0
 	 *

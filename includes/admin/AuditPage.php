@@ -26,7 +26,7 @@ use ZW_TTVGPT_Core\Helper;
  */
 class AuditPage {
 	/**
-	 * Gets validated filter parameters from GET request.
+	 * Retrieves validated filter parameters for audit page display.
 	 *
 	 * @since 1.0.0
 	 *
@@ -315,7 +315,7 @@ class AuditPage {
 	 * @since 1.0.0
 	 *
 	 * @param array $categorized_posts Array of categorized posts with analysis data.
-	 * @param array $meta_cache        Meta data cache to avoid N+1 queries.
+	 * @param array $meta_cache        Pre-fetched meta data cache.
 	 *
 	 * @phpstan-param array<int, array<string, mixed>> $categorized_posts
 	 * @phpstan-param array<int, array<string, string>> $meta_cache

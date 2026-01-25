@@ -54,7 +54,7 @@ class ApiHandler {
 	private const float TEMPERATURE = 0.7;
 
 	/**
-	 * Initializes API handler with credentials and dependencies.
+	 * Creates an API handler instance.
 	 *
 	 * @since 1.0.0
 	 *
@@ -69,7 +69,7 @@ class ApiHandler {
 	) {}
 
 	/**
-	 * Generates system prompt for summarization.
+	 * Retrieves the system prompt with word limit applied.
 	 *
 	 * @since 1.0.0
 	 *
@@ -82,10 +82,7 @@ class ApiHandler {
 	}
 
 	/**
-	 * Prepares content for API request by extracting text from HTML.
-	 *
-	 * Removes script/style content (which wp_strip_all_tags doesn't handle),
-	 * converts block elements to newlines, and normalizes whitespace.
+	 * Extracts clean text from HTML content.
 	 *
 	 * @since 1.0.0
 	 *
@@ -117,7 +114,7 @@ class ApiHandler {
 	}
 
 	/**
-	 * Builds messages array for OpenAI API chat completion.
+	 * Creates the messages structure for the Chat Completions API.
 	 *
 	 * @since 1.0.0
 	 *
@@ -141,7 +138,7 @@ class ApiHandler {
 	}
 
 	/**
-	 * Determines which API endpoint to use based on the model.
+	 * Retrieves the appropriate API endpoint URL.
 	 *
 	 * @since 1.0.0
 	 *
@@ -156,7 +153,7 @@ class ApiHandler {
 	}
 
 	/**
-	 * Builds request body for Chat Completions API (GPT-4.1 family).
+	 * Creates the request payload for the Chat Completions API.
 	 *
 	 * @since 1.0.0
 	 *
@@ -176,7 +173,7 @@ class ApiHandler {
 	}
 
 	/**
-	 * Builds request body for Responses API (GPT-5.1 only).
+	 * Creates the request payload for the Responses API.
 	 *
 	 * @since 1.0.0
 	 *
@@ -206,7 +203,7 @@ class ApiHandler {
 	}
 
 	/**
-	 * Extracts summary text from Chat Completions API response.
+	 * Retrieves the generated summary from a Chat Completions API response.
 	 *
 	 * @since 1.0.0
 	 *
@@ -228,7 +225,7 @@ class ApiHandler {
 	}
 
 	/**
-	 * Extracts summary text from Responses API response.
+	 * Retrieves the generated summary from a Responses API response.
 	 *
 	 * @since 1.0.0
 	 *
@@ -269,7 +266,7 @@ class ApiHandler {
 	}
 
 	/**
-	 * Generates text summary using OpenAI API (Chat Completions or Responses).
+	 * Sends content to the OpenAI API and returns the generated summary.
 	 *
 	 * @since 1.0.0
 	 *

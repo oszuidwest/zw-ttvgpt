@@ -74,11 +74,9 @@ class AdminMenu {
 	}
 
 	/**
-	 * Loads CSS and JavaScript assets on post edit screens and audit page.
+	 * Enqueues plugin stylesheets and JavaScript modules for the admin interface.
 	 *
 	 * @since 1.0.0
-	 *
-	 * Uses wp_enqueue_script_module (WordPress 6.5+) for ES modules support.
 	 *
 	 * @param string $hook Current admin page hook.
 	 */
