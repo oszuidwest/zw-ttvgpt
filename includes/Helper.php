@@ -37,21 +37,24 @@ class Helper {
 		}
 
 		// Clean up orphaned transients using direct query.
+		// Delete both _transient_ and _transient_timeout_ entries.
 		global $wpdb;
 
-		// Clean rate limit transients.
+		// Clean rate limit transients (value + timeout).
 		$wpdb->query(
 			$wpdb->prepare(
-				"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
-				'_transient_' . Constants::RATE_LIMIT_PREFIX . '%'
+				"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
+				'_transient_' . Constants::RATE_LIMIT_PREFIX . '%',
+				'_transient_timeout_' . Constants::RATE_LIMIT_PREFIX . '%'
 			)
 		);
 
-		// Clean export transients (prefix: zw_ttvgpt_export_).
+		// Clean export transients (value + timeout).
 		$wpdb->query(
 			$wpdb->prepare(
-				"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
-				'_transient_zw_ttvgpt_export_%'
+				"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
+				'_transient_zw_ttvgpt_export_%',
+				'_transient_timeout_zw_ttvgpt_export_%'
 			)
 		);
 	}
