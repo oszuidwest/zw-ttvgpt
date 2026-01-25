@@ -41,7 +41,10 @@ class FineTuningPage {
 		private readonly Logger $logger
 	) {
 		// Register AJAX handler.
-		add_action( 'wp_ajax_zw_ttvgpt_export_training_data', $this->handle_export_ajax( ... ) );
+		add_action( 'wp_ajax_zw_ttvgpt_export_training_data', array( $this, 'handle_export_ajax' ) );
+		// Register download handler (runs early to send headers before any output).
+		// @phpstan-ignore-next-line deadCode.unreachable -- False positive: add_action registers callback.
+		add_action( 'admin_init', array( $this, 'handle_download_request' ) );
 	}
 
 	/**
@@ -158,7 +161,8 @@ class FineTuningPage {
 								'<h4>Exportdetails</h4>' +
 								'<p><strong>' + response.data.file_info.line_count + ' trainingsrecords</strong> geëxporteerd</p>' +
 								<?php // phpcs:ignore Generic.Files.LineLength.TooLong -- Inline JS template string ?>
-								'<p><a href="' + response.data.file_info.file_url + '" target="_blank" class="file-download">📄 ' + response.data.file_info.filename + '</a> <span class="file-size">(' + Math.round(response.data.file_info.file_size / 1024) + ' KB)</span></p>' +
+								'<p><a href="' + response.data.file_info.download_url + '" class="button button-primary file-download">📥 ' + response.data.file_info.filename + ' downloaden</a> <span class="file-size">(' + Math.round(response.data.file_info.file_size / 1024) + ' KB)</span></p>' +
+								'<p class="description"><?php esc_html_e( 'Let op: deze download link is 15 minuten geldig.', 'zw-ttvgpt' ); ?></p>' +
 							'</div>' +
 							'<details class="export-stats">' +
 								'<summary>Technische gegevens</summary>' +
@@ -303,24 +307,67 @@ class FineTuningPage {
 			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
 		}
 
-		// Export to JSONL file.
-		$export_result = $this->export->export_to_jsonl( $result['data'] );
+		// Prepare data for download (stores in transient).
+		$export_result = $this->export->prepare_for_download( $result['data'] );
 
 		if ( is_wp_error( $export_result ) ) {
 			wp_send_json_error( array( 'message' => $export_result->get_error_message() ) );
 		}
+
+		// Build download URL.
+		$download_url = add_query_arg(
+			array(
+				'action'       => 'zw_ttvgpt_download_export',
+				'download_key' => $export_result['download_key'],
+				'_wpnonce'     => wp_create_nonce( 'zw_ttvgpt_download_export' ),
+			),
+			admin_url( 'admin.php' )
+		);
 
 		wp_send_json_success(
 			array(
 				'message'   => $result['message'] . ' ' . $export_result['message'],
 				'stats'     => $result['stats'],
 				'file_info' => array(
-					'filename'   => $export_result['filename'],
-					'file_url'   => $export_result['file_url'],
-					'line_count' => $export_result['line_count'],
-					'file_size'  => $export_result['file_size'],
+					'filename'     => $export_result['filename'],
+					'download_url' => $download_url,
+					'line_count'   => $export_result['line_count'],
+					'file_size'    => $export_result['file_size'],
 				),
 			)
 		);
+	}
+
+	/**
+	 * Handles download request for exported training data.
+	 *
+	 * @since 1.0.0
+	 */
+	public function handle_download_request(): void {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce verified below with wp_verify_nonce
+		if ( ! isset( $_GET['action'] ) || 'zw_ttvgpt_download_export' !== $_GET['action'] ) {
+			return;
+		}
+
+		// Verify nonce.
+		if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( $_GET['_wpnonce'], 'zw_ttvgpt_download_export' ) ) {
+			wp_die( esc_html__( 'Beveiligingscontrole mislukt.', 'zw-ttvgpt' ), 403 );
+		}
+
+		// Check capability.
+		if ( ! current_user_can( Constants::REQUIRED_CAPABILITY ) ) {
+			wp_die( esc_html__( 'Je hebt geen toestemming om dit bestand te downloaden.', 'zw-ttvgpt' ), 403 );
+		}
+
+		// Get download key.
+		if ( ! isset( $_GET['download_key'] ) ) {
+			wp_die( esc_html__( 'Ongeldige download aanvraag.', 'zw-ttvgpt' ), 400 );
+		}
+
+		$download_key = sanitize_text_field( $_GET['download_key'] );
+		$error        = $this->export->stream_download( $download_key );
+
+		// stream_download exits on success, so reaching here means an error occurred.
+		wp_die( esc_html( $error->get_error_message() ), 404 );
 	}
 }

@@ -37,24 +37,6 @@ class FineTuningExport {
 	) {}
 
 	/**
-	 * Initializes WordPress filesystem API.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return \WP_Filesystem_Base WordPress filesystem instance.
-	 */
-	private function init_filesystem() {
-		global $wp_filesystem;
-
-		if ( ! function_exists( 'WP_Filesystem' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/file.php';
-		}
-		WP_Filesystem();
-
-		return $wp_filesystem;
-	}
-
-	/**
 	 * Generates JSONL training data for DPO fine-tuning.
 	 *
 	 * @since 1.0.0
@@ -275,18 +257,33 @@ class FineTuningExport {
 
 
 	/**
-	 * Exports training data as JSONL file.
+	 * Transient key prefix for temporary export data.
+	 *
+	 * @since 1.0.0
+	 * @var string
+	 */
+	private const string EXPORT_TRANSIENT_PREFIX = 'zw_ttvgpt_export_';
+
+	/**
+	 * Transient expiration time in seconds (15 minutes).
+	 *
+	 * @since 1.0.0
+	 * @var int
+	 */
+	private const int EXPORT_TRANSIENT_EXPIRATION = 900;
+
+	/**
+	 * Prepares training data for download by storing it in a transient.
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array  $training_data Array of training entries.
-	 * @param string $filename      Optional. Filename (defaults to timestamped name). Default empty.
-	 * @return array|\WP_Error Export result with file info, or WP_Error on failure.
+	 * @param array $training_data Array of training entries.
+	 * @return array|\WP_Error Preparation result with download key, or WP_Error on failure.
 	 *
 	 * @phpstan-param array<int, mixed> $training_data
-	 * @phpstan-return array{message: string, file_path: string, file_url: string, filename: string, line_count: int, file_size: int}|\WP_Error
+	 * @phpstan-return array{message: string, download_key: string, filename: string, line_count: int, file_size: int}|\WP_Error
 	 */
-	public function export_to_jsonl( array $training_data, string $filename = '' ): array|\WP_Error {
+	public function prepare_for_download( array $training_data ): array|\WP_Error {
 		if ( empty( $training_data ) ) {
 			return new \WP_Error(
 				'no_data',
@@ -294,21 +291,9 @@ class FineTuningExport {
 			);
 		}
 
-		// Generate filename if not provided.
-		if ( empty( $filename ) ) {
-			$filename = 'dpo_training_data_' . gmdate( 'Y-m-d_H-i-s' ) . '.jsonl';
-		}
-
-		// Ensure .jsonl extension.
-		if ( ! str_ends_with( $filename, '.jsonl' ) ) {
-			$filename .= '.jsonl';
-		}
-
-		// Create uploads directory if needed.
-		$upload_dir = wp_upload_dir();
-		$file_path  = $upload_dir['path'] . '/' . $filename;
-
-		$wp_filesystem = $this->init_filesystem();
+		// Generate unique download key.
+		$download_key = wp_generate_password( 32, false );
+		$filename     = 'dpo_training_data_' . gmdate( 'Y-m-d_H-i-s' ) . '.jsonl';
 
 		// Build JSONL content.
 		$jsonl_content = '';
@@ -318,32 +303,89 @@ class FineTuningExport {
 			++$line_count;
 		}
 
-		// Write file using WP_Filesystem.
-		if ( ! $wp_filesystem->put_contents( $file_path, $jsonl_content, FS_CHMOD_FILE ) ) {
-			$this->logger->error( 'JSONL export error: Could not create file: ' . $file_path );
+		$file_size = strlen( $jsonl_content );
 
+		// Store in transient for temporary access.
+		$transient_data = array(
+			'content'  => $jsonl_content,
+			'filename' => $filename,
+		);
+
+		$transient_key = self::EXPORT_TRANSIENT_PREFIX . $download_key;
+		$stored        = set_transient( $transient_key, $transient_data, self::EXPORT_TRANSIENT_EXPIRATION );
+
+		if ( false === $stored ) {
+			$this->logger->error( "Failed to store export transient ({$file_size} bytes). Database or object cache limit may be exceeded." );
 			return new \WP_Error(
-				'export_failed',
-				__( 'Fout bij exporteren van training data: kon bestand niet aanmaken', 'zw-ttvgpt' )
+				'transient_failed',
+				__( 'Export data kon niet worden opgeslagen. Probeer met minder berichten of neem contact op met de beheerder.', 'zw-ttvgpt' )
 			);
 		}
 
-		$file_size = $wp_filesystem->size( $file_path );
-
-		$this->logger->debug( "JSONL export completed: {$filename} ({$line_count} lines, {$file_size} bytes)" );
+		$this->logger->debug( "Export prepared: {$filename} ({$line_count} lines, {$file_size} bytes)" );
 
 		return array(
-			'message'    => sprintf(
+			'message'      => sprintf(
 				/* translators: %1$s: filename, %2$d: number of records */
-				__( 'Training data geëxporteerd naar %1$s (%2$d records)', 'zw-ttvgpt' ),
+				__( 'Training data klaar voor download: %1$s (%2$d records)', 'zw-ttvgpt' ),
 				$filename,
 				$line_count
 			),
-			'file_path'  => $file_path,
-			'file_url'   => $upload_dir['url'] . '/' . $filename,
-			'filename'   => $filename,
-			'line_count' => $line_count,
-			'file_size'  => $file_size,
+			'download_key' => $download_key,
+			'filename'     => $filename,
+			'line_count'   => $line_count,
+			'file_size'    => $file_size,
 		);
+	}
+
+	/**
+	 * Streams the export file as a download and removes the transient.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $download_key The unique download key.
+	 * @return \WP_Error|never Returns WP_Error if download key is invalid, otherwise streams file and exits.
+	 */
+	public function stream_download( string $download_key ): \WP_Error {
+		$transient_key  = self::EXPORT_TRANSIENT_PREFIX . $download_key;
+		$transient_data = get_transient( $transient_key );
+
+		if ( false === $transient_data || ! is_array( $transient_data ) ) {
+			$this->logger->error( 'Invalid or expired download key: ' . $download_key );
+			return new \WP_Error(
+				'invalid_download',
+				__( 'Download link is verlopen of ongeldig. Genereer de export opnieuw.', 'zw-ttvgpt' )
+			);
+		}
+
+		// Validate required keys exist.
+		if ( ! isset( $transient_data['content'] ) || ! isset( $transient_data['filename'] ) ) {
+			$this->logger->error( 'Corrupted transient data for download key: ' . $download_key );
+			delete_transient( $transient_key );
+			return new \WP_Error(
+				'corrupted_download',
+				__( 'Export data is beschadigd. Genereer de export opnieuw.', 'zw-ttvgpt' )
+			);
+		}
+
+		// Delete transient immediately to prevent reuse.
+		delete_transient( $transient_key );
+
+		$content  = $transient_data['content'];
+		$filename = $transient_data['filename'];
+
+		$this->logger->debug( "Streaming download: {$filename}" );
+
+		// Set headers for file download.
+		header( 'Content-Type: application/jsonl' );
+		header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
+		header( 'Content-Length: ' . strlen( $content ) );
+		header( 'Cache-Control: no-cache, must-revalidate' );
+		header( 'Pragma: no-cache' );
+
+		// Output content and exit.
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Binary file download, escaping would corrupt the JSONL data
+		echo $content;
+		exit;
 	}
 }
