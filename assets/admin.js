@@ -536,7 +536,7 @@ function animateText(element, text, button, warning = null) {
         if (index < text.length) {
             // Type multiple characters at once - faster
             const charsToType = Math.floor(Math.random() * 6) + 2; // 2-7 chars
-            const newText = text.substr(index, charsToType);
+            const newText = text.slice(index, index + charsToType);
             index += newText.length;
 
             element.value += newText;

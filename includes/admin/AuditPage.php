@@ -78,11 +78,7 @@ class AuditPage {
 		// Clean implementation - no benchmarking needed.
 
 		$posts  = AuditHelper::get_posts( $year, $month );
-		$counts = array(
-			AuditStatus::FullyHumanWritten->value  => 0,
-			AuditStatus::AiWrittenNotEdited->value => 0,
-			AuditStatus::AiWrittenEdited->value    => 0,
-		);
+		$counts = array_fill_keys( array_column( AuditStatus::cases(), 'value' ), 0 );
 
 		// Bulk fetch all meta data in one query to avoid N+1 problem.
 		$post_ids   = array_map( static fn( $post ) => $post->ID, $posts );
@@ -304,6 +300,7 @@ class AuditPage {
 						$status        = $item['status'];
 						$ai_content    = $item['ai_content'];
 						$human_content = $item['human_content'];
+						$post_title    = get_the_title( $post->ID );
 						$author_data   = get_userdata( $post->post_author );
 						$edit_last     = $meta_cache[ $post->ID ]['_edit_last'] ?? '';
 						$editor_data   = is_numeric( $edit_last ) ? get_userdata( (int) $edit_last ) : null;
@@ -330,20 +327,20 @@ class AuditPage {
 									<?php if ( $post_url ) : ?>
 										<?php
 										/* translators: %s is the post title. */
-										$edit_label = sprintf( __( '"%s" (bewerken)', 'zw-ttvgpt' ), get_the_title( $post->ID ) );
+										$edit_label = sprintf( __( '"%s" (bewerken)', 'zw-ttvgpt' ), $post_title );
 										?>
 									<a class="row-title" href="<?php echo esc_url( $post_url ); ?>" aria-label="<?php echo esc_attr( $edit_label ); ?>">
-											<?php echo esc_html( get_the_title( $post->ID ) ); ?>
+											<?php echo esc_html( $post_title ); ?>
 										</a>
 									<?php else : ?>
-										<?php echo esc_html( get_the_title( $post->ID ) ); ?>
+										<?php echo esc_html( $post_title ); ?>
 									<?php endif; ?>
 								</strong>
 								<div class="row-actions">
 									<span class="edit">
 										<?php
 										/* translators: %s is the post title. */
-										$edit_aria_label = sprintf( __( 'Bewerk "%s"', 'zw-ttvgpt' ), get_the_title( $post->ID ) );
+										$edit_aria_label = sprintf( __( 'Bewerk "%s"', 'zw-ttvgpt' ), $post_title );
 										?>
 										<a href="<?php echo esc_url( (string) $post_url ); ?>"
 											aria-label="<?php echo esc_attr( $edit_aria_label ); ?>">
@@ -353,7 +350,7 @@ class AuditPage {
 									<span class="view">
 										<?php
 										/* translators: %s is the post title. */
-										$view_aria_label = sprintf( __( '"%s" bekijken', 'zw-ttvgpt' ), get_the_title( $post->ID ) );
+										$view_aria_label = sprintf( __( '"%s" bekijken', 'zw-ttvgpt' ), $post_title );
 										?>
 										<a href="<?php echo esc_url( (string) get_permalink( $post->ID ) ); ?>"
 											rel="bookmark"

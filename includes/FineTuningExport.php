@@ -124,16 +124,10 @@ class FineTuningExport {
 	private function get_suitable_posts( array $filters ): array {
 		global $wpdb;
 
-		$date_filter  = Helper::build_date_filter_clause(
+		$date_filter = Helper::build_date_filter_clause(
 			$filters['start_date'] ?? '',
 			$filters['end_date'] ?? ''
 		);
-		$limit_clause = '';
-
-		// Apply limit.
-		if ( ! empty( $filters['limit'] ) ) {
-			$limit_clause = $wpdb->prepare( 'LIMIT %d', $filters['limit'] );
-		}
 
 		$base_query = $wpdb->prepare(
 			"SELECT p.ID, p.post_title, p.post_content, p.post_date,
@@ -156,17 +150,14 @@ class FineTuningExport {
 			Constants::ACF_FIELD_IN_KABELKRANT
 		);
 
-		// Add date filter if provided.
 		if ( ! empty( $date_filter ) ) {
 			$base_query .= ' ' . $date_filter;
 		}
 
-		// Add order by.
 		$base_query .= ' ORDER BY p.post_date DESC';
 
-		// Add limit if provided.
-		if ( ! empty( $limit_clause ) ) {
-			$base_query .= ' ' . $limit_clause;
+		if ( ! empty( $filters['limit'] ) ) {
+			$base_query .= ' ' . $wpdb->prepare( ' LIMIT %d', $filters['limit'] );
 		}
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Base query is prepared above, date/limit clauses are also prepared
@@ -332,7 +323,7 @@ class FineTuningExport {
 		}
 
 		// Validate required keys exist.
-		if ( ! isset( $transient_data['content'] ) || ! isset( $transient_data['filename'] ) ) {
+		if ( ! isset( $transient_data['content'], $transient_data['filename'] ) ) {
 			$this->logger->error( 'Corrupted transient data for download key: ' . $download_key );
 			delete_transient( $transient_key );
 			return new \WP_Error(
