@@ -38,19 +38,19 @@ class SettingsPage {
 	}
 
 	/**
-	 * Generates settings field name attribute.
+	 * Retrieves the settings field name attribute.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @param string $field_key Field key within settings array.
-	 * @return string Name attribute value (not escaped - caller must escape for context).
+	 * @return string Name attribute value.
 	 */
 	private function get_field_name( string $field_key ): string {
 		return Constants::SETTINGS_OPTION_NAME . '[' . $field_key . ']';
 	}
 
 	/**
-	 * Registers all plugin settings, sections, and fields with WordPress.
+	 * Registers plugin settings with the WordPress Settings API.
 	 *
 	 * @since 1.0.0
 	 */
@@ -196,7 +196,7 @@ class SettingsPage {
 	}
 
 	/**
-	 * Renders the model field as dropdown with fine-tuned option.
+	 * Renders the model selection field.
 	 *
 	 * @since 1.0.0
 	 */
@@ -361,7 +361,7 @@ class SettingsPage {
 	}
 
 	/**
-	 * Sanitizes and validates all plugin settings before saving.
+	 * Sanitizes and validates plugin settings.
 	 *
 	 * @since 1.0.0
 	 *

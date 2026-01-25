@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Summary Generator class.
  *
- * Core functionality for generating summaries.
+ * Generates AI-powered summaries for posts via AJAX.
  *
  * @package ZW_TTVGPT
  * @since   1.0.0
@@ -24,7 +24,7 @@ class SummaryGenerator {
 	use AjaxSecurity;
 
 	/**
-	 * Initializes the summary generator with dependencies and registers AJAX handler.
+	 * Creates a summary generator instance.
 	 *
 	 * @since 1.0.0
 	 *
@@ -41,7 +41,7 @@ class SummaryGenerator {
 	}
 
 	/**
-	 * Processes AJAX request for generating summary with security and validation.
+	 * Handles the AJAX request for summary generation.
 	 *
 	 * @since 1.0.0
 	 *
@@ -140,10 +140,7 @@ class SummaryGenerator {
 	}
 
 	/**
-	 * Generates summary with automatic retry for invalid responses.
-	 *
-	 * Retries when response is too short (< 20% of limit) or too long (> limit).
-	 * Returns the last attempt if all retries fail, allowing user to manually adjust.
+	 * Generates summary with automatic retry for word count validation.
 	 *
 	 * @since 1.0.0
 	 *
@@ -190,7 +187,7 @@ class SummaryGenerator {
 	}
 
 	/**
-	 * Saves generated summary to ACF fields and marks as AI-generated.
+	 * Persists the generated summary for a post.
 	 *
 	 * @since 1.0.0
 	 *

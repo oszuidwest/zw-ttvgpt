@@ -1,6 +1,6 @@
 <?php
 /**
- * AJAX Response helper class for ZW TTVGPT.
+ * Provides standardized AJAX response methods.
  *
  * @package ZW_TTVGPT
  * @since   1.0.0
@@ -13,9 +13,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * AJAX Response helper class.
+ * AJAX Response class.
  *
- * Provides centralized helper methods for consistent AJAX responses.
+ * Provides standardized success and error response methods.
  *
  * @package ZW_TTVGPT
  * @since   1.0.0

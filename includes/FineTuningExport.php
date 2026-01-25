@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class FineTuningExport {
 	/**
-	 * Initializes fine tuning export with dependencies.
+	 * Creates a fine tuning export instance.
 	 *
 	 * @since 1.0.0
 	 *

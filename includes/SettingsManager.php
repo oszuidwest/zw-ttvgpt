@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Settings Manager class.
  *
- * Handles all settings operations for the plugin.
+ * Manages plugin settings retrieval and caching.
  *
  * @package ZW_TTVGPT
  * @since   1.0.0
@@ -76,7 +76,7 @@ class SettingsManager {
 	}
 
 	/**
-	 * Deletes all plugin settings and clears cache.
+	 * Removes all plugin settings from the database.
 	 *
 	 * @since 1.0.0
 	 *

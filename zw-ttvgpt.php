@@ -42,7 +42,7 @@ use ZW_TTVGPT_Core\Admin\Admin;
 use ZW_TTVGPT_Core\Admin\FineTuningPage;
 
 /**
- * Initializes plugin components with dependency injection.
+ * Initializes plugin components.
  *
  * @since 1.0.0
  */
@@ -96,7 +96,7 @@ function zw_ttvgpt_activate(): void {
 register_activation_hook( __FILE__, 'zw_ttvgpt_activate' );
 
 /**
- * Cleans up temporary data and rewrite rules on deactivation.
+ * Removes temporary data and flushes rewrite rules.
  *
  * @since 1.0.0
  */

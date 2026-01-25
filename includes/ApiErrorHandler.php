@@ -1,6 +1,6 @@
 <?php
 /**
- * API Error Handler class for ZW TTVGPT.
+ * Provides API error message handling.
  *
  * @package ZW_TTVGPT
  * @since   1.0.0
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * API Error Handler class.
  *
- * Provides centralized handling of API error messages.
+ * Translates HTTP status codes to user-friendly error messages.
  *
  * @package ZW_TTVGPT
  * @since   1.0.0

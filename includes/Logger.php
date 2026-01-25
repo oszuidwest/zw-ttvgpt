@@ -15,9 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Logger class.
  *
- * Simplified logging system with only debug and error levels.
- * Debug messages are only logged when debug mode is enabled.
- * Error messages are always logged but with limited context in production.
+ * Provides standardized logging for debugging and error tracking.
  *
  * @package ZW_TTVGPT
  * @since   1.0.0
@@ -32,7 +30,7 @@ class Logger {
 	private const string PREFIX = 'ZW_TTVGPT';
 
 	/**
-	 * Initializes the logger with debug mode configuration.
+	 * Creates a logger instance.
 	 *
 	 * @since 1.0.0
 	 *
@@ -41,12 +39,13 @@ class Logger {
 	public function __construct( private readonly bool $debug_mode = false ) {}
 
 	/**
-	 * Logs a debug message when debug mode is enabled.
+	 * Records a debug-level message.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @param string $message Debug message to log.
 	 * @param array  $context Additional context data.
+	 * @return void
 	 *
 	 * @phpstan-param LogContext $context
 	 */
@@ -57,12 +56,13 @@ class Logger {
 	}
 
 	/**
-	 * Logs an error message.
+	 * Records an error-level message.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @param string $message Error message to log.
 	 * @param array  $context Additional context data.
+	 * @return void
 	 *
 	 * @phpstan-param LogContext $context
 	 */
@@ -72,13 +72,14 @@ class Logger {
 
 
 	/**
-	 * Writes a formatted log entry to PHP error log.
+	 * Records a log entry with timestamp and context.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @param string $level   Log level (DEBUG or ERROR).
 	 * @param string $message Message to log.
 	 * @param array  $context Additional context data.
+	 * @return void
 	 *
 	 * @phpstan-param LogContext $context
 	 */
