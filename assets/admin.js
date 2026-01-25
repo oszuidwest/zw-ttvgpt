@@ -242,34 +242,30 @@ async function handleGenerateClick(e) {
         let data;
         try {
             data = await response.json();
-        } catch (parseError) {
+        } catch (_parseError) {
             throw new Error(`Server error: ${response.status}`);
         }
 
-        // Check for HTTP errors, but use server message if available
         if (!response.ok && !data?.data?.message) {
             throw new Error(`Server error: ${response.status}`);
         }
 
-        // Debug: log API response
         if (window.zwTTVGPT.debugMode) {
             console.log('ZW TTVGPT Debug - API Response:', data);
         }
 
+        clearLoadingMessages();
+
         if (data.success) {
-            clearLoadingMessages();
             handleSuccess(data.data, button);
         } else {
-            clearLoadingMessages();
-            const errorMessage =
-                data.data?.message || window.zwTTVGPT.strings.error;
-            showStatus('error', errorMessage);
-
-            // Log error code for debugging.
             if (window.zwTTVGPT.debugMode && data.data?.code) {
                 console.error('ZW TTVGPT Error Code:', data.data.code);
             }
-
+            showStatus(
+                'error',
+                data.data?.message || window.zwTTVGPT.strings.error,
+            );
             setLoadingState(button, false);
             button.dataset.isGenerating = 'false';
         }

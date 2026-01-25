@@ -183,7 +183,6 @@ class AuditHelper {
 		return $query->posts;
 	}
 
-
 	/**
 	 * Retrieves metadata for multiple posts in a single query.
 	 *
@@ -202,41 +201,30 @@ class AuditHelper {
 
 		global $wpdb;
 
-		// Sanitize post IDs to integers only.
 		$post_ids = array_map( 'intval', $post_ids );
 
-		// Single query to get all meta data for all posts.
 		$meta_keys = array(
 			Constants::ACF_FIELD_AI_CONTENT,
 			Constants::ACF_FIELD_HUMAN_CONTENT,
 			'_edit_last',
 		);
 
-		// Build WHERE clause for post IDs.
-		$where_post_ids = array();
-		foreach ( $post_ids as $id ) {
-			$where_post_ids[] = $wpdb->prepare( 'post_id = %d', $id );
-		}
+		$id_placeholders  = implode( ',', array_fill( 0, count( $post_ids ), '%d' ) );
+		$key_placeholders = implode( ',', array_fill( 0, count( $meta_keys ), '%s' ) );
 
-		// Build WHERE clause for meta keys.
-		$where_meta_keys = array();
-		foreach ( $meta_keys as $key ) {
-			$where_meta_keys[] = $wpdb->prepare( 'meta_key = %s', $key );
-		}
-
-		// Combine conditions.
-		$where_post_clause = '(' . implode( ' OR ', $where_post_ids ) . ')';
-		$where_key_clause  = '(' . implode( ' OR ', $where_meta_keys ) . ')';
-
-		// Build final query.
-		$query = "SELECT post_id, meta_key, meta_value 
-			FROM {$wpdb->postmeta} 
-			WHERE {$where_post_clause}
-			AND {$where_key_clause}
-			ORDER BY post_id";
-
-		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Query is built from individually prepared fragments above
-		$meta_data = $wpdb->get_results( $query );
+		// Dynamic IN() placeholders built from array_fill, safe for interpolation.
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders
+		$meta_data = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT post_id, meta_key, meta_value
+				FROM {$wpdb->postmeta}
+				WHERE post_id IN ({$id_placeholders})
+				AND meta_key IN ({$key_placeholders})
+				ORDER BY post_id",
+				...array_merge( $post_ids, $meta_keys )
+			)
+		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders
 
 		// Organize data by post_id for fast lookup.
 		$meta_cache = array();
@@ -258,8 +246,7 @@ class AuditHelper {
 	public static function strip_region_prefix( string $content ): string {
 		// Remove region prefixes like "LEIDEN - ", "DEN HAAG - ", "ROOSENDAAL/OUDENBOSCH - ", "ETTEN-LEUR - ".
 		// Matches: uppercase letters, spaces, forward slashes, hyphens, followed by " - ".
-		$result = preg_replace( '/^[A-Z][A-Z\s\/\-]*\s-\s/', '', trim( $content ) );
-		return null !== $result ? $result : trim( $content );
+		return preg_replace( '/^[A-Z][A-Z\s\/\-]*\s-\s/', '', trim( $content ) ) ?? trim( $content );
 	}
 
 	/**

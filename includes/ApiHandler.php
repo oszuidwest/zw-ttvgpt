@@ -138,21 +138,6 @@ class ApiHandler {
 	}
 
 	/**
-	 * Retrieves the appropriate API endpoint URL.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return string API endpoint URL.
-	 */
-	private function get_api_endpoint(): string {
-		if ( Helper::is_gpt5_model( $this->model ) ) {
-			return self::RESPONSES_ENDPOINT;
-		}
-
-		return self::CHAT_COMPLETIONS_ENDPOINT;
-	}
-
-	/**
 	 * Creates the request payload for the Chat Completions API.
 	 *
 	 * @since 1.0.0
@@ -277,8 +262,7 @@ class ApiHandler {
 	public function generate_summary( string $content, int $word_limit ): string|\WP_Error {
 		$is_gpt5  = Helper::is_gpt5_model( $this->model );
 		$api_type = $is_gpt5 ? 'Responses' : 'Chat Completions';
-		$endpoint = $this->get_api_endpoint();
-		$timeout  = Constants::API_TIMEOUT;
+		$endpoint = $is_gpt5 ? self::RESPONSES_ENDPOINT : self::CHAT_COMPLETIONS_ENDPOINT;
 
 		$this->logger->debug(
 			'Starting API request',
@@ -298,12 +282,9 @@ class ApiHandler {
 			);
 		}
 
-		// Build request based on API type.
-		if ( $is_gpt5 ) {
-			$request_data = $this->build_responses_request( $content, $word_limit );
-		} else {
-			$request_data = $this->build_chat_completions_request( $content, $word_limit );
-		}
+		$request_data = $is_gpt5
+			? $this->build_responses_request( $content, $word_limit )
+			: $this->build_chat_completions_request( $content, $word_limit );
 
 		$request_body = wp_json_encode( $request_data );
 
@@ -318,7 +299,7 @@ class ApiHandler {
 		$response = wp_remote_post(
 			$endpoint,
 			array(
-				'timeout' => $timeout,
+				'timeout' => Constants::API_TIMEOUT,
 				'headers' => array(
 					'Authorization' => 'Bearer ' . $this->api_key,
 					'Content-Type'  => 'application/json',
@@ -359,12 +340,9 @@ class ApiHandler {
 			);
 		}
 
-		// Extract summary based on API type.
-		if ( $is_gpt5 ) {
-			$summary = $this->extract_responses_summary( $data );
-		} else {
-			$summary = $this->extract_chat_completions_summary( $data );
-		}
+		$summary = $is_gpt5
+			? $this->extract_responses_summary( $data )
+			: $this->extract_chat_completions_summary( $data );
 
 		if ( is_wp_error( $summary ) ) {
 			return $summary;

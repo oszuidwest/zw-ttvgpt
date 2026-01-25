@@ -82,19 +82,13 @@ class FineTuningExport {
 					$training_data[] = $training_entry;
 					++$stats['processed'];
 
-					// Track date range.
-					$post_date = get_the_date( 'Y-m-d', $post->ID );
-					if ( '' === $stats['date_range']['start'] ) {
-						$stats['date_range']['start'] = $post_date;
-						$stats['date_range']['end']   = $post_date;
-					} else {
-						if ( $post_date < $stats['date_range']['start'] ) {
-							$stats['date_range']['start'] = $post_date;
-						}
-						if ( $post_date > $stats['date_range']['end'] ) {
-							$stats['date_range']['end'] = $post_date;
-						}
-					}
+					$post_date                    = get_the_date( 'Y-m-d', $post->ID );
+					$stats['date_range']['start'] = ( '' === $stats['date_range']['start'] )
+						? $post_date
+						: min( $stats['date_range']['start'], $post_date );
+					$stats['date_range']['end']   = ( '' === $stats['date_range']['end'] )
+						? $post_date
+						: max( $stats['date_range']['end'], $post_date );
 				} else {
 					++$stats['skipped'];
 				}
@@ -253,8 +247,6 @@ class FineTuningExport {
 
 		return $training_entry;
 	}
-
-
 
 	/**
 	 * Transient key prefix for temporary export data.

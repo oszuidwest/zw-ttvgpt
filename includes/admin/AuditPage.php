@@ -14,7 +14,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use ZW_TTVGPT_Core\AuditHelper;
 use ZW_TTVGPT_Core\AuditStatus;
-use ZW_TTVGPT_Core\Helper;
 
 /**
  * Audit Page class.
@@ -117,11 +116,6 @@ class AuditPage {
 
 		$available_months = AuditHelper::get_months();
 
-		// Load audit CSS for improved card spacing.
-		$version = Helper::get_asset_version();
-		wp_enqueue_style( 'zw-ttvgpt-audit', ZW_TTVGPT_URL . 'assets/audit.css', array(), $version );
-		wp_print_styles( array( 'zw-ttvgpt-audit' ) );
-
 		// Enqueue WordPress ThickBox for modal functionality.
 		add_thickbox();
 		?>
@@ -140,9 +134,6 @@ class AuditPage {
 		</div>
 		<?php
 	}
-
-
-
 
 	/**
 	 * Renders WordPress-style status filter links.
