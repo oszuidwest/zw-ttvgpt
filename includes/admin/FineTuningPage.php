@@ -40,10 +40,8 @@ class FineTuningPage {
 		private readonly FineTuningExport $export,
 		private readonly Logger $logger
 	) {
-		// Register AJAX handler.
-		add_action( 'wp_ajax_zw_ttvgpt_export_training_data', $this->handle_export_ajax( ... ) );
-		// Register download handler (runs early to send headers before any output).
 		add_action( 'admin_init', $this->handle_download_request( ... ) );
+		add_action( 'wp_ajax_zw_ttvgpt_export_training_data', $this->handle_export_ajax( ... ) );
 	}
 
 	/**
