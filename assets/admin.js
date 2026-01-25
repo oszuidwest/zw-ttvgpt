@@ -239,11 +239,12 @@ async function handleGenerateClick(e) {
             body: formData,
         });
 
-        if (!response.ok) {
+        const data = await response.json();
+
+        // Check for HTTP errors, but use server message if available
+        if (!response.ok && !data) {
             throw new Error(`Server error: ${response.status}`);
         }
-
-        const data = await response.json();
 
         // Debug: log API response
         if (window.zwTTVGPT.debugMode) {
