@@ -321,12 +321,12 @@ class ApiHandler {
 			);
 		}
 
-		$status_code = wp_remote_retrieve_response_code( $response );
-		if ( 200 !== (int) $status_code ) {
+		$status_code = (int) wp_remote_retrieve_response_code( $response );
+		if ( 200 !== $status_code ) {
 			$this->logger->error( 'API error: HTTP ' . $status_code );
 			return new \WP_Error(
 				'api_error',
-				ApiErrorHandler::get_error_message( (int) $status_code ),
+				ApiErrorHandler::get_error_message( $status_code ),
 				array( 'status_code' => $status_code )
 			);
 		}

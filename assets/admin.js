@@ -293,7 +293,7 @@ function getBlockText(block) {
     const text = window.wp.sanitize.stripTags(html);
 
     // Process inner blocks recursively
-    if (block.innerBlocks && block.innerBlocks.length > 0) {
+    if (block.innerBlocks?.length > 0) {
         const innerText = block.innerBlocks
             .map(getBlockText)
             .filter(Boolean)
@@ -321,7 +321,7 @@ function getEditorContent() {
         const editor = window.wp.data.select('core/block-editor');
         const blocks = editor.getBlocks();
 
-        if (blocks && blocks.length > 0) {
+        if (blocks?.length > 0) {
             // Extract text from each block
             const textParts = blocks.map(getBlockText).filter(Boolean);
             content = textParts.join('\n\n');
@@ -445,18 +445,13 @@ function getSelectedRegions() {
         });
     }
 
-    const regions = [];
-    checkboxes.forEach((checkbox) => {
-        const labelText = isBlockEditorCheckbox(checkbox)
-            ? getBlockEditorLabel(checkbox)
-            : getClassicEditorLabel(checkbox);
-
-        if (labelText) {
-            regions.push(labelText);
-        }
-    });
-
-    return regions;
+    return Array.from(checkboxes)
+        .map((checkbox) =>
+            isBlockEditorCheckbox(checkbox)
+                ? getBlockEditorLabel(checkbox)
+                : getClassicEditorLabel(checkbox),
+        )
+        .filter(Boolean);
 }
 
 /**
