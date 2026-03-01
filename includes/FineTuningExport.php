@@ -157,7 +157,7 @@ class FineTuningExport {
 		$base_query .= ' ORDER BY p.post_date DESC';
 
 		if ( ! empty( $filters['limit'] ) ) {
-			$base_query .= ' ' . $wpdb->prepare( ' LIMIT %d', $filters['limit'] );
+			$base_query .= ' ' . $wpdb->prepare( 'LIMIT %d', $filters['limit'] );
 		}
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Base query is prepared above, date/limit clauses are also prepared

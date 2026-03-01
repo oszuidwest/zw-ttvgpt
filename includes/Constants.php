@@ -330,16 +330,17 @@ class Constants {
 		}
 
 		// Extract base model from ft:base-model-YYYY-MM-DD:org:suffix:id.
-		$parts = explode( ':', $model_lower, 3 );
+		$parts = explode( ':', $model, 3 );
 		if ( count( $parts ) < 2 ) {
 			return $model;
 		}
 
-		$model_part = $parts[1];
+		$model_part       = $parts[1];
+		$model_part_lower = strtolower( $model_part );
 
 		// Strip date suffix (e.g., -2025-04-14) if present.
 		foreach ( self::FINE_TUNABLE_MODELS as $base ) {
-			if ( str_starts_with( $model_part, $base ) ) {
+			if ( str_starts_with( $model_part_lower, $base ) ) {
 				return $base;
 			}
 		}

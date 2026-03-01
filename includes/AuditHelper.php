@@ -368,9 +368,11 @@ class AuditHelper {
 			return 100.0;
 		}
 
-		$ai_words    = preg_split( '/\s+/', trim( $ai_content ) );
-		$human_words = preg_split( '/\s+/', trim( $human_content ) );
-		$max_words   = max( count( $ai_words ), count( $human_words ) );
+		$ai_words_result    = preg_split( '/\s+/', trim( $ai_content ) );
+		$human_words_result = preg_split( '/\s+/', trim( $human_content ) );
+		$ai_words           = false !== $ai_words_result ? $ai_words_result : array();
+		$human_words        = false !== $human_words_result ? $human_words_result : array();
+		$max_words          = max( count( $ai_words ), count( $human_words ) );
 
 		$matching_words    = count( array_intersect( $ai_words, $human_words ) );
 		$change_percentage = ( 1 - $matching_words / $max_words ) * 100;
