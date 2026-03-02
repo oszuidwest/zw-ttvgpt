@@ -4,6 +4,15 @@ on:
   push:
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type: "release" creates a GitHub release, "edge" creates a development artifact'
+        required: true
+        default: 'edge'
+        type: choice
+        options:
+          - edge
+          - release
 
 permissions:
   contents: write
@@ -19,11 +28,18 @@ jobs:
 
       - name: Set version
         id: version
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          BUILD_TYPE: ${{ inputs.build_type }}
         run: |
-          if [[ "${{ github.ref_type }}" == "tag" ]]; then
-            echo "version=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          if [[ "$REF_TYPE" == "tag" ]]; then
+            echo "version=$REF_NAME" >> $GITHUB_OUTPUT
+            echo "is_release=true" >> $GITHUB_OUTPUT
+          elif [[ "$BUILD_TYPE" == "edge" ]]; then
+            echo "version=edge" >> $GITHUB_OUTPUT
+            echo "is_release=false" >> $GITHUB_OUTPUT
           else
-            # Extract version from plugin header
             VERSION=$(sed -n 's/.*Version:\s*\([0-9a-zA-Z.-]\+\).*/\1/p' zw-ttvgpt.php | head -1)
             if [[ ! "$VERSION" =~ ^[0-9]+(\.[0-9]+)+(-(alpha|beta|rc)\.[0-9]+)?$ ]]; then
               echo "Error: Invalid version format - $VERSION"
@@ -32,6 +48,7 @@ jobs:
             fi
             TAG="v$VERSION"
             echo "version=$TAG" >> $GITHUB_OUTPUT
+            echo "is_release=true" >> $GITHUB_OUTPUT
             git config --global user.email "github-actions[bot]@users.noreply.github.com"
             git config --global user.name "github-actions[bot]"
             git tag "$TAG"
@@ -75,14 +92,20 @@ jobs:
         id: package
         env:
           PLUGIN_NAME: zw-ttvgpt
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
+          if [[ "$VERSION" == "edge" ]]; then
+            ZIP_VERSION="edge-$(git rev-parse --short HEAD)"
+          else
+            ZIP_VERSION="${VERSION#v}"
+          fi
           cd release
-          zip -r "../${PLUGIN_NAME}-${VERSION#v}.zip" $PLUGIN_NAME
+          zip -r "../${PLUGIN_NAME}-${ZIP_VERSION}.zip" $PLUGIN_NAME
           cd ..
-          echo "zip_file=${PLUGIN_NAME}-${VERSION#v}.zip" >> $GITHUB_OUTPUT
+          echo "zip_file=${PLUGIN_NAME}-${ZIP_VERSION}.zip" >> $GITHUB_OUTPUT
 
       - name: Create Release
+        if: steps.version.outputs.is_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.version }}
@@ -90,3 +113,11 @@ jobs:
           prerelease: ${{ contains(steps.version.outputs.version, '-') }}
           files: ${{ steps.package.outputs.zip_file }}
           generate_release_notes: true
+
+      - name: Upload edge artifact
+        if: steps.version.outputs.is_release == 'false'
+        uses: actions/upload-artifact@v4
+        with:
+          name: edge-${{ github.sha }}
+          path: ${{ steps.package.outputs.zip_file }}
+          retention-days: 7
