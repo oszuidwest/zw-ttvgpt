@@ -242,34 +242,30 @@ async function handleGenerateClick(e) {
         let data;
         try {
             data = await response.json();
-        } catch (parseError) {
+        } catch (_parseError) {
             throw new Error(`Server error: ${response.status}`);
         }
 
-        // Check for HTTP errors, but use server message if available
         if (!response.ok && !data?.data?.message) {
             throw new Error(`Server error: ${response.status}`);
         }
 
-        // Debug: log API response
         if (window.zwTTVGPT.debugMode) {
             console.log('ZW TTVGPT Debug - API Response:', data);
         }
 
+        clearLoadingMessages();
+
         if (data.success) {
-            clearLoadingMessages();
             handleSuccess(data.data, button);
         } else {
-            clearLoadingMessages();
-            const errorMessage =
-                data.data?.message || window.zwTTVGPT.strings.error;
-            showStatus('error', errorMessage);
-
-            // Log error code for debugging.
             if (window.zwTTVGPT.debugMode && data.data?.code) {
                 console.error('ZW TTVGPT Error Code:', data.data.code);
             }
-
+            showStatus(
+                'error',
+                data.data?.message || window.zwTTVGPT.strings.error,
+            );
             setLoadingState(button, false);
             button.dataset.isGenerating = 'false';
         }
@@ -297,7 +293,7 @@ function getBlockText(block) {
     const text = window.wp.sanitize.stripTags(html);
 
     // Process inner blocks recursively
-    if (block.innerBlocks && block.innerBlocks.length > 0) {
+    if (block.innerBlocks?.length > 0) {
         const innerText = block.innerBlocks
             .map(getBlockText)
             .filter(Boolean)
@@ -325,7 +321,7 @@ function getEditorContent() {
         const editor = window.wp.data.select('core/block-editor');
         const blocks = editor.getBlocks();
 
-        if (blocks && blocks.length > 0) {
+        if (blocks?.length > 0) {
             // Extract text from each block
             const textParts = blocks.map(getBlockText).filter(Boolean);
             content = textParts.join('\n\n');
@@ -385,8 +381,7 @@ function cleanupWhitespace(text) {
  * @return {boolean} True if Block Editor checkbox.
  */
 function isBlockEditorCheckbox(checkbox) {
-    const id = checkbox.id;
-    return id?.startsWith('inspector-checkbox-control') ?? false;
+    return checkbox.id?.startsWith('inspector-checkbox-control') ?? false;
 }
 
 /**
@@ -449,18 +444,13 @@ function getSelectedRegions() {
         });
     }
 
-    const regions = [];
-    checkboxes.forEach((checkbox) => {
-        const labelText = isBlockEditorCheckbox(checkbox)
-            ? getBlockEditorLabel(checkbox)
-            : getClassicEditorLabel(checkbox);
-
-        if (labelText) {
-            regions.push(labelText);
-        }
-    });
-
-    return regions;
+    return Array.from(checkboxes)
+        .map((checkbox) =>
+            isBlockEditorCheckbox(checkbox)
+                ? getBlockEditorLabel(checkbox)
+                : getClassicEditorLabel(checkbox),
+        )
+        .filter(Boolean);
 }
 
 /**
@@ -546,7 +536,7 @@ function animateText(element, text, button, warning = null) {
         if (index < text.length) {
             // Type multiple characters at once - faster
             const charsToType = Math.floor(Math.random() * 6) + 2; // 2-7 chars
-            const newText = text.substr(index, charsToType);
+            const newText = text.slice(index, index + charsToType);
             index += newText.length;
 
             element.value += newText;
