@@ -73,7 +73,7 @@ class SummaryGenerator {
 		}
 
 		$clean_content = $this->api_handler->prepare_content( $content );
-		$word_count    = str_word_count( $clean_content );
+		$word_count    = Helper::count_words( $clean_content );
 
 		if ( $word_count < Constants::MIN_WORD_COUNT ) {
 			AjaxResponse::error(
@@ -129,7 +129,7 @@ class SummaryGenerator {
 
 		$response = array(
 			'summary'    => $summary,
-			'word_count' => str_word_count( $summary ),
+			'word_count' => Helper::count_words( $summary ),
 		);
 
 		if ( ! $validated ) {
