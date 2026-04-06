@@ -323,7 +323,9 @@ class Constants {
 	 * @return string Base model identifier.
 	 */
 	public static function get_base_model( string $model ): string {
-		if ( ! str_starts_with( strtolower( $model ), 'ft:' ) ) {
+		$model_lower = strtolower( $model );
+
+		if ( ! str_starts_with( $model_lower, 'ft:' ) ) {
 			return $model;
 		}
 
@@ -333,11 +335,12 @@ class Constants {
 			return $model;
 		}
 
-		$model_part = $parts[1];
+		$model_part       = $parts[1];
+		$model_part_lower = strtolower( $model_part );
 
 		// Strip date suffix (e.g., -2025-04-14) if present.
 		foreach ( self::FINE_TUNABLE_MODELS as $base ) {
-			if ( str_starts_with( strtolower( $model_part ), $base ) ) {
+			if ( str_starts_with( $model_part_lower, $base ) ) {
 				return $base;
 			}
 		}
