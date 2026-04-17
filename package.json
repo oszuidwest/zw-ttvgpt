@@ -8,6 +8,6 @@
     "format": "biome format --write assets/"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.10"
+    "@biomejs/biome": "^2.4.11"
   }
 }
