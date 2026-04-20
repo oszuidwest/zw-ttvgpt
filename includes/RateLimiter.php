@@ -52,11 +52,8 @@ class RateLimiter {
 	public static function increment( int $user_id ): void {
 		$transient_key = Constants::get_rate_limit_key( $user_id );
 		$requests      = get_transient( $transient_key );
+		$new_count     = ( false === $requests ) ? 1 : $requests + 1;
 
-		if ( false === $requests ) {
-			set_transient( $transient_key, 1, Constants::RATE_LIMIT_WINDOW );
-		} else {
-			set_transient( $transient_key, $requests + 1, Constants::RATE_LIMIT_WINDOW );
-		}
+		set_transient( $transient_key, $new_count, Constants::RATE_LIMIT_WINDOW );
 	}
 }
