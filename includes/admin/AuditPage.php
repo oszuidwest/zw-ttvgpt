@@ -14,7 +14,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use ZW_TTVGPT_Core\AuditHelper;
 use ZW_TTVGPT_Core\AuditStatus;
-use ZW_TTVGPT_Core\Helper;
 
 /**
  * Audit Page class.
@@ -42,9 +41,18 @@ class AuditPage {
 			'month'         => isset( $_GET['month'] ) ? absint( $_GET['month'] ) : null,
 			'status_filter' => isset( $_GET['status'] ) ? sanitize_text_field( $_GET['status'] ) : '',
 			'change_filter' => isset( $_GET['change'] ) ? sanitize_text_field( $_GET['change'] ) : '',
+			'paged'         => isset( $_GET['paged'] ) ? max( 1, absint( $_GET['paged'] ) ) : 1,
 		);
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 	}
+
+	/**
+	 * Posts shown per page on the audit overview.
+	 *
+	 * @since 1.0.0
+	 * @var int
+	 */
+	private const int POSTS_PER_PAGE = 50;
 
 	/**
 	 * Renders the audit analysis page.
@@ -57,6 +65,7 @@ class AuditPage {
 		$month         = $params['month'];
 		$status_filter = $params['status_filter'];
 		$change_filter = $params['change_filter'];
+		$paged         = $params['paged'];
 
 		if ( ! $year || ! $month ) {
 			$most_recent = AuditHelper::get_most_recent_month();
@@ -85,13 +94,13 @@ class AuditPage {
 			AuditStatus::AiWrittenEdited->value    => 0,
 		);
 
-		// Bulk fetch all meta data in one query to avoid N+1 problem.
-		$post_ids   = array_map( static fn( $post ) => $post->ID, $posts );
-		$meta_cache = AuditHelper::get_bulk_meta_data( $post_ids );
+		// Prime WordPress' meta cache so categorize_post's get_post_meta calls hit cache.
+		$post_ids = array_map( static fn( $post ) => $post->ID, $posts );
+		AuditHelper::prime_meta_cache( $post_ids );
 
 		$categorized_posts = array();
 		foreach ( $posts as $post ) {
-			$analysis = AuditHelper::categorize_post( $post, $meta_cache );
+			$analysis = AuditHelper::categorize_post( $post );
 			$status   = $analysis['status'];
 			++$counts[ $status->value ];
 
@@ -117,25 +126,49 @@ class AuditPage {
 
 		$available_months = AuditHelper::get_months();
 
-		// Load audit CSS for improved card spacing.
-		$version = Helper::get_asset_version();
-		wp_enqueue_style( 'zw-ttvgpt-audit', ZW_TTVGPT_URL . 'assets/audit.css', array(), $version );
-		wp_print_styles( array( 'zw-ttvgpt-audit' ) );
+		// Slice filtered results for the requested page.
+		$total_filtered = count( $categorized_posts );
+		$total_pages    = (int) ceil( $total_filtered / self::POSTS_PER_PAGE );
+		$paged          = $total_pages > 0 ? min( $paged, $total_pages ) : 1;
+		$page_offset    = ( $paged - 1 ) * self::POSTS_PER_PAGE;
+		$page_slice     = array_slice( $categorized_posts, $page_offset, self::POSTS_PER_PAGE );
 
-		// Enqueue WordPress ThickBox for modal functionality.
+		// Stylesheet is enqueued by AdminMenu on the audit page hook.
 		add_thickbox();
 		?>
 		<div class="wrap">
 			<h1 class="wp-heading-inline"><?php esc_html_e( 'Tekst TV GPT - Auditlog', 'zw-ttvgpt' ); ?></h1>
 			<hr class="wp-header-end">
-			
+
 			<?php $this->render_status_links( $year, $month, $status_filter, $counts ); ?>
-			
+
 			<form id="posts-filter" method="get">
 				<input type="hidden" name="page" value="zw-ttvgpt-audit">
-				<?php $this->render_tablenav( $year, $month, $available_months, $status_filter, $change_filter, $counts, 'top' ); ?>
-				<?php $this->render_audit_table( $categorized_posts, $meta_cache ); ?>
-				<?php $this->render_tablenav( $year, $month, $available_months, $status_filter, $change_filter, $counts, 'bottom' ); ?>
+				<?php
+				$this->render_tablenav(
+					$year,
+					$month,
+					$available_months,
+					$status_filter,
+					$change_filter,
+					$total_filtered,
+					$paged,
+					$total_pages,
+					'top'
+				);
+				$this->render_audit_table( $page_slice );
+				$this->render_tablenav(
+					$year,
+					$month,
+					$available_months,
+					$status_filter,
+					$change_filter,
+					$total_filtered,
+					$paged,
+					$total_pages,
+					'bottom'
+				);
+				?>
 			</form>
 		</div>
 		<?php
@@ -204,11 +237,12 @@ class AuditPage {
 	 * @param array  $available_months All available months with data.
 	 * @param string $status_filter    Current status filter value.
 	 * @param string $change_filter    Current change percentage filter value.
-	 * @param array  $counts           Statistics counts for each category.
+	 * @param int    $total_filtered   Total items matching the current filters.
+	 * @param int    $paged            Current page number (1-indexed).
+	 * @param int    $total_pages      Total page count for the filtered set.
 	 * @param string $which            Position of navigation ('top' or 'bottom').
 	 *
 	 * @phpstan-param array<int, MonthData> $available_months
-	 * @phpstan-param array<value-of<AuditStatus>, int> $counts
 	 */
 	private function render_tablenav(
 		int $year,
@@ -216,10 +250,11 @@ class AuditPage {
 		array $available_months,
 		string $status_filter,
 		string $change_filter,
-		array $counts,
+		int $total_filtered,
+		int $paged,
+		int $total_pages,
 		string $which
 	): void {
-		$total = array_sum( $counts );
 		?>
 		<div class="tablenav <?php echo esc_attr( $which ); ?>">
 			<?php if ( 'top' === $which ) : ?>
@@ -273,11 +308,52 @@ class AuditPage {
 
 			<h2 class="screen-reader-text"><?php esc_html_e( 'Auditlijst navigatie', 'zw-ttvgpt' ); ?></h2>
 			<div class="tablenav-pages">
-				<span class="displaying-num"><?php echo esc_html( (string) $total ); ?> items</span>
+				<span class="displaying-num">
+					<?php
+					printf(
+						/* translators: %s: total item count */
+						esc_html( _n( '%s item', '%s items', $total_filtered, 'zw-ttvgpt' ) ),
+						esc_html( number_format_i18n( $total_filtered ) )
+					);
+					?>
+				</span>
+				<?php $this->render_pagination_links( $paged, $total_pages ); ?>
 			</div>
 			<br class="clear">
 		</div>
 		<?php
+	}
+
+	/**
+	 * Renders WordPress-style pagination links preserving current filters.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $paged       Current page (1-indexed).
+	 * @param int $total_pages Total number of pages.
+	 */
+	private function render_pagination_links( int $paged, int $total_pages ): void {
+		if ( $total_pages < 2 ) {
+			return;
+		}
+
+		$links = paginate_links(
+			array(
+				'base'      => add_query_arg( 'paged', '%#%' ),
+				'format'    => '',
+				'prev_text' => __( '&laquo;', 'zw-ttvgpt' ),
+				'next_text' => __( '&raquo;', 'zw-ttvgpt' ),
+				'total'     => $total_pages,
+				'current'   => $paged,
+				'type'      => 'plain',
+			)
+		);
+
+		if ( empty( $links ) ) {
+			return;
+		}
+
+		echo '<span class="pagination-links">' . wp_kses_post( $links ) . '</span>';
 	}
 
 	/**
@@ -286,12 +362,10 @@ class AuditPage {
 	 * @since 1.0.0
 	 *
 	 * @param array $categorized_posts Array of categorized posts with analysis data.
-	 * @param array $meta_cache        Pre-fetched meta data cache.
 	 *
 	 * @phpstan-param array<int, array<string, mixed>> $categorized_posts
-	 * @phpstan-param array<int, array<string, string>> $meta_cache
 	 */
-	private function render_audit_table( array $categorized_posts, array $meta_cache ): void {
+	private function render_audit_table( array $categorized_posts ): void {
 		?>
 		<h2 class="screen-reader-text"><?php esc_html_e( 'Auditlog', 'zw-ttvgpt' ); ?></h2>
 		<table class="wp-list-table widefat fixed striped table-view-list posts zw-audit-table">
@@ -320,7 +394,7 @@ class AuditPage {
 						$ai_content    = $item['ai_content'];
 						$human_content = $item['human_content'];
 						$author_data   = get_userdata( $post->post_author );
-						$edit_last     = $meta_cache[ $post->ID ]['_edit_last'] ?? '';
+						$edit_last     = get_post_meta( $post->ID, '_edit_last', true );
 						$editor_data   = is_numeric( $edit_last ) ? get_userdata( (int) $edit_last ) : null;
 						$post_url      = get_edit_post_link( $post->ID );
 						?>

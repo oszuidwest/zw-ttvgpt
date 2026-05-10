@@ -23,21 +23,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Helper {
 
 	/**
-	 * Removes all plugin-related transients from database.
+	 * Removes all plugin-related transients from the database.
+	 *
+	 * Note: this only clears DB-backed transients. Sites with a persistent
+	 * object cache (Redis/Memcached) hold transients in cache, but those expire
+	 * naturally inside the rate-limit window (60s) so we don't enumerate them.
 	 *
 	 * @since 1.0.0
 	 */
 	public static function cleanup_transients(): void {
-		// Get all users to clean their rate limit transients.
-		$users = get_users( array( 'fields' => 'ID' ) );
-
-		foreach ( $users as $user_id ) {
-			$transient_key = Constants::get_rate_limit_key( $user_id );
-			delete_transient( $transient_key );
-		}
-
-		// Clean up orphaned transients using direct query.
-		// Delete both _transient_ and _transient_timeout_ entries.
 		global $wpdb;
 
 		// Clean rate limit transients (value + timeout).
