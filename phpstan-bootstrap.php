@@ -1,9 +1,15 @@
 <?php
 /**
- * PHPStan bootstrap file
+ * PHPStan bootstrap file - never loaded by WordPress.
+ *
+ * The OR-define pattern below satisfies WordPress plugin-check's direct-access
+ * guard while still letting PHPStan execute the rest of this file (PHPStan
+ * runs outside WordPress, so ABSPATH is not defined there).
  *
  * @package ZW_TTVGPT
  */
+
+defined( 'ABSPATH' ) || define( 'ABSPATH', __DIR__ );
 
 define( 'ZW_TTVGPT_VERSION', '1.0.0' );
 define( 'ZW_TTVGPT_DIR', __DIR__ . '/' );

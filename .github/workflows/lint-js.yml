@@ -1,0 +1,29 @@
+---
+name: JS Lint
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**/*.js'
+      - '**/*.ts'
+      - '**/*.css'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'biome.json'
+  pull_request:
+    paths:
+      - '**/*.js'
+      - '**/*.ts'
+      - '**/*.css'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'biome.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    uses: oszuidwest/.github-templates/.github/workflows/wp-js-ci.yml@v2
