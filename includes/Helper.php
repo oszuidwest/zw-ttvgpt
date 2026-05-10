@@ -48,6 +48,15 @@ class Helper {
 				'_transient_timeout_' . Constants::RATE_LIMIT_PREFIX . '%'
 			)
 		);
+
+		// Clean legacy export transients left by removed training-data export tooling.
+		$wpdb->query(
+			$wpdb->prepare(
+				"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
+				'_transient_zw_ttvgpt_export_%',
+				'_transient_timeout_zw_ttvgpt_export_%'
+			)
+		);
 	}
 
 	/**

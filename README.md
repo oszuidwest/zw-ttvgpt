@@ -11,7 +11,7 @@ WordPress-plugin die de GPT-modellen van OpenAI gebruikt om automatisch korte sa
 
 ## Kenmerken
 
-- AI-gemaakte samenvattingen met GPT-modellen van OpenAI (GPT-5.5, GPT-5.4 mini en GPT-4.1 familie)
+- AI-gemaakte samenvattingen met GPT-modellen van OpenAI (`gpt-5.5`, `gpt-5.4-mini` en GPT-4.1 familie)
 - Automatische detectie en ondersteuning voor de Chat Completions API en Responses API
 - Werkt met zowel de Block Editor (Gutenberg) als de Classic Editor
 - Auditfunctionaliteit met overzicht van alle samenvattingen en diff-weergave
@@ -49,7 +49,7 @@ De plugin ondersteunt de twee geselecteerde modellen uit de **GPT-5 familie** en
 
 **GPT-5.5** (aanbevolen): Nieuwste frontier model voor hoogwaardige tekstsamenvattingen via de Responses API.
 
-**GPT-5.4 mini**: Snellere en goedkopere GPT-5 variant voor lagere latency of hogere volumes.
+**GPT-5.4-mini**: Snellere en goedkopere GPT-5 variant voor lagere latency of hogere volumes.
 
 **GPT-4.1 familie**: Bewezen betrouwbare modellen met uitstekende kwaliteit via de Chat Completions API. Keuze uit standaard en mini (budget) varianten.
 

@@ -131,6 +131,26 @@ class Constants {
 	);
 
 	/**
+	 * Legacy fine-tuned base models accepted for existing ft: model IDs.
+	 *
+	 * @since 1.0.0
+	 * @var array<string>
+	 */
+	public const array LEGACY_FINE_TUNED_BASE_MODELS = array(
+		'gpt-4.1-mini',
+		'gpt-4.1-nano',
+		'gpt-4.1',
+	);
+
+	/**
+	 * Browser validation pattern for legacy fine-tuned model IDs.
+	 *
+	 * @since 1.0.0
+	 * @var string
+	 */
+	public const string LEGACY_FINE_TUNED_MODEL_HTML_PATTERN = 'ft:gpt-4\.1(?:-(?:mini|nano))?(?:-[0-9]{4}-[0-9]{2}-[0-9]{2})?:.+';
+
+	/**
 	 * Maximum requests allowed per user in rate limit window.
 	 *
 	 * @since 1.0.0
@@ -266,6 +286,8 @@ class Constants {
 	/**
 	 * Checks if a model is supported.
 	 *
+	 * Supports current base models and existing legacy ft: model IDs from the GPT-4.1 family.
+	 *
 	 * @since 1.0.0
 	 *
 	 * @param string $model Model identifier to check.
@@ -274,11 +296,11 @@ class Constants {
 	public static function is_supported_model( string $model ): bool {
 		$model_lower = strtolower( $model );
 
-		return in_array( $model_lower, self::SUPPORTED_BASE_MODELS, true ) || self::is_legacy_fine_tuned_model( $model_lower );
+		return in_array( $model_lower, self::SUPPORTED_BASE_MODELS, true ) || self::is_legacy_fine_tuned_model( $model );
 	}
 
 	/**
-	 * Checks if a model is a legacy fine-tuned model ID.
+	 * Checks if a model is a legacy GPT-4.1-family fine-tuned model ID.
 	 *
 	 * @since 1.0.0
 	 *
@@ -286,6 +308,15 @@ class Constants {
 	 * @return bool True if model is a legacy fine-tuned model ID, false otherwise.
 	 */
 	public static function is_legacy_fine_tuned_model( string $model ): bool {
-		return str_starts_with( strtolower( $model ), 'ft:' ) && strlen( $model ) > 3;
+		$model_lower = strtolower( $model );
+
+		foreach ( self::LEGACY_FINE_TUNED_BASE_MODELS as $base_model ) {
+			$base_pattern = preg_quote( $base_model, '/' );
+			if ( 1 === preg_match( '/^ft:' . $base_pattern . '(?::|-[0-9]{4}-[0-9]{2}-[0-9]{2}:).+/', $model_lower ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

@@ -27,6 +27,14 @@ use ZW_TTVGPT_Core\SettingsManager;
  */
 class SettingsPage {
 	/**
+	 * Select value used to reveal the legacy fine-tuned model input.
+	 *
+	 * @since 1.0.0
+	 * @var string
+	 */
+	private const string LEGACY_FINE_TUNED_SELECT_VALUE = 'legacy-fine-tuned';
+
+	/**
 	 * Initializes the settings page and registers WordPress hooks.
 	 *
 	 * @since 1.0.0
@@ -134,6 +142,7 @@ class SettingsPage {
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+			<?php $this->render_model_migration_notice(); ?>
 			<?php settings_errors(); ?>
 
 			<form method="post" action="options.php">
@@ -143,6 +152,35 @@ class SettingsPage {
 				submit_button();
 				?>
 			</form>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Renders a one-shot notice when an unsupported stored model has been migrated.
+	 *
+	 * @since 1.0.0
+	 */
+	private function render_model_migration_notice(): void {
+		SettingsManager::get_model();
+
+		$notice = SettingsManager::get_model_migration_notice();
+		if ( null === $notice ) {
+			return;
+		}
+
+		?>
+		<div class="notice notice-warning">
+			<p>
+				<?php
+				printf(
+					/* translators: 1: Previous model name, 2: New model name */
+					esc_html__( 'Het opgeslagen OpenAI-model "%1$s" wordt niet meer ondersteund en is automatisch vervangen door "%2$s".', 'zw-ttvgpt' ),
+					esc_html( $notice['old_model'] ),
+					esc_html( $notice['new_model'] )
+				);
+				?>
+			</p>
 		</div>
 		<?php
 	}
@@ -211,7 +249,7 @@ class SettingsPage {
 					<?php echo esc_html( $model ); ?>
 				</option>
 			<?php endforeach; ?>
-			<option value="legacy-fine-tuned" <?php selected( $is_legacy_fine_tuned ); ?>>
+			<option value="<?php echo esc_attr( self::LEGACY_FINE_TUNED_SELECT_VALUE ); ?>" <?php selected( $is_legacy_fine_tuned ); ?>>
 				<?php esc_html_e( 'Legacy ft:-model...', 'zw-ttvgpt' ); ?>
 			</option>
 		</select>
@@ -222,6 +260,9 @@ class SettingsPage {
 				<?php echo $is_legacy_fine_tuned ? 'name="' . esc_attr( $field_name ) . '"' : ''; ?>
 				value="<?php echo $is_legacy_fine_tuned ? esc_attr( $current_model ) : ''; ?>"
 				class="regular-text"
+				<?php echo $is_legacy_fine_tuned ? 'required' : ''; ?>
+				pattern="<?php echo esc_attr( Constants::LEGACY_FINE_TUNED_MODEL_HTML_PATTERN ); ?>"
+				title="<?php esc_attr_e( 'Gebruik een bestaande legacy ft:-model-ID uit de GPT-4.1 familie.', 'zw-ttvgpt' ); ?>"
 				placeholder="ft:gpt-4.1:org:suffix:id" />
 			<p class="description">
 				<?php
@@ -243,17 +284,20 @@ class SettingsPage {
 			const wrapper = document.getElementById('zw_ttvgpt_legacy_fine_tuned_wrapper');
 			const legacyInput = document.getElementById('zw_ttvgpt_legacy_fine_tuned_model');
 			const fieldName = <?php echo wp_json_encode( $field_name ); ?>;
+			const legacyOptionValue = <?php echo wp_json_encode( self::LEGACY_FINE_TUNED_SELECT_VALUE ); ?>;
 
 			select.addEventListener('change', function() {
-				const isLegacyFineTuned = this.value === 'legacy-fine-tuned';
+				const isLegacyFineTuned = this.value === legacyOptionValue;
 				wrapper.style.display = isLegacyFineTuned ? 'block' : 'none';
 
 				if (isLegacyFineTuned) {
 					select.removeAttribute('name');
 					legacyInput.setAttribute('name', fieldName);
+					legacyInput.setAttribute('required', 'required');
 				} else {
 					select.setAttribute('name', fieldName);
 					legacyInput.removeAttribute('name');
+					legacyInput.removeAttribute('required');
 				}
 			});
 		})();
@@ -346,6 +390,12 @@ class SettingsPage {
 	 */
 	private function get_model_error_message( string $model ): string {
 		$supported_list = implode( ', ', Constants::SUPPORTED_BASE_MODELS );
+		$legacy_list    = implode( ', ', Constants::LEGACY_FINE_TUNED_BASE_MODELS );
+
+		if ( str_starts_with( strtolower( $model ), 'ft:' ) ) {
+			/* translators: %s: List of supported legacy fine-tuned base models */
+			return sprintf( __( 'Legacy ft:-model moet gebaseerd zijn op: %s', 'zw-ttvgpt' ), $legacy_list );
+		}
 
 		return sprintf(
 			/* translators: 1: Invalid model name, 2: List of supported models */
@@ -385,9 +435,27 @@ class SettingsPage {
 		// Model.
 		if ( isset( $input['model'] ) ) {
 			$model = sanitize_text_field( $input['model'] );
-			if ( ! empty( $model ) && ! Constants::is_supported_model( $model ) ) {
+			if ( empty( $model ) ) {
+				$this->logger->error(
+					'Empty OpenAI model submitted in settings',
+					array( 'user_id' => get_current_user_id() )
+				);
+				add_settings_error(
+					Constants::SETTINGS_OPTION_NAME,
+					'invalid_model',
+					__( 'Model mag niet leeg zijn. Standaardmodel hersteld.', 'zw-ttvgpt' )
+				);
+				$model = Constants::DEFAULT_MODEL;
+			} elseif ( ! Constants::is_supported_model( $model ) ) {
 				$error_message = $this->get_model_error_message( $model );
 				add_settings_error( Constants::SETTINGS_OPTION_NAME, 'invalid_model', $error_message );
+				$this->logger->error(
+					'Invalid OpenAI model submitted in settings',
+					array(
+						'model'   => $model,
+						'user_id' => get_current_user_id(),
+					)
+				);
 				$model = Constants::DEFAULT_MODEL;
 			}
 			$sanitized['model'] = $model;
@@ -435,6 +503,7 @@ class SettingsPage {
 		$sanitized['debug_mode'] = ! empty( $input['debug_mode'] );
 
 		$this->logger->debug( 'Settings updated', $sanitized );
+		SettingsManager::clear_cache();
 
 		return $sanitized;
 	}
