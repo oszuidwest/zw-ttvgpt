@@ -164,9 +164,6 @@ class AuditPage {
 			'month' => $month,
 		);
 
-		$human_status = AuditStatus::FullyHumanWritten;
-		$ai_unedited  = AuditStatus::AiWrittenNotEdited;
-		$ai_edited    = AuditStatus::AiWrittenEdited;
 		?>
 		<h2 class="screen-reader-text"><?php esc_html_e( 'Auditlog filteren', 'zw-ttvgpt' ); ?></h2>
 		<ul class="subsubsub">
@@ -177,48 +174,22 @@ class AuditPage {
 					<?php esc_html_e( 'Alle', 'zw-ttvgpt' ); ?> <span class="count">(<?php echo esc_html( (string) $total ); ?>)</span>
 				</a>
 			</li>
-			<li class="<?php echo esc_attr( $human_status->get_css_class() ); ?>">
+			<?php foreach ( AuditStatus::cases() as $status ) : ?>
 				<?php
-				$human_params   = array_merge( $current_params, array( 'status' => $human_status->value ) );
-				$human_url      = add_query_arg( $human_params, $base_url );
-				$human_selected = $human_status->value === $status_filter;
+				$params   = array_merge( $current_params, array( 'status' => $status->value ) );
+				$url      = add_query_arg( $params, $base_url );
+				$selected = $status->value === $status_filter;
 				?>
-				<a href="<?php echo esc_url( $human_url ); ?>"
-					<?php if ( $human_selected ) : ?>
-					class="current" aria-current="page"
-					<?php endif; ?>>
-					<?php echo esc_html( $human_status->get_label() ); ?>
-					<span class="count">(<?php echo esc_html( (string) $counts[ $human_status->value ] ); ?>)</span>
-				</a>
-			</li>
-			<li class="<?php echo esc_attr( $ai_unedited->get_css_class() ); ?>">
-				<?php
-				$unedited_params   = array_merge( $current_params, array( 'status' => $ai_unedited->value ) );
-				$unedited_url      = add_query_arg( $unedited_params, $base_url );
-				$unedited_selected = $ai_unedited->value === $status_filter;
-				?>
-				<a href="<?php echo esc_url( $unedited_url ); ?>"
-					<?php if ( $unedited_selected ) : ?>
-					class="current" aria-current="page"
-					<?php endif; ?>>
-					<?php echo esc_html( $ai_unedited->get_label() ); ?>
-					<span class="count">(<?php echo esc_html( (string) $counts[ $ai_unedited->value ] ); ?>)</span>
-				</a>
-			</li>
-			<li class="<?php echo esc_attr( $ai_edited->get_css_class() ); ?>">
-				<?php
-				$edited_params   = array_merge( $current_params, array( 'status' => $ai_edited->value ) );
-				$edited_url      = add_query_arg( $edited_params, $base_url );
-				$edited_selected = $ai_edited->value === $status_filter;
-				?>
-				<a href="<?php echo esc_url( $edited_url ); ?>"
-					<?php if ( $edited_selected ) : ?>
-					class="current" aria-current="page"
-					<?php endif; ?>>
-					<?php echo esc_html( $ai_edited->get_label() ); ?>
-					<span class="count">(<?php echo esc_html( (string) $counts[ $ai_edited->value ] ); ?>)</span>
-				</a>
-			</li>
+				<li class="<?php echo esc_attr( $status->get_css_class() ); ?>">
+					<a href="<?php echo esc_url( $url ); ?>"
+						<?php if ( $selected ) : ?>
+						class="current" aria-current="page"
+						<?php endif; ?>>
+						<?php echo esc_html( $status->get_label() ); ?>
+						<span class="count">(<?php echo esc_html( (string) $counts[ $status->value ] ); ?>)</span>
+					</a>
+				</li>
+			<?php endforeach; ?>
 		</ul>
 		<?php
 	}
