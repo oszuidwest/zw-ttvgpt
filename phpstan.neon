@@ -7,7 +7,7 @@ parameters:
   excludePaths:
     - vendor
   bootstrapFiles:
-    - tests/phpstan-bootstrap.php
+    - phpstan-bootstrap.stub
   parallel:
     maximumNumberOfProcesses: 1
   typeAliases:
