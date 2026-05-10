@@ -137,9 +137,9 @@ class Constants {
 	 * @var array<string>
 	 */
 	public const array LEGACY_FINE_TUNED_BASE_MODELS = array(
+		'gpt-4.1',
 		'gpt-4.1-mini',
 		'gpt-4.1-nano',
-		'gpt-4.1',
 	);
 
 	/**
@@ -296,7 +296,7 @@ class Constants {
 	public static function is_supported_model( string $model ): bool {
 		$model_lower = strtolower( $model );
 
-		return in_array( $model_lower, self::SUPPORTED_BASE_MODELS, true ) || self::is_legacy_fine_tuned_model( $model );
+		return in_array( $model_lower, self::SUPPORTED_BASE_MODELS, true ) || self::is_legacy_fine_tuned_model( $model_lower );
 	}
 
 	/**
