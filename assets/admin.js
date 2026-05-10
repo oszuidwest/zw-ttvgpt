@@ -101,7 +101,7 @@ function onReady() {
 }
 
 /**
- * Count words in text (matches PHP str_word_count behavior).
+ * Count words with a Unicode-aware tokenizer that matches Helper::count_words on the server.
  *
  * @param {string} text Text to count words in.
  * @return {number} Word count.
