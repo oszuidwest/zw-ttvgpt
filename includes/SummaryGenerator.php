@@ -89,7 +89,7 @@ class SummaryGenerator {
 		}
 
 		$user_id = get_current_user_id();
-		if ( RateLimiter::is_limited( $user_id ) ) {
+		if ( RateLimiter::check_and_increment( $user_id ) ) {
 			AjaxResponse::error(
 				'rate_limited',
 				__( 'Wacht even - max 10 per minuut', 'zw-ttvgpt' ),
@@ -124,7 +124,6 @@ class SummaryGenerator {
 			);
 		}
 
-		RateLimiter::increment( $user_id );
 		$this->logger->debug( 'Summary generated for post ' . $post_id );
 
 		$response = array(

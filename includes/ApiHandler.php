@@ -219,7 +219,16 @@ class ApiHandler {
 			);
 		}
 
-		return trim( (string) $data['choices'][0]['message']['content'] );
+		$summary = trim( (string) $data['choices'][0]['message']['content'] );
+		if ( '' === $summary ) {
+			$this->logger->error( 'Empty Chat Completions API response' );
+			return new \WP_Error(
+				'empty_response',
+				__( 'Lege samenvatting ontvangen van de API', 'zw-ttvgpt' )
+			);
+		}
+
+		return $summary;
 	}
 
 	/**
@@ -233,34 +242,46 @@ class ApiHandler {
 	 * @phpstan-param array<string, mixed> $data
 	 */
 	private function extract_responses_summary( array $data ): string|\WP_Error {
+		$summary = null;
+
 		// Check if output_text helper is available.
 		if ( isset( $data['output_text'] ) && is_string( $data['output_text'] ) ) {
-			return trim( $data['output_text'] );
-		}
-
-		// Parse output array to find message items.
-		if ( isset( $data['output'] ) && is_array( $data['output'] ) ) {
+			$summary = trim( $data['output_text'] );
+		} elseif ( isset( $data['output'] ) && is_array( $data['output'] ) ) {
+			// Parse output array to find message items.
 			foreach ( $data['output'] as $item ) {
 				if ( ! isset( $item['type'] ) ) {
 					continue;
 				}
 
-				// Look for message items.
 				if ( 'message' === $item['type'] && isset( $item['content'] ) && is_array( $item['content'] ) ) {
 					foreach ( $item['content'] as $content_item ) {
 						if ( isset( $content_item['type'] ) && 'output_text' === $content_item['type'] && isset( $content_item['text'] ) ) {
-							return trim( (string) $content_item['text'] );
+							$summary = trim( (string) $content_item['text'] );
+							break 2;
 						}
 					}
 				}
 			}
 		}
 
-		$this->logger->error( 'Invalid Responses API response structure' );
-		return new \WP_Error(
-			'invalid_response',
-			__( 'Ongeldig antwoord van de API', 'zw-ttvgpt' )
-		);
+		if ( null === $summary ) {
+			$this->logger->error( 'Invalid Responses API response structure' );
+			return new \WP_Error(
+				'invalid_response',
+				__( 'Ongeldig antwoord van de API', 'zw-ttvgpt' )
+			);
+		}
+
+		if ( '' === $summary ) {
+			$this->logger->error( 'Empty Responses API response' );
+			return new \WP_Error(
+				'empty_response',
+				__( 'Lege samenvatting ontvangen van de API', 'zw-ttvgpt' )
+			);
+		}
+
+		return $summary;
 	}
 
 	/**
