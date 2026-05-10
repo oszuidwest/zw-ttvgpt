@@ -57,6 +57,8 @@ De plugin ondersteunt de twee geselecteerde modellen uit de **GPT-5 familie** en
 
 Bestaande legacy `ft:` model-ID's blijven bruikbaar via de optie **Legacy ft:-model...** op de instellingenpagina. De plugin bevat geen tooling meer om trainingsdata te exporteren of nieuwe fine-tuning workflows te beheren.
 
+OpenAI faseert self-serve fine-tuning uit. Nieuwe organisaties zonder eerder fine-tuninggebruik kunnen sinds 7 mei 2026 geen training jobs meer maken. Organisaties zonder recente fine-tuned model-inference verliezen op 2 juli 2026 toegang tot nieuwe training jobs. Voor bestaande actieve klanten stopt het aanmaken van nieuwe fine-tuning jobs op 6 januari 2027. Bestaande fine-tuned modellen blijven beschikbaar voor inference totdat hun basismodel wordt uitgefaseerd. Zie de officiële [OpenAI deprecations](https://developers.openai.com/api/docs/deprecations#update-to-openais-self-serve-fine-tuning).
+
 > **Let op**: Alleen bovenstaande basismodellen en bestaande legacy `ft:` model-ID's worden ondersteund. Oudere losse modellen zoals `gpt-5`, `gpt-4o`, en `gpt-4-turbo` werken niet.
 
 ## Gebruik
