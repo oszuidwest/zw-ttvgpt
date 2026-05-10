@@ -11,8 +11,7 @@ WordPress-plugin die de GPT-modellen van OpenAI gebruikt om automatisch korte sa
 
 ## Kenmerken
 
-- AI-gemaakte samenvattingen met GPT-modellen van OpenAI (GPT-5.2, GPT-5.1 en GPT-4.1 familie)
-- Ondersteuning voor fine-tuned modellen (GPT-4.1 familie)
+- AI-gemaakte samenvattingen met GPT-modellen van OpenAI (GPT-5.5, GPT-5.2, GPT-5.1 en GPT-4.1 familie)
 - Automatische detectie en ondersteuning voor de Chat Completions API en Responses API
 - Werkt met zowel de Block Editor (Gutenberg) als de Classic Editor
 - Auditfunctionaliteit met overzicht van alle samenvattingen en diff-weergave
@@ -33,41 +32,34 @@ WordPress-plugin die de GPT-modellen van OpenAI gebruikt om automatisch korte sa
 2. Activeer de plugin via het scherm **Plugins** in WordPress
 3. Ga naar **Instellingen** → **Tekst TV GPT** en configureer de volgende instellingen:
    - OpenAI API key
-   - AI-model (standaard: `gpt-5.2`)
+   - AI-model (standaard: `gpt-5.5`)
    - Maximaal aantal woorden (standaard: 100)
    - Debugmodus (optioneel)
 
 ### Modelselectie
 
-De plugin ondersteunt **GPT-5.2**, **GPT-5.1** en de **GPT-4.1 familie** van OpenAI:
+De plugin ondersteunt **GPT-5.5**, **GPT-5.2**, **GPT-5.1** en de **GPT-4.1 familie** van OpenAI:
 
 | Model | Kwaliteit | Snelheid | Kosten | Context | API | Aanbeveling |
 |-------|-----------|----------|--------|---------|-----|-------------|
-| `gpt-5.2` | Uitstekend++ | Zeer hoog | Laag | 1M tokens | Responses | **Aanbevolen** |
-| `gpt-5.1` | Uitstekend+ | Zeer hoog | Laag | 1M tokens | Responses | Vorige flagship |
+| `gpt-5.5` | Uitstekend+++ | Hoog | Hoog | 1M tokens | Responses | **Aanbevolen** |
+| `gpt-5.2` | Uitstekend++ | Zeer hoog | Laag | 1M tokens | Responses | Vorige flagship |
+| `gpt-5.1` | Uitstekend+ | Zeer hoog | Laag | 1M tokens | Responses | Ouder flagship |
 | `gpt-4.1` | Uitstekend+ | Hoog | Laag-Gemiddeld | 1M tokens | Chat | Beste kwaliteit GPT-4 |
 | `gpt-4.1-mini` | Uitstekend | Zeer hoog | Zeer laag | 1M tokens | Chat | GPT-4 budget |
 | `gpt-4.1-nano` | Hoog | Zeer hoog | Zeer laag | 1M tokens | Chat | GPT-4 snelste |
 
-**GPT-5.2** (aanbevolen): Nieuwste flagship model met `reasoning_effort='low'` voor hoogwaardige tekstsamenvattingen met goede snelheid. Intelligentere output dan GPT-5.1 via de Responses API.
+**GPT-5.5** (aanbevolen): Nieuwste frontier model voor hoogwaardige tekstsamenvattingen via de Responses API.
 
-**GPT-5.1**: Vorige flagship model, nog steeds uitstekend voor samenvattingen.
+**GPT-5.2 en GPT-5.1**: Eerdere GPT-5 modellen, nog steeds uitstekend voor samenvattingen.
 
 **GPT-4.1 familie**: Bewezen betrouwbare modellen met uitstekende kwaliteit via de Chat Completions API. Keuze uit standaard, mini (budget), en nano (snelste) varianten.
 
-### Fine-tuned modellen
+### Legacy ft:-modellen
 
-De plugin ondersteunt fine-tuned modellen van de GPT-4.1 familie. Fine-tuning is **niet** beschikbaar voor GPT-5 modellen.
+Bestaande legacy `ft:` model-ID's blijven bruikbaar via de optie **Legacy ft:-model...** op de instellingenpagina. De plugin bevat geen tooling meer om trainingsdata te exporteren of nieuwe fine-tuning workflows te beheren.
 
-Ondersteunde formaten:
-- `ft:gpt-4.1:my-org:custom-suffix:id`
-- `ft:gpt-4.1-mini:my-org:custom-suffix:id`
-- `ft:gpt-4.1-nano:my-org:custom-suffix:id`
-- Modellen met date suffix worden ook ondersteund (bijv. `ft:gpt-4.1-mini-2025-04-14:my-org:custom-suffix:id`)
-
-Selecteer "Fine-tuned model..." in de dropdown op de instellingenpagina en voer je model-ID in.
-
-> **Let op**: Alleen bovenstaande modellen worden ondersteund. Oudere modellen zoals `gpt-5`, `gpt-4o`, en `gpt-4-turbo` werken niet.
+> **Let op**: Alleen bovenstaande basismodellen en bestaande legacy `ft:` model-ID's worden ondersteund. Oudere losse modellen zoals `gpt-5`, `gpt-4o`, en `gpt-4-turbo` werken niet.
 
 ## Gebruik
 
@@ -84,10 +76,6 @@ Selecteer "Fine-tuned model..." in de dropdown op de instellingenpagina en voer 
 - Filter op type: Handmatig, AI (onbewerkt) of AI (bewerkt)
 - Filter op wijzigingspercentage: Laag (≤20%), Gemiddeld (21-50%) of Hoog (>50%)
 - Bekijk de diff-weergave door op **Bekijk diff** te klikken
-
-### Fine-tuning data export
-- Ga naar **Tools** → **Fine-tuning Export** om trainingsdata te exporteren
-- Exporteer goedgekeurde samenvattingen in JSONL-formaat voor OpenAI fine-tuning
 
 ### Debuggen
 Schakel debugmodus in via **Instellingen** → **Tekst TV GPT** om gedetailleerde informatie te loggen:
@@ -138,7 +126,7 @@ npm run lint:fix                    # Biome auto-fix
 De plugin gebruikt PSR-4 autoloading met namespace `ZW_TTVGPT_Core`. Belangrijkste componenten:
 
 - **API Layer**: Automatische detectie Chat Completions (GPT-4.1) vs Responses API (GPT-5.x)
-- **Admin UI**: Instellingenpagina, audit overzicht met diff-weergave, fine-tuning export
+- **Admin UI**: Instellingenpagina en audit overzicht met diff-weergave
 - **Security**: Rate limiting (10/min/user), nonce verificatie, model whitelist validatie
 
 ## Licentie

@@ -108,7 +108,11 @@ class SettingsManager {
 	 */
 	public static function get_model(): string {
 		$model = self::get_setting( 'model', Constants::DEFAULT_MODEL );
-		return is_string( $model ) ? $model : Constants::DEFAULT_MODEL;
+		if ( ! is_string( $model ) || ! Constants::is_supported_model( $model ) ) {
+			return Constants::DEFAULT_MODEL;
+		}
+
+		return $model;
 	}
 
 	/**

@@ -48,15 +48,6 @@ class Helper {
 				'_transient_timeout_' . Constants::RATE_LIMIT_PREFIX . '%'
 			)
 		);
-
-		// Clean export transients (value + timeout).
-		$wpdb->query(
-			$wpdb->prepare(
-				"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
-				'_transient_zw_ttvgpt_export_%',
-				'_transient_timeout_zw_ttvgpt_export_%'
-			)
-		);
 	}
 
 	/**
@@ -142,12 +133,9 @@ class Helper {
 	 * @return bool True if model uses Responses API (GPT-5.* family), false otherwise.
 	 */
 	public static function is_gpt5_model( string $model ): bool {
-		// Use base model for fine-tuned models.
-		$base_model  = Constants::get_base_model( $model );
-		$model_lower = strtolower( $base_model );
+		$model_lower = strtolower( $model );
 
 		// Accept any gpt-5* model for Responses API (forward compatibility).
-		// Note: gpt-5 (without .1) is deprecated - use gpt-5.1 instead.
 		return str_starts_with( $model_lower, 'gpt-5' );
 	}
 

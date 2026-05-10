@@ -31,13 +31,9 @@ class AdminMenu {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param Logger         $logger           Logger instance for debugging.
-	 * @param FineTuningPage $fine_tuning_page Fine tuning page instance.
+	 * @param Logger $logger Logger instance for debugging.
 	 */
-	public function __construct(
-		private readonly Logger $logger,
-		private readonly FineTuningPage $fine_tuning_page
-	) {
+	public function __construct( private readonly Logger $logger ) {
 		add_action( 'admin_menu', $this->add_admin_menu( ... ) );
 		add_action( 'admin_enqueue_scripts', $this->enqueue_admin_assets( ... ) );
 	}
@@ -63,14 +59,6 @@ class AdminMenu {
 			'zw-ttvgpt-audit',
 			array( new AuditPage(), 'render' )
 		);
-
-		add_management_page(
-			__( 'Tekst TV Training Data', 'zw-ttvgpt' ),
-			__( 'Tekst TV Training', 'zw-ttvgpt' ),
-			Constants::REQUIRED_CAPABILITY,
-			'zw-ttvgpt-fine-tuning',
-			array( $this->fine_tuning_page, 'render' )
-		);
 	}
 
 	/**
@@ -86,12 +74,6 @@ class AdminMenu {
 		// Enqueue audit CSS on audit page.
 		if ( 'tools_page_zw-ttvgpt-audit' === $hook ) {
 			wp_enqueue_style( 'zw-ttvgpt-audit', ZW_TTVGPT_URL . 'assets/audit.css', array(), $version );
-			return;
-		}
-
-		// Enqueue fine tuning page assets.
-		if ( 'tools_page_zw-ttvgpt-fine-tuning' === $hook ) {
-			wp_enqueue_style( 'zw-ttvgpt-fine-tuning', ZW_TTVGPT_URL . 'assets/admin.css', array(), $version );
 			return;
 		}
 

@@ -33,13 +33,11 @@ require_once ZW_TTVGPT_DIR . 'vendor/autoload.php';
 
 use ZW_TTVGPT_Core\ApiHandler;
 use ZW_TTVGPT_Core\Constants;
-use ZW_TTVGPT_Core\FineTuningExport;
 use ZW_TTVGPT_Core\Helper;
 use ZW_TTVGPT_Core\Logger;
 use ZW_TTVGPT_Core\SettingsManager;
 use ZW_TTVGPT_Core\SummaryGenerator;
 use ZW_TTVGPT_Core\Admin\Admin;
-use ZW_TTVGPT_Core\Admin\FineTuningPage;
 
 /**
  * Initializes plugin components.
@@ -62,18 +60,7 @@ function zw_ttvgpt_init(): void {
 	);
 
 	if ( is_admin() ) {
-		// Initialize fine tuning export.
-		$fine_tuning_export = new FineTuningExport(
-			$logger,
-			$api_handler,
-			SettingsManager::get_word_limit()
-		);
-		$fine_tuning_page   = new FineTuningPage(
-			$fine_tuning_export,
-			$logger
-		);
-
-		new Admin( $logger, $fine_tuning_page );
+		new Admin( $logger );
 	}
 }
 add_action( 'init', 'zw_ttvgpt_init' );

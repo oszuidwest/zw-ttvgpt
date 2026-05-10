@@ -185,7 +185,7 @@ class ApiHandler {
 	 */
 	private function build_responses_request( string $content, int $word_limit ): array {
 		// The Responses API accepts messages array in the input parameter.
-		// Note: GPT-5.1 does not support temperature parameter
+		// GPT-5 models do not use the Chat Completions temperature parameter here.
 		// Using 'low' reasoning effort for quality summaries while maintaining speed.
 		// Using 'medium' verbosity for balanced response length.
 		return array(

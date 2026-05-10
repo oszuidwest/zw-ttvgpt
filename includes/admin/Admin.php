@@ -28,11 +28,10 @@ class Admin {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param Logger         $logger           Logger instance for debugging.
-	 * @param FineTuningPage $fine_tuning_page Fine tuning page instance.
+	 * @param Logger $logger Logger instance for debugging.
 	 */
-	public function __construct( Logger $logger, FineTuningPage $fine_tuning_page ) {
+	public function __construct( Logger $logger ) {
 		// Initialize admin components.
-		new AdminMenu( $logger, $fine_tuning_page );
+		new AdminMenu( $logger );
 	}
 }
