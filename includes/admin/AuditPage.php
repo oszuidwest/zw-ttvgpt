@@ -186,7 +186,7 @@ class AuditPage {
 						class="current" aria-current="page"
 						<?php endif; ?>>
 						<?php echo esc_html( $status->get_label() ); ?>
-						<span class="count">(<?php echo esc_html( (string) $counts[ $status->value ] ); ?>)</span>
+						<span class="count">(<?php echo esc_html( (string) ( $counts[ $status->value ] ?? 0 ) ); ?>)</span>
 					</a>
 				</li>
 			<?php endforeach; ?>
