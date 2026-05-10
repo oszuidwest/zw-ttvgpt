@@ -37,7 +37,7 @@ use ZW_TTVGPT_Core\Helper;
 use ZW_TTVGPT_Core\Logger;
 use ZW_TTVGPT_Core\SettingsManager;
 use ZW_TTVGPT_Core\SummaryGenerator;
-use ZW_TTVGPT_Core\Admin\Admin;
+use ZW_TTVGPT_Core\Admin\AdminMenu;
 
 /**
  * Initializes plugin components.
@@ -53,14 +53,14 @@ function zw_ttvgpt_init(): void {
 		$logger
 	);
 
-	$generator = new SummaryGenerator(
+	new SummaryGenerator(
 		$api_handler,
 		SettingsManager::get_word_limit(),
 		$logger
 	);
 
 	if ( is_admin() ) {
-		new Admin( $logger );
+		new AdminMenu( $logger );
 	}
 }
 add_action( 'init', 'zw_ttvgpt_init' );
