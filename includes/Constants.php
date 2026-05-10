@@ -115,7 +115,7 @@ class Constants {
 	 * @since 1.0.0
 	 * @var string
 	 */
-	public const string DEFAULT_MODEL = 'gpt-5.2';
+	public const string DEFAULT_MODEL = 'gpt-5.5';
 
 	/**
 	 * Base models that are supported.
@@ -124,25 +124,31 @@ class Constants {
 	 * @var array<string>
 	 */
 	public const array SUPPORTED_BASE_MODELS = array(
-		'gpt-5.2',
-		'gpt-5.1',
+		'gpt-5.5',
+		'gpt-5.4-mini',
+		'gpt-4.1',
+		'gpt-4.1-mini',
+	);
+
+	/**
+	 * Legacy fine-tuned base models accepted for existing ft: model IDs.
+	 *
+	 * @since 1.0.0
+	 * @var array<string>
+	 */
+	public const array LEGACY_FINE_TUNED_BASE_MODELS = array(
 		'gpt-4.1',
 		'gpt-4.1-mini',
 		'gpt-4.1-nano',
 	);
 
 	/**
-	 * Models that support fine-tuning.
+	 * Validation pattern for legacy fine-tuned model IDs, without delimiters.
 	 *
 	 * @since 1.0.0
-	 * @var array<string>
+	 * @var string
 	 */
-	// Ordered by length descending for str_starts_with() matching.
-	public const array FINE_TUNABLE_MODELS = array(
-		'gpt-4.1-mini',
-		'gpt-4.1-nano',
-		'gpt-4.1',
-	);
+	public const string LEGACY_FINE_TUNED_MODEL_PATTERN = 'ft:gpt-4\.1(?:-(?:mini|nano))?(?:-[0-9]{4}-[0-9]{2}-[0-9]{2})?:.+';
 
 	/**
 	 * Maximum requests allowed per user in rate limit window.
@@ -280,8 +286,7 @@ class Constants {
 	/**
 	 * Checks if a model is supported.
 	 *
-	 * Supports both base models and fine-tuned variants (ft:gpt-4.1:...).
-	 * Note: GPT-5 models cannot be fine-tuned.
+	 * Supports current base models and existing legacy ft: model IDs from the GPT-4.1 family.
 	 *
 	 * @since 1.0.0
 	 *
@@ -291,57 +296,20 @@ class Constants {
 	public static function is_supported_model( string $model ): bool {
 		$model_lower = strtolower( $model );
 
-		// Check base models.
-		if ( in_array( $model_lower, self::SUPPORTED_BASE_MODELS, true ) ) {
-			return true;
-		}
-
-		// Check fine-tuned models.
-		// Format: ft:base-model-YYYY-MM-DD:org:suffix:id (OpenAI includes date in model name).
-		// Only GPT-4.1 family supports fine-tuning.
-		if ( str_starts_with( $model_lower, 'ft:' ) ) {
-			foreach ( self::FINE_TUNABLE_MODELS as $base ) {
-				$prefix = 'ft:' . $base;
-				// Match ft:gpt-4.1-mini: or ft:gpt-4.1-mini-2025-04-14: (with date suffix).
-				if ( str_starts_with( $model_lower, $prefix . ':' ) || str_starts_with( $model_lower, $prefix . '-' ) ) {
-					return true;
-				}
-			}
-		}
-
-		return false;
+		return in_array( $model_lower, self::SUPPORTED_BASE_MODELS, true ) || self::is_legacy_fine_tuned_model( $model_lower );
 	}
 
 	/**
-	 * Gets the base model from a model string.
-	 *
-	 * For fine-tuned models (ft:gpt-4.1-mini-2025-04-14:...) this returns gpt-4.1-mini.
+	 * Checks if a model is a legacy GPT-4.1-family fine-tuned model ID.
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $model Model identifier.
-	 * @return string Base model identifier.
+	 * @param string $model Model identifier to check.
+	 * @return bool True if model is a legacy fine-tuned model ID, false otherwise.
 	 */
-	public static function get_base_model( string $model ): string {
-		if ( ! str_starts_with( strtolower( $model ), 'ft:' ) ) {
-			return $model;
-		}
+	public static function is_legacy_fine_tuned_model( string $model ): bool {
+		$model_lower = strtolower( $model );
 
-		// Extract base model from ft:base-model-YYYY-MM-DD:org:suffix:id.
-		$parts = explode( ':', $model, 3 );
-		if ( count( $parts ) < 2 ) {
-			return $model;
-		}
-
-		$model_part = $parts[1];
-
-		// Strip date suffix (e.g., -2025-04-14) if present.
-		foreach ( self::FINE_TUNABLE_MODELS as $base ) {
-			if ( str_starts_with( strtolower( $model_part ), $base ) ) {
-				return $base;
-			}
-		}
-
-		return $model_part;
+		return 1 === preg_match( '/^' . self::LEGACY_FINE_TUNED_MODEL_PATTERN . '$/', $model_lower );
 	}
 }

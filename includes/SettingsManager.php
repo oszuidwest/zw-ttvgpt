@@ -38,6 +38,23 @@ class SettingsManager {
 	private const string CACHE_GROUP = 'zw_ttvgpt';
 
 	/**
+	 * Transient key for notifying administrators about automatic model migration.
+	 *
+	 * @since 1.0.0
+	 * @var string
+	 */
+	private const string MODEL_MIGRATION_NOTICE_TRANSIENT = 'zw_ttvgpt_model_migration_notice';
+
+	/**
+	 * Clears the cached settings.
+	 *
+	 * @since 1.0.0
+	 */
+	public static function clear_cache(): void {
+		wp_cache_delete( self::CACHE_KEY, self::CACHE_GROUP );
+	}
+
+	/**
 	 * Retrieves all plugin settings with caching.
 	 *
 	 * @since 1.0.0
@@ -83,7 +100,7 @@ class SettingsManager {
 	 * @return bool True if settings were successfully deleted.
 	 */
 	public static function delete_settings(): bool {
-		wp_cache_delete( self::CACHE_KEY, self::CACHE_GROUP );
+		self::clear_cache();
 		return delete_option( Constants::SETTINGS_OPTION_NAME );
 	}
 
@@ -100,7 +117,7 @@ class SettingsManager {
 	}
 
 	/**
-	 * Gets the configured OpenAI model name.
+	 * Gets the configured OpenAI model name, falling back to the default for invalid stored values.
 	 *
 	 * @since 1.0.0
 	 *
@@ -108,7 +125,72 @@ class SettingsManager {
 	 */
 	public static function get_model(): string {
 		$model = self::get_setting( 'model', Constants::DEFAULT_MODEL );
-		return is_string( $model ) ? $model : Constants::DEFAULT_MODEL;
+		if ( ! is_string( $model ) || ! Constants::is_supported_model( $model ) ) {
+			return Constants::DEFAULT_MODEL;
+		}
+
+		return $model;
+	}
+
+	/**
+	 * Migrates an unsupported stored model setting to the default model.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param Logger $logger Logger instance for migration logging.
+	 * @return bool True when a migration was performed, false otherwise.
+	 */
+	public static function migrate_invalid_model_if_needed( Logger $logger ): bool {
+		$model = self::get_setting( 'model', Constants::DEFAULT_MODEL );
+		if ( is_string( $model ) && Constants::is_supported_model( $model ) ) {
+			return false;
+		}
+
+		$old_model = is_scalar( $model ) ? (string) $model : gettype( $model );
+		$settings  = self::get_settings();
+
+		$settings['model'] = Constants::DEFAULT_MODEL;
+		update_option( Constants::SETTINGS_OPTION_NAME, $settings );
+		self::clear_cache();
+
+		set_transient(
+			self::MODEL_MIGRATION_NOTICE_TRANSIENT,
+			array(
+				'old_model' => $old_model,
+				'new_model' => Constants::DEFAULT_MODEL,
+			),
+			DAY_IN_SECONDS
+		);
+
+		$logger->error(
+			'Unsupported stored OpenAI model migrated to default',
+			array(
+				'old_model' => $old_model,
+				'new_model' => Constants::DEFAULT_MODEL,
+			)
+		);
+
+		return true;
+	}
+
+	/**
+	 * Retrieves and clears the model migration notice data.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return array|null Migration notice data, or null when unavailable.
+	 *
+	 * @phpstan-return array{old_model: string, new_model: string}|null
+	 */
+	public static function get_model_migration_notice(): ?array {
+		$notice = get_transient( self::MODEL_MIGRATION_NOTICE_TRANSIENT );
+		delete_transient( self::MODEL_MIGRATION_NOTICE_TRANSIENT );
+
+		if ( ! is_array( $notice ) ) {
+			return null;
+		}
+
+		return $notice;
 	}
 
 	/**

@@ -20,7 +20,5 @@ parameters:
     DiffResult: 'array{before: string, after: string}'
     # OpenAI types
     ChatMessage: 'array{role: string, content: string}'
-    # Training/Fine-tuning types
-    TrainingFilters: 'array{start_date?: string, end_date?: string, limit?: int}'
     # Logger types
     LogContext: 'array<string, mixed>'
