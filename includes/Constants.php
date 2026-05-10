@@ -143,12 +143,12 @@ class Constants {
 	);
 
 	/**
-	 * Browser validation pattern for legacy fine-tuned model IDs.
+	 * Validation pattern for legacy fine-tuned model IDs, without delimiters.
 	 *
 	 * @since 1.0.0
 	 * @var string
 	 */
-	public const string LEGACY_FINE_TUNED_MODEL_HTML_PATTERN = 'ft:gpt-4\.1(?:-(?:mini|nano))?(?:-[0-9]{4}-[0-9]{2}-[0-9]{2})?:.+';
+	public const string LEGACY_FINE_TUNED_MODEL_PATTERN = 'ft:gpt-4\.1(?:-(?:mini|nano))?(?:-[0-9]{4}-[0-9]{2}-[0-9]{2})?:.+';
 
 	/**
 	 * Maximum requests allowed per user in rate limit window.
@@ -310,13 +310,6 @@ class Constants {
 	public static function is_legacy_fine_tuned_model( string $model ): bool {
 		$model_lower = strtolower( $model );
 
-		foreach ( self::LEGACY_FINE_TUNED_BASE_MODELS as $base_model ) {
-			$base_pattern = preg_quote( $base_model, '/' );
-			if ( 1 === preg_match( '/^ft:' . $base_pattern . '(?::|-[0-9]{4}-[0-9]{2}-[0-9]{2}:).+/', $model_lower ) ) {
-				return true;
-			}
-		}
-
-		return false;
+		return 1 === preg_match( '/^' . self::LEGACY_FINE_TUNED_MODEL_PATTERN . '$/', $model_lower );
 	}
 }

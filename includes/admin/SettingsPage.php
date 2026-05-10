@@ -43,6 +43,7 @@ class SettingsPage {
 	 */
 	public function __construct( private readonly Logger $logger ) {
 		add_action( 'admin_init', $this->register_settings( ... ) );
+		add_action( 'admin_init', $this->migrate_invalid_model_setting( ... ) );
 	}
 
 	/**
@@ -134,6 +135,15 @@ class SettingsPage {
 	}
 
 	/**
+	 * Migrates unsupported stored model settings on admin requests.
+	 *
+	 * @since 1.0.0
+	 */
+	public function migrate_invalid_model_setting(): void {
+		SettingsManager::migrate_invalid_model_if_needed( $this->logger );
+	}
+
+	/**
 	 * Renders the settings page.
 	 *
 	 * @since 1.0.0
@@ -162,8 +172,6 @@ class SettingsPage {
 	 * @since 1.0.0
 	 */
 	private function render_model_migration_notice(): void {
-		SettingsManager::get_model();
-
 		$notice = SettingsManager::get_model_migration_notice();
 		if ( null === $notice ) {
 			return;
@@ -261,7 +269,7 @@ class SettingsPage {
 				value="<?php echo $is_legacy_fine_tuned ? esc_attr( $current_model ) : ''; ?>"
 				class="regular-text"
 				<?php echo $is_legacy_fine_tuned ? 'required' : ''; ?>
-				pattern="<?php echo esc_attr( Constants::LEGACY_FINE_TUNED_MODEL_HTML_PATTERN ); ?>"
+				pattern="<?php echo esc_attr( Constants::LEGACY_FINE_TUNED_MODEL_PATTERN ); ?>"
 				title="<?php esc_attr_e( 'Gebruik een bestaande legacy ft:-model-ID uit de GPT-4.1 familie.', 'zw-ttvgpt' ); ?>"
 				placeholder="ft:gpt-4.1:org:suffix:id" />
 			<p class="description">

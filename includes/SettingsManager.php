@@ -117,9 +117,7 @@ class SettingsManager {
 	}
 
 	/**
-	 * Gets the configured OpenAI model name.
-	 *
-	 * Invalid stored models are migrated to the default model to avoid repeated silent fallback.
+	 * Gets the configured OpenAI model name, falling back to the default for invalid stored values.
 	 *
 	 * @since 1.0.0
 	 *
@@ -128,7 +126,6 @@ class SettingsManager {
 	public static function get_model(): string {
 		$model = self::get_setting( 'model', Constants::DEFAULT_MODEL );
 		if ( ! is_string( $model ) || ! Constants::is_supported_model( $model ) ) {
-			self::migrate_invalid_model_setting( $model );
 			return Constants::DEFAULT_MODEL;
 		}
 
@@ -136,41 +133,19 @@ class SettingsManager {
 	}
 
 	/**
-	 * Retrieves and clears the model migration notice data.
+	 * Migrates an unsupported stored model setting to the default model.
 	 *
 	 * @since 1.0.0
 	 *
-	 * @return array|null Migration notice data, or null when unavailable.
-	 *
-	 * @phpstan-return array{old_model: string, new_model: string}|null
+	 * @param Logger $logger Logger instance for migration logging.
+	 * @return bool True when a migration was performed, false otherwise.
 	 */
-	public static function get_model_migration_notice(): ?array {
-		$notice = get_transient( self::MODEL_MIGRATION_NOTICE_TRANSIENT );
-		delete_transient( self::MODEL_MIGRATION_NOTICE_TRANSIENT );
-
-		if (
-			! is_array( $notice )
-			|| ! isset( $notice['old_model'], $notice['new_model'] )
-			|| ! is_string( $notice['old_model'] )
-			|| ! is_string( $notice['new_model'] )
-		) {
-			return null;
+	public static function migrate_invalid_model_if_needed( Logger $logger ): bool {
+		$model = self::get_setting( 'model', Constants::DEFAULT_MODEL );
+		if ( is_string( $model ) && Constants::is_supported_model( $model ) ) {
+			return false;
 		}
 
-		return array(
-			'old_model' => $notice['old_model'],
-			'new_model' => $notice['new_model'],
-		);
-	}
-
-	/**
-	 * Migrates an invalid stored model setting to the default model.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param mixed $model Invalid stored model value.
-	 */
-	private static function migrate_invalid_model_setting( mixed $model ): void {
 		$old_model = is_scalar( $model ) ? (string) $model : gettype( $model );
 		$settings  = self::get_settings();
 
@@ -187,9 +162,35 @@ class SettingsManager {
 			DAY_IN_SECONDS
 		);
 
-		error_log( // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Migration should be visible outside debug mode.
-			sprintf( 'ZW TTVGPT: unsupported stored OpenAI model "%s" migrated to "%s".', $old_model, Constants::DEFAULT_MODEL )
+		$logger->error(
+			'Unsupported stored OpenAI model migrated to default',
+			array(
+				'old_model' => $old_model,
+				'new_model' => Constants::DEFAULT_MODEL,
+			)
 		);
+
+		return true;
+	}
+
+	/**
+	 * Retrieves and clears the model migration notice data.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return array|null Migration notice data, or null when unavailable.
+	 *
+	 * @phpstan-return array{old_model: string, new_model: string}|null
+	 */
+	public static function get_model_migration_notice(): ?array {
+		$notice = get_transient( self::MODEL_MIGRATION_NOTICE_TRANSIENT );
+		delete_transient( self::MODEL_MIGRATION_NOTICE_TRANSIENT );
+
+		if ( ! is_array( $notice ) ) {
+			return null;
+		}
+
+		return $notice;
 	}
 
 	/**
