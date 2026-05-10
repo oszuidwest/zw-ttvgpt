@@ -154,7 +154,7 @@ class AuditPage {
 	 * @param string $status_filter Current status filter value.
 	 * @param array  $counts        Statistics counts for each category.
 	 *
-	 * @phpstan-param array<string, int> $counts
+	 * @phpstan-param array<value-of<AuditStatus>, int> $counts
 	 */
 	private function render_status_links( int $year, int $month, string $status_filter, array $counts ): void {
 		$total          = array_sum( $counts );
@@ -208,7 +208,7 @@ class AuditPage {
 	 * @param string $which            Position of navigation ('top' or 'bottom').
 	 *
 	 * @phpstan-param array<int, MonthData> $available_months
-	 * @phpstan-param array<string, int> $counts
+	 * @phpstan-param array<value-of<AuditStatus>, int> $counts
 	 */
 	private function render_tablenav(
 		int $year,
