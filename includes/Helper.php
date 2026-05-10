@@ -149,7 +149,13 @@ class Helper {
 	}
 
 	/**
-	 * Retrieves the word count for a text string.
+	 * Counts words in a text using a Unicode-aware tokenizer.
+	 *
+	 * A word is one or more Unicode letters, optionally followed by groups of a
+	 * hyphen or apostrophe and more letters (e.g. "zelf-rijdend", "auto's"). This
+	 * mirrors the client-side counter in admin.js so client and server agree on
+	 * counts for content containing diacritics (café, Curaçao) — `str_word_count`
+	 * would split such words and produce inflated counts.
 	 *
 	 * @since 1.0.0
 	 *
@@ -157,6 +163,6 @@ class Helper {
 	 * @return int Number of words.
 	 */
 	public static function count_words( string $text ): int {
-		return str_word_count( trim( $text ) );
+		return (int) preg_match_all( '/[\p{L}]+([-\'][\p{L}]+)*/u', $text );
 	}
 }

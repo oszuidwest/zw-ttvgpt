@@ -1,0 +1,39 @@
+---
+name: Test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**/*.php'
+      - 'composer.json'
+      - 'phpunit.xml.dist'
+      - 'tests/**'
+  pull_request:
+    paths:
+      - '**/*.php'
+      - 'composer.json'
+      - 'phpunit.xml.dist'
+      - 'tests/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  phpunit:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['8.4']
+    name: PHP ${{ matrix.php-version }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          coverage: none
+          tools: composer:v2
+      - run: composer install --prefer-dist --no-progress
+      - run: vendor/bin/phpunit
