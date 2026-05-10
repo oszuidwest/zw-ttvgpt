@@ -213,10 +213,13 @@ class AuditHelper {
 	 * @return string Cleaned content without region prefix.
 	 */
 	public static function strip_region_prefix( string $content ): string {
-		// Remove region prefixes like "LEIDEN - ", "DEN HAAG - ", "ROOSENDAAL/OUDENBOSCH - ", "ETTEN-LEUR - ".
-		// Matches: uppercase letters, spaces, forward slashes, hyphens, followed by " - ".
-		$result = preg_replace( '/^[A-Z][A-Z\s\/\-]*\s-\s/', '', trim( $content ) );
-		return null !== $result ? $result : trim( $content );
+		// Region prefixes look like "LEIDEN - ", "DEN HAAG - ",
+		// "ROOSENDAAL/OUDENBOSCH - ", "ETTEN-LEUR - ", "CURAÇAO - ". The
+		// character class is Unicode-aware so diacritic uppercase letters
+		// (Ç, Ü, É, ...) still match.
+		$trimmed = trim( $content );
+		$result  = preg_replace( '/^\p{Lu}[\p{Lu}\s\/\-]*\s-\s/u', '', $trimmed );
+		return null !== $result ? $result : $trimmed;
 	}
 
 	/**

@@ -55,6 +55,17 @@ class AuditPage {
 	private const int POSTS_PER_PAGE = 50;
 
 	/**
+	 * Allowed HTML for rendered diff markup. The renderer only ever emits
+	 * span.zw-diff-added / span.zw-diff-removed, so the allowlist is tight.
+	 *
+	 * @since 1.0.0
+	 * @var array<string, array<string, bool>>
+	 */
+	private const array DIFF_ALLOWED_TAGS = array(
+		'span' => array( 'class' => true ),
+	);
+
+	/**
 	 * Renders the audit analysis page.
 	 *
 	 * @since 1.0.0
@@ -542,7 +553,7 @@ class AuditPage {
 								</div>
 								<div class="inside">
 									<div style="max-height: 400px; overflow-y: auto; padding: 10px; font-size: 13px; line-height: 1.6;">
-										<?php echo wp_kses_post( $diff['before'] ); ?>
+										<?php echo wp_kses( $diff['before'], self::DIFF_ALLOWED_TAGS ); ?>
 									</div>
 								</div>
 							</div>
@@ -553,7 +564,7 @@ class AuditPage {
 								</div>
 								<div class="inside">
 									<div style="max-height: 400px; overflow-y: auto; padding: 10px; font-size: 13px; line-height: 1.6;">
-										<?php echo wp_kses_post( $diff['after'] ); ?>
+										<?php echo wp_kses( $diff['after'], self::DIFF_ALLOWED_TAGS ); ?>
 									</div>
 								</div>
 							</div>
@@ -562,35 +573,6 @@ class AuditPage {
 				</div>
 			<?php endif; ?>
 		<?php endforeach; ?>
-		
-		<script>
-		jQuery(function($) {
-			function applyFilters() {
-				var date = $('#filter-by-date').val();
-				var status = $('#filter-by-status').val();
-				var change = $('#filter-by-change').val();
-				var url = '<?php echo esc_js( admin_url( 'tools.php?page=zw-ttvgpt-audit' ) ); ?>';
-				var params = [];
-				
-				if (date && date !== '0') {
-					params.push('year=' + date.substring(0, 4));
-					params.push('month=' + parseInt(date.substring(4, 6), 10));
-				}
-				
-				if (status) params.push('status=' + status);
-				if (change) params.push('change=' + change);
-				
-				if (params.length) url += '&' + params.join('&');
-				window.location.href = url;
-			}
-			
-			$('#filter-by-date, #filter-by-status, #filter-by-change').on('change', applyFilters);
-			$('#post-query-submit').on('click', function(e) {
-				e.preventDefault();
-				applyFilters();
-			});
-		});
-		</script>
 		<?php
 	}
 }

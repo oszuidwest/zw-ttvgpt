@@ -285,32 +285,21 @@ class SettingsPage {
 		<p class="description">
 			<?php esc_html_e( 'Aanbevolen: gpt-5.5 (beste kwaliteit)', 'zw-ttvgpt' ); ?>
 		</p>
-
-		<script>
-		(function() {
-			const select = document.getElementById('zw_ttvgpt_model_select');
-			const wrapper = document.getElementById('zw_ttvgpt_legacy_fine_tuned_wrapper');
-			const legacyInput = document.getElementById('zw_ttvgpt_legacy_fine_tuned_model');
-			const fieldName = <?php echo wp_json_encode( $field_name ); ?>;
-			const legacyOptionValue = <?php echo wp_json_encode( self::LEGACY_FINE_TUNED_SELECT_VALUE ); ?>;
-
-			select.addEventListener('change', function() {
-				const isLegacyFineTuned = this.value === legacyOptionValue;
-				wrapper.style.display = isLegacyFineTuned ? 'block' : 'none';
-
-				if (isLegacyFineTuned) {
-					select.removeAttribute('name');
-					legacyInput.setAttribute('name', fieldName);
-					legacyInput.setAttribute('required', 'required');
-				} else {
-					select.setAttribute('name', fieldName);
-					legacyInput.removeAttribute('name');
-					legacyInput.removeAttribute('required');
-				}
-			});
-		})();
-		</script>
 		<?php
+	}
+
+	/**
+	 * Returns the inline JS config consumed by the settings ES module.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return array{fieldName: string, legacyOptionValue: string}
+	 */
+	public function get_legacy_model_toggle_config(): array {
+		return array(
+			'fieldName'         => $this->get_field_name( 'model' ),
+			'legacyOptionValue' => self::LEGACY_FINE_TUNED_SELECT_VALUE,
+		);
 	}
 
 	/**

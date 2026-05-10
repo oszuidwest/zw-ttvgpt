@@ -80,12 +80,17 @@ class Helper {
 	}
 
 	/**
-	 * Validates OpenAI API key format.
+	 * Liveness check for an OpenAI API key.
+	 *
+	 * Verifies the key is non-empty and carries the OpenAI 'sk-' prefix used by
+	 * all current key flavours (sk-, sk-proj-, sk-svcacct-, sk-admin-). This is
+	 * intentionally not a strict format validator — the canonical key shape has
+	 * shifted over time, and a tight regex would reject valid future keys.
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $api_key API key to validate.
-	 * @return bool True if key format is valid (starts with 'sk-'), false otherwise.
+	 * @param string $api_key API key to inspect.
+	 * @return bool True if the key looks like an OpenAI key, false otherwise.
 	 */
 	public static function is_valid_api_key( string $api_key ): bool {
 		return ! empty( $api_key ) && str_starts_with( $api_key, 'sk-' );
