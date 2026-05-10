@@ -1,6 +1,11 @@
 <?php
 /**
- * PHPStan bootstrap file
+ * PHPStan bootstrap stub - loaded by PHPStan only, never by WordPress.
+ *
+ * The .stub extension keeps this file outside WordPress plugin-check's scan
+ * scope (which targets *.php only) while still being a valid PHP file that
+ * PHPStan can require via bootstrapFiles. Release zips also exclude
+ * phpstan-bootstrap.stub via wp-release.yml@v2's rsync exclude list.
  *
  * @package ZW_TTVGPT
  */
