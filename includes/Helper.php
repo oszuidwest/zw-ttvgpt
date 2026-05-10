@@ -98,31 +98,6 @@ class Helper {
 	}
 
 	/**
-	 * Creates a SQL WHERE clause for filtering posts by date range.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param string $start_date Optional. Start date in Y-m-d format. Default empty.
-	 * @param string $end_date   Optional. End date in Y-m-d format. Default empty.
-	 * @return string SQL WHERE clause or empty string if dates invalid.
-	 */
-	public static function build_date_filter_clause( string $start_date = '', string $end_date = '' ): string {
-		if ( empty( $start_date ) || empty( $end_date ) ) {
-			return '';
-		}
-
-		global $wpdb;
-		$start_date = sanitize_text_field( $start_date );
-		$end_date   = sanitize_text_field( $end_date );
-
-		return $wpdb->prepare(
-			'AND p.post_date >= %s AND p.post_date <= %s',
-			$start_date . ' 00:00:00',
-			$end_date . ' 23:59:59'
-		);
-	}
-
-	/**
 	 * Retrieves the version string for asset cache management.
 	 *
 	 * @since 1.0.0
