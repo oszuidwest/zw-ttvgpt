@@ -1,14 +1,18 @@
 <?php
 /**
- * PHPStan bootstrap stub - loaded by PHPStan only, never by WordPress.
+ * PHPStan bootstrap file - never loaded by WordPress.
  *
- * The .stub extension keeps this file outside WordPress plugin-check's scan
- * scope (which targets *.php only) while still being a valid PHP file that
- * PHPStan can require via bootstrapFiles. Release zips also exclude
- * phpstan-bootstrap.stub via wp-release.yml@v2's rsync exclude list.
+ * The canonical ABSPATH guard satisfies WordPress plugin-check's direct-access
+ * rule. PHPStan can still execute the rest of this file because
+ * szepeviktor/phpstan-wordpress runtime-defines ABSPATH in its extension
+ * bootstrap, so the guard short-circuits during analysis.
  *
  * @package ZW_TTVGPT
  */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 define( 'ZW_TTVGPT_VERSION', '1.0.0' );
 define( 'ZW_TTVGPT_DIR', __DIR__ . '/' );
