@@ -6,8 +6,8 @@
  * Version: 0.3.0
  * Author: Streekomroep ZuidWest
  * Author URI: https://www.zuidwesttv.nl
- * License: GPL-2.0-or-later
- * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * License: GPL-3.0-or-later
+ * License URI: https://www.gnu.org/licenses/gpl-3.0.html
  * Text Domain: zw-ttvgpt
  * Requires at least: 6.8
  * Requires PHP: 8.3
@@ -77,18 +77,15 @@ function zw_ttvgpt_activate(): void {
 			Constants::get_default_settings()
 		);
 	}
-
-	flush_rewrite_rules();
 }
 register_activation_hook( __FILE__, 'zw_ttvgpt_activate' );
 
 /**
- * Removes temporary data and flushes rewrite rules.
+ * Removes temporary data on deactivation.
  *
  * @since 1.0.0
  */
 function zw_ttvgpt_deactivate(): void {
 	Helper::cleanup_transients();
-	flush_rewrite_rules();
 }
 register_deactivation_hook( __FILE__, 'zw_ttvgpt_deactivate' );

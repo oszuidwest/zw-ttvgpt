@@ -242,7 +242,7 @@ async function handleGenerateClick(e) {
         let data;
         try {
             data = await response.json();
-        } catch (parseError) {
+        } catch {
             throw new Error(`Server error: ${response.status}`);
         }
 
