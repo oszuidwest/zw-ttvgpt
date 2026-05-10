@@ -11,7 +11,7 @@ WordPress-plugin die de GPT-modellen van OpenAI gebruikt om automatisch korte sa
 
 ## Kenmerken
 
-- AI-gemaakte samenvattingen met GPT-modellen van OpenAI (GPT-5.5, GPT-5.2, GPT-5.1 en GPT-4.1 familie)
+- AI-gemaakte samenvattingen met GPT-modellen van OpenAI (GPT-5.5, GPT-5.4 mini en GPT-4.1 familie)
 - Automatische detectie en ondersteuning voor de Chat Completions API en Responses API
 - Werkt met zowel de Block Editor (Gutenberg) als de Classic Editor
 - Auditfunctionaliteit met overzicht van alle samenvattingen en diff-weergave
@@ -38,22 +38,20 @@ WordPress-plugin die de GPT-modellen van OpenAI gebruikt om automatisch korte sa
 
 ### Modelselectie
 
-De plugin ondersteunt **GPT-5.5**, **GPT-5.2**, **GPT-5.1** en de **GPT-4.1 familie** van OpenAI:
+De plugin ondersteunt de twee geselecteerde modellen uit de **GPT-5 familie** en de twee geselecteerde modellen uit de **GPT-4.1 familie**:
 
 | Model | Kwaliteit | Snelheid | Kosten | Context | API | Aanbeveling |
 |-------|-----------|----------|--------|---------|-----|-------------|
 | `gpt-5.5` | Uitstekend+++ | Hoog | Hoog | 1M tokens | Responses | **Aanbevolen** |
-| `gpt-5.2` | Uitstekend++ | Zeer hoog | Laag | 1M tokens | Responses | Vorige flagship |
-| `gpt-5.1` | Uitstekend+ | Zeer hoog | Laag | 1M tokens | Responses | Ouder flagship |
+| `gpt-5.4-mini` | Uitstekend++ | Zeer hoog | Laag | 400K tokens | Responses | GPT-5 budget |
 | `gpt-4.1` | Uitstekend+ | Hoog | Laag-Gemiddeld | 1M tokens | Chat | Beste kwaliteit GPT-4 |
 | `gpt-4.1-mini` | Uitstekend | Zeer hoog | Zeer laag | 1M tokens | Chat | GPT-4 budget |
-| `gpt-4.1-nano` | Hoog | Zeer hoog | Zeer laag | 1M tokens | Chat | GPT-4 snelste |
 
 **GPT-5.5** (aanbevolen): Nieuwste frontier model voor hoogwaardige tekstsamenvattingen via de Responses API.
 
-**GPT-5.2 en GPT-5.1**: Eerdere GPT-5 modellen, nog steeds uitstekend voor samenvattingen.
+**GPT-5.4 mini**: Snellere en goedkopere GPT-5 variant voor lagere latency of hogere volumes.
 
-**GPT-4.1 familie**: Bewezen betrouwbare modellen met uitstekende kwaliteit via de Chat Completions API. Keuze uit standaard, mini (budget), en nano (snelste) varianten.
+**GPT-4.1 familie**: Bewezen betrouwbare modellen met uitstekende kwaliteit via de Chat Completions API. Keuze uit standaard en mini (budget) varianten.
 
 ### Legacy ft:-modellen
 
