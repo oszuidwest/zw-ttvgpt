@@ -67,7 +67,7 @@ class Logger {
 	 * @phpstan-param LogContext $context
 	 */
 	public function error( string $message, array $context = array() ): void {
-		$this->write_log( 'ERROR', $message, $this->debug_mode ? $context : array() );
+		$this->write_log( 'ERROR', $message, $context );
 	}
 
 

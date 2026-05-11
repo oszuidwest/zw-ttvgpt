@@ -11,6 +11,7 @@
  * Text Domain: zw-ttvgpt
  * Requires at least: 6.8
  * Requires PHP: 8.3
+ * Requires Plugins: advanced-custom-fields
  *
  * @package ZW_TTVGPT
  * @since   1.0.0
@@ -64,6 +65,34 @@ function zw_ttvgpt_init(): void {
 	}
 }
 add_action( 'init', 'zw_ttvgpt_init' );
+
+/**
+ * Surfaces a persistent admin notice when ACF is not active.
+ *
+ * Without ACF the AJAX handler short-circuits with an `acf_unavailable` error
+ * (see SummaryGenerator::handle_ajax_request). This notice surfaces the same
+ * condition up front so admins can fix the dependency before users try to
+ * generate summaries, instead of finding out via a failed AJAX response.
+ *
+ * @since 1.0.0
+ */
+function zw_ttvgpt_acf_dependency_notice(): void {
+	if ( function_exists( 'update_field' ) ) {
+		return;
+	}
+
+	if ( ! current_user_can( 'activate_plugins' ) ) {
+		return;
+	}
+
+	echo '<div class="notice notice-error"><p>';
+	echo esc_html__(
+		'ZuidWest Tekst TV GPT vereist de Advanced Custom Fields plugin. Activeer ACF om samenvattingen te kunnen genereren.',
+		'zw-ttvgpt'
+	);
+	echo '</p></div>';
+}
+add_action( 'admin_notices', 'zw_ttvgpt_acf_dependency_notice' );
 
 /**
  * Validates environment and initializes plugin settings on activation.

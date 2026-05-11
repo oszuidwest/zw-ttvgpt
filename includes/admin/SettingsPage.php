@@ -510,7 +510,12 @@ class SettingsPage {
 		// Debug mode.
 		$sanitized['debug_mode'] = ! empty( $input['debug_mode'] );
 
-		$this->logger->debug( 'Settings updated', $sanitized );
+		// Redact api_key before logging; debug.log can be world-readable depending on host config.
+		$loggable = $sanitized;
+		if ( array_key_exists( 'api_key', $loggable ) ) {
+			$loggable['api_key'] = '' === $loggable['api_key'] ? '' : '[redacted]';
+		}
+		$this->logger->debug( 'Settings updated', $loggable );
 		SettingsManager::clear_cache();
 
 		return $sanitized;
