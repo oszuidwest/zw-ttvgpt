@@ -201,6 +201,39 @@ class ApiHandler {
 	}
 
 	/**
+	 * Builds a sanitized log context from an API response payload.
+	 *
+	 * Only metadata fields are surfaced. Generated text, the prompt, and any
+	 * auth material are deliberately excluded so error logs remain safe to
+	 * forward even when the global debug flag is off.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array<string, mixed> $data     Decoded response payload.
+	 * @param string               $api_type Human-readable API label.
+	 * @return array<string, mixed> Safe context for Logger::error().
+	 */
+	private function build_safe_response_context( array $data, string $api_type ): array {
+		$context = array( 'api_type' => $api_type );
+
+		foreach ( array( 'id', 'model', 'status' ) as $key ) {
+			if ( isset( $data[ $key ] ) && ( is_string( $data[ $key ] ) || is_int( $data[ $key ] ) ) ) {
+				$context[ $key ] = $data[ $key ];
+			}
+		}
+
+		if ( isset( $data['choices'][0]['finish_reason'] ) && is_string( $data['choices'][0]['finish_reason'] ) ) {
+			$context['finish_reason'] = $data['choices'][0]['finish_reason'];
+		}
+
+		if ( isset( $data['usage'] ) && is_array( $data['usage'] ) ) {
+			$context['usage'] = $data['usage'];
+		}
+
+		return $context;
+	}
+
+	/**
 	 * Retrieves the generated summary from a Chat Completions API response.
 	 *
 	 * @since 1.0.0
@@ -212,19 +245,25 @@ class ApiHandler {
 	 */
 	private function extract_chat_completions_summary( array $data ): string|\WP_Error {
 		if ( ! isset( $data['choices'][0]['message']['content'] ) ) {
-			$this->logger->error( 'Invalid Chat Completions API response structure' );
+			$this->logger->error(
+				'Invalid Chat Completions API response structure',
+				$this->build_safe_response_context( $data, 'Chat Completions' )
+			);
 			return new \WP_Error(
 				'invalid_response',
-				__( 'Ongeldig antwoord van de API', 'zw-ttvgpt' )
+				__( 'Ongeldig antwoord van de API. Probeer het opnieuw; raadpleeg bij herhaling de beheerder of debuglog.', 'zw-ttvgpt' )
 			);
 		}
 
 		$summary = trim( (string) $data['choices'][0]['message']['content'] );
 		if ( '' === $summary ) {
-			$this->logger->error( 'Empty Chat Completions API response' );
+			$this->logger->error(
+				'Empty Chat Completions API response',
+				$this->build_safe_response_context( $data, 'Chat Completions' )
+			);
 			return new \WP_Error(
 				'empty_response',
-				__( 'Lege samenvatting ontvangen van de API', 'zw-ttvgpt' )
+				__( 'Lege samenvatting ontvangen van de API. Probeer het opnieuw of kies een ander model in de instellingen.', 'zw-ttvgpt' )
 			);
 		}
 
@@ -266,18 +305,24 @@ class ApiHandler {
 		}
 
 		if ( null === $summary ) {
-			$this->logger->error( 'Invalid Responses API response structure' );
+			$this->logger->error(
+				'Invalid Responses API response structure',
+				$this->build_safe_response_context( $data, 'Responses' )
+			);
 			return new \WP_Error(
 				'invalid_response',
-				__( 'Ongeldig antwoord van de API', 'zw-ttvgpt' )
+				__( 'Ongeldig antwoord van de API. Probeer het opnieuw; raadpleeg bij herhaling de beheerder of debuglog.', 'zw-ttvgpt' )
 			);
 		}
 
 		if ( '' === $summary ) {
-			$this->logger->error( 'Empty Responses API response' );
+			$this->logger->error(
+				'Empty Responses API response',
+				$this->build_safe_response_context( $data, 'Responses' )
+			);
 			return new \WP_Error(
 				'empty_response',
-				__( 'Lege samenvatting ontvangen van de API', 'zw-ttvgpt' )
+				__( 'Lege samenvatting ontvangen van de API. Probeer het opnieuw of kies een ander model in de instellingen.', 'zw-ttvgpt' )
 			);
 		}
 

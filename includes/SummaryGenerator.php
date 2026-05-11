@@ -89,11 +89,23 @@ class SummaryGenerator {
 		}
 
 		$user_id = get_current_user_id();
-		if ( RateLimiter::check_and_increment( $user_id ) ) {
+		if ( RateLimiter::check_and_increment( $user_id, $this->logger ) ) {
 			AjaxResponse::error(
 				'rate_limited',
 				__( 'Wacht even - max 10 per minuut', 'zw-ttvgpt' ),
 				429
+			);
+		}
+
+		// Bail before the paid API call when ACF is unavailable: save_to_acf()
+		// would otherwise fail post-generation, wasting tokens for a result we
+		// cannot persist.
+		if ( ! function_exists( 'update_field' ) ) {
+			$this->logger->error( 'ACF unavailable - aborting before API call', array( 'post_id' => $post_id ) );
+			AjaxResponse::error(
+				'acf_unavailable',
+				__( 'Advanced Custom Fields is niet actief. Activeer ACF voordat je samenvattingen genereert.', 'zw-ttvgpt' ),
+				503
 			);
 		}
 

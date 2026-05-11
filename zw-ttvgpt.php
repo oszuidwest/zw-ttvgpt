@@ -69,12 +69,18 @@ add_action( 'init', 'zw_ttvgpt_init' );
 /**
  * Surfaces a persistent admin notice when ACF is not active.
  *
- * The `Requires Plugins` header gates new installs on WP 6.5+, but existing
- * users who deactivate ACF would otherwise only see a save-time error.
+ * Without ACF the AJAX handler short-circuits with an `acf_unavailable` error
+ * (see SummaryGenerator::handle_ajax_request). This notice surfaces the same
+ * condition up front so admins can fix the dependency before users try to
+ * generate summaries, instead of finding out via a failed AJAX response.
  *
  * @since 1.0.0
  */
 function zw_ttvgpt_acf_dependency_notice(): void {
+	if ( wp_doing_ajax() ) {
+		return;
+	}
+
 	if ( function_exists( 'update_field' ) ) {
 		return;
 	}
