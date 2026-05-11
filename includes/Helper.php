@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Helper {
 
 	/**
-	 * Removes all plugin-related transients from the database.
+	 * Removes plugin-owned transient rows from wp_options.
 	 *
 	 * Only called on deactivation and uninstall, so any persistent-object-cache
 	 * entries that survive this DB cleanup have no live reader and expire on

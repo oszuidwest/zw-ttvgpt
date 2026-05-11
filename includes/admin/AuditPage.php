@@ -47,7 +47,9 @@ class AuditPage {
 	}
 
 	/**
-	 * Posts shown per page on the audit overview.
+	 * Posts per page on the audit overview. Sized to show a meaningful slice
+	 * of a typical month without blowing up render time on large months
+	 * (the page renders a hidden modal per row, so the cost is non-trivial).
 	 *
 	 * @since 1.0.0
 	 * @var int
@@ -328,7 +330,7 @@ class AuditPage {
 					);
 					?>
 				</span>
-				<?php $this->render_pagination_links( $paged, $total_pages ); ?>
+				<?php $this->render_pagination_links( $paged, $total_pages, $year, $month, $status_filter, $change_filter ); ?>
 			</div>
 			<br class="clear">
 		</div>
@@ -338,19 +340,44 @@ class AuditPage {
 	/**
 	 * Renders WordPress-style pagination links preserving current filters.
 	 *
+	 * Builds the base URL from a known allowlist of args (the audit page slug
+	 * plus active filters) so unrelated query parameters present in
+	 * REQUEST_URI — e.g. _wp_http_referer, settings-updated, filter_action —
+	 * do not leak into pagination hrefs.
+	 *
 	 * @since 1.0.0
 	 *
-	 * @param int $paged       Current page (1-indexed).
-	 * @param int $total_pages Total number of pages.
+	 * @param int    $paged         Current page (1-indexed).
+	 * @param int    $total_pages   Total number of pages.
+	 * @param int    $year          Active year filter.
+	 * @param int    $month         Active month filter.
+	 * @param string $status_filter Active status filter (empty when none).
+	 * @param string $change_filter Active change-percentage filter (empty when none).
 	 */
-	private function render_pagination_links( int $paged, int $total_pages ): void {
+	private function render_pagination_links(
+		int $paged,
+		int $total_pages,
+		int $year,
+		int $month,
+		string $status_filter,
+		string $change_filter
+	): void {
 		if ( $total_pages < 2 ) {
 			return;
 		}
 
+		$base_args = array(
+			'page'   => 'zw-ttvgpt-audit',
+			'year'   => $year,
+			'month'  => $month,
+			'status' => '' !== $status_filter ? $status_filter : false,
+			'change' => '' !== $change_filter ? $change_filter : false,
+			'paged'  => '%#%',
+		);
+
 		$links = paginate_links(
 			array(
-				'base'      => add_query_arg( 'paged', '%#%' ),
+				'base'      => add_query_arg( $base_args, admin_url( 'tools.php' ) ),
 				'format'    => '',
 				'prev_text' => __( '&laquo;', 'zw-ttvgpt' ),
 				'next_text' => __( '&raquo;', 'zw-ttvgpt' ),

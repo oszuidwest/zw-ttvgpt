@@ -81,6 +81,9 @@ class AdminMenu {
 	public function enqueue_admin_assets( string $hook ): void {
 		$version = Helper::get_asset_version();
 
+		// Inline config blobs below print at admin_print_footer_scripts priority 5
+		// so they land in the document before wp_enqueue_script_module's deferred
+		// module tag executes and reads window.zwTTVGPT*.
 		// Enqueue audit assets on audit page.
 		if ( 'tools_page_zw-ttvgpt-audit' === $hook ) {
 			wp_enqueue_style( 'zw-ttvgpt-audit', ZW_TTVGPT_URL . 'assets/audit.css', array(), $version );
