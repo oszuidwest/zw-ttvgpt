@@ -187,9 +187,8 @@ class AuditHelper {
 	/**
 	 * Primes WordPress' meta cache for a set of posts.
 	 *
-	 * Subsequent get_post_meta() calls on these posts hit the cache without
-	 * extra queries. Replaces a hand-rolled OR-query that bypassed the cache
-	 * and didn't scale on large months.
+	 * Call once before bulk get_post_meta() loops; subsequent reads on these
+	 * posts hit the cache without extra queries.
 	 *
 	 * @since 1.0.0
 	 *

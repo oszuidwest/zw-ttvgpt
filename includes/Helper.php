@@ -25,9 +25,9 @@ class Helper {
 	/**
 	 * Removes all plugin-related transients from the database.
 	 *
-	 * Note: this only clears DB-backed transients. Sites with a persistent
-	 * object cache (Redis/Memcached) hold transients in cache, but those expire
-	 * naturally inside the rate-limit window (60s) so we don't enumerate them.
+	 * Only called on deactivation and uninstall, so any persistent-object-cache
+	 * entries that survive this DB cleanup have no live reader and expire on
+	 * their own TTL.
 	 *
 	 * @since 1.0.0
 	 */
