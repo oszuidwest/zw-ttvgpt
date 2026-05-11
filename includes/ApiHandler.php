@@ -214,7 +214,12 @@ class ApiHandler {
 	 * @return array<string, mixed> Safe context for Logger::error().
 	 */
 	private function build_safe_response_context( array $data, string $api_type ): array {
-		$context = array( 'api_type' => $api_type );
+		// Seed with what we know locally so malformed responses (which often lack a `model` field)
+		// still log the model we asked for — the most useful field when diagnosing rejections.
+		$context = array(
+			'api_type' => $api_type,
+			'model'    => $this->model,
+		);
 
 		foreach ( array( 'id', 'model', 'status' ) as $key ) {
 			if ( isset( $data[ $key ] ) && ( is_string( $data[ $key ] ) || is_int( $data[ $key ] ) ) ) {

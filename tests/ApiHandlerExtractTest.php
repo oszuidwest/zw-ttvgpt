@@ -88,7 +88,11 @@ final class ApiHandlerExtractTest extends TestCase {
 		self::assertInstanceOf( WP_Error::class, $result );
 		self::assertSame( 'invalid_response', $result->get_error_code() );
 		self::assertCount( 1, $this->logger->errors );
-		self::assertSame( 'chatcmpl-y', $this->logger->errors[0]['context']['id'] );
+
+		$context = $this->logger->errors[0]['context'];
+		self::assertSame( 'chatcmpl-y', $context['id'] );
+		// Configured model must survive into the log even when the response payload omits it.
+		self::assertSame( 'gpt-5.5', $context['model'] );
 	}
 
 	public function test_responses_output_text_helper_returns_trimmed_summary(): void {
@@ -158,6 +162,12 @@ final class ApiHandlerExtractTest extends TestCase {
 
 		self::assertInstanceOf( WP_Error::class, $result );
 		self::assertSame( 'invalid_response', $result->get_error_code() );
+
+		self::assertCount( 1, $this->logger->errors );
+		$context = $this->logger->errors[0]['context'];
+		self::assertSame( 'Responses', $context['api_type'] );
+		// Configured model must survive into the log even when the response payload omits it.
+		self::assertSame( 'gpt-5.5', $context['model'] );
 	}
 
 	public function test_responses_output_without_message_items_returns_invalid_response_error(): void {
