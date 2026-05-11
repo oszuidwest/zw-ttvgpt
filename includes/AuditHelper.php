@@ -185,66 +185,23 @@ class AuditHelper {
 
 
 	/**
-	 * Retrieves metadata for multiple posts in a single query.
+	 * Primes WordPress' meta cache for a set of posts.
+	 *
+	 * Call once before bulk get_post_meta() loops; subsequent reads on these
+	 * posts hit the cache without extra queries.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @param array $post_ids Array of post IDs.
-	 * @return array Associative array with post_id as key and meta_data as value.
 	 *
 	 * @phpstan-param array<int, int> $post_ids
-	 * @phpstan-return array<int, array<string, string>>
 	 */
-	public static function get_bulk_meta_data( array $post_ids ): array {
+	public static function prime_meta_cache( array $post_ids ): void {
 		if ( empty( $post_ids ) ) {
-			return array();
+			return;
 		}
 
-		global $wpdb;
-
-		// Sanitize post IDs to integers only.
-		$post_ids = array_map( 'intval', $post_ids );
-
-		// Single query to get all meta data for all posts.
-		$meta_keys = array(
-			Constants::ACF_FIELD_AI_CONTENT,
-			Constants::ACF_FIELD_HUMAN_CONTENT,
-			'_edit_last',
-		);
-
-		// Build WHERE clause for post IDs.
-		$where_post_ids = array();
-		foreach ( $post_ids as $id ) {
-			$where_post_ids[] = $wpdb->prepare( 'post_id = %d', $id );
-		}
-
-		// Build WHERE clause for meta keys.
-		$where_meta_keys = array();
-		foreach ( $meta_keys as $key ) {
-			$where_meta_keys[] = $wpdb->prepare( 'meta_key = %s', $key );
-		}
-
-		// Combine conditions.
-		$where_post_clause = '(' . implode( ' OR ', $where_post_ids ) . ')';
-		$where_key_clause  = '(' . implode( ' OR ', $where_meta_keys ) . ')';
-
-		// Build final query.
-		$query = "SELECT post_id, meta_key, meta_value 
-			FROM {$wpdb->postmeta} 
-			WHERE {$where_post_clause}
-			AND {$where_key_clause}
-			ORDER BY post_id";
-
-		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Query is built from individually prepared fragments above
-		$meta_data = $wpdb->get_results( $query );
-
-		// Organize data by post_id for fast lookup.
-		$meta_cache = array();
-		foreach ( $meta_data as $meta ) {
-			$meta_cache[ $meta->post_id ][ $meta->meta_key ] = $meta->meta_value;
-		}
-
-		return $meta_cache;
+		update_meta_cache( 'post', array_map( 'intval', $post_ids ) );
 	}
 
 	/**
@@ -265,20 +222,19 @@ class AuditHelper {
 	/**
 	 * Determines the audit status of a post.
 	 *
+	 * Callers should prime the meta cache with prime_meta_cache() before
+	 * looping over many posts so get_post_meta hits the cache.
+	 *
 	 * @since 1.0.0
 	 *
-	 * @param \WP_Post $post       Post object to categorize.
-	 * @param array    $meta_cache Optional. Pre-fetched meta data cache. Default empty array.
+	 * @param \WP_Post $post Post object to categorize.
 	 * @return array Analysis result with status (AuditStatus enum), ai_content, human_content, and change_percentage.
 	 *
-	 * @phpstan-param array<int, array<string, string>> $meta_cache
 	 * @phpstan-return PostAnalysis
 	 */
-	public static function categorize_post( \WP_Post $post, array $meta_cache = array() ): array {
-		$ai_key        = Constants::ACF_FIELD_AI_CONTENT;
-		$human_key     = Constants::ACF_FIELD_HUMAN_CONTENT;
-		$ai_content    = $meta_cache[ $post->ID ][ $ai_key ] ?? get_post_meta( $post->ID, $ai_key, true );
-		$human_content = $meta_cache[ $post->ID ][ $human_key ] ?? get_post_meta( $post->ID, $human_key, true );
+	public static function categorize_post( \WP_Post $post ): array {
+		$ai_content    = (string) get_post_meta( $post->ID, Constants::ACF_FIELD_AI_CONTENT, true );
+		$human_content = (string) get_post_meta( $post->ID, Constants::ACF_FIELD_HUMAN_CONTENT, true );
 
 		// Clean content for accurate comparison.
 		$ai_clean    = self::strip_region_prefix( $ai_content );
