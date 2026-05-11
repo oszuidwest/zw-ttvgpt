@@ -77,10 +77,6 @@ add_action( 'init', 'zw_ttvgpt_init' );
  * @since 1.0.0
  */
 function zw_ttvgpt_acf_dependency_notice(): void {
-	if ( wp_doing_ajax() ) {
-		return;
-	}
-
 	if ( function_exists( 'update_field' ) ) {
 		return;
 	}
