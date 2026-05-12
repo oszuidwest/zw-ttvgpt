@@ -52,7 +52,7 @@ class AuditHelper {
 			do_action( 'zw_ttvgpt_audit_regex_failed', $operation, $error_code, $error_message );
 		}
 
-		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Static helper has no injected Logger, and regex failures need production visibility.
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Static helper has no injected Logger.
 		error_log( sprintf( '[ZW_TTVGPT] Audit regex failed during %s: %s', $operation, $error_message ) );
 	}
 
@@ -324,12 +324,8 @@ class AuditHelper {
 	 * @return string Cleaned content without region prefix.
 	 */
 	public static function strip_region_prefix( string $content ): string {
-		// Region prefixes look like "LEIDEN - ", "DEN HAAG - ",
-		// "ROOSENDAAL/OUDENBOSCH - ", "ETTEN-LEUR - ", "CURAÇAO - ". The
-		// character class is Unicode-aware so diacritic uppercase letters
-		// (Ç, Ü, É, ...) still match. The leading `\p{Lu}{2,}` requires at
-		// least two uppercase letters so single-letter listicle prefixes
-		// like "A - eerste optie" are not mistaken for a region.
+		// Match Unicode uppercase region prefixes while preserving one-letter
+		// list markers such as "A - eerste optie".
 		$trimmed = trim( $content );
 		$result  = preg_replace( '/^\p{Lu}{2,}[\p{Lu}\s\/\-]*\s-\s/u', '', $trimmed );
 		if ( null === $result ) {

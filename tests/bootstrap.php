@@ -1,10 +1,7 @@
 <?php
 declare(strict_types=1);
 
-// Point ABSPATH at the vendored WordPress install so tests that opt in to the
-// real wp_kses / Text_Diff pipeline can resolve sibling wp-includes/ files via
-// ABSPATH constants the way production code does. Tests that don't load WP
-// only need ABSPATH to be defined to satisfy the source guards.
+// Point ABSPATH at the vendored WordPress install for tests that load WP pieces.
 if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', dirname( __DIR__ ) . '/vendor/roots/wordpress-no-content/' );
 }

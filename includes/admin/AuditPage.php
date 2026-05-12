@@ -65,9 +65,9 @@ class AuditPage {
 	}
 
 	/**
-	 * Posts per page on the audit overview. Sized to show a meaningful slice
-	 * of a typical month without blowing up render time on large months
-	 * (the page renders a hidden modal per row, so the cost is non-trivial).
+	 * Posts per page on the audit overview.
+	 *
+	 * The page renders a hidden modal per row, so large pages are expensive.
 	 *
 	 * @since 1.0.0
 	 * @var int
@@ -165,32 +165,10 @@ class AuditPage {
 	/**
 	 * Sanitizes diff markup for display in the audit modal.
 	 *
-	 * Note: `wp_kses` with `['span' => ['class' => true]]` strips disallowed
-	 * tags but does NOT validate the class attribute value — any class string
-	 * passes. That breaks the "safe to echo" contract on raw input like
-	 * `<span class="evil">x</span>`. We therefore run a second pass that
-	 * drops every <span> whose class is not exactly zw-diff-added or
-	 * zw-diff-removed, keeping its inner content as text. The pattern
-	 * tolerates the variations wp_kses leaves intact: single/double quotes,
-	 * uppercase tag/attribute names, whitespace padding inside the value.
-	 *
-	 * The regex is iterated because a single pass uses non-greedy `(.*?)`
-	 * and binds the outer disallowed span to the FIRST `</span>` it sees —
-	 * for nested disallowed spans like `<span class="a"><span class="b">x
-	 * </span></span>` that leaves the inner span as a top-level survivor.
-	 * Re-running peels one level per pass.
-	 *
-	 * Iterations are bounded by the count of `<span` markers in the
-	 * kses-normalized input: each pass removes at least one disallowed
-	 * span (otherwise the stability check exits), and the substitution is
-	 * `$2` — content between the matched open/close pair — so new `<span`
-	 * markers can never be introduced. If the bound is somehow exceeded we
-	 * MUST NOT return the partially-stripped string (it can still contain
-	 * a live disallowed span); fail closed by stripping all remaining tags.
-	 *
-	 * Centralizing here keeps the modal render path and the regression
-	 * tests in AuditPageDiffAllowlistTest exercising the same sanitizer —
-	 * removing either pass fails those tests, not just the constant lock-in.
+	 * WordPress allows any class value when class is allowed in wp_kses(), so this
+	 * adds a second pass that keeps only the plugin's diff classes and converts
+	 * all other span markup to inert text. Malformed or untrusted output fails
+	 * closed by stripping all remaining tags.
 	 *
 	 * @since 1.0.0
 	 *
@@ -211,19 +189,13 @@ class AuditPage {
 				self::DIFF_ALLOWED_CLASSES
 			)
 		);
-		// Shared predicate: an opening <span...> whose class is NOT in the
-		// allowlist. The paired pattern below requires a matching </span>;
-		// the open-only pattern reuses the same predicate to catch orphan
-		// opens that survived the paired pass (e.g. malformed unbalanced
-		// input like `<span class="a"><span class="b">x</span>`).
+		// Shared predicate for disallowed span opens, reused for paired and
+		// orphan-span checks.
 		$disallowed_open = '<(?i:span)(?![^>]*\b(?i:class)=(["\'])\s*(?:' . $class_pattern . ')\s*\1)[^>]*>';
 		$paired_pattern  = '#' . $disallowed_open . '(.*?)</(?i:span)>#s';
 		$open_pattern    = '#' . $disallowed_open . '#';
 
-		// Tight upper bound: one iteration per span in the input, plus one
-		// final stability check to confirm no further changes. Counted with
-		// the same case-insensitive match the regex above uses so the bound
-		// never undershoots on non-normalized input.
+		// Bound iteration to the number of input spans, plus one stability check.
 		$span_count = preg_match_all( '/<span\b/i', $kses_out );
 		if ( false === $span_count ) {
 			self::report_diff_sanitizer_failure( 'span_count_regex_failed', preg_last_error_msg() );
@@ -774,8 +746,8 @@ class AuditPage {
 								<div class="inside">
 									<div style="max-height: 400px; overflow-y: auto; padding: 10px; font-size: 13px; line-height: 1.6;">
 										<?php
-										// sanitize_diff_panel applies wp_kses with DIFF_ALLOWED_TAGS.
-										echo self::sanitize_diff_panel( $diff['before'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+											// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is sanitized by sanitize_diff_panel().
+											echo self::sanitize_diff_panel( $diff['before'] );
 										?>
 									</div>
 								</div>
@@ -788,8 +760,8 @@ class AuditPage {
 								<div class="inside">
 									<div style="max-height: 400px; overflow-y: auto; padding: 10px; font-size: 13px; line-height: 1.6;">
 										<?php
-										// sanitize_diff_panel applies wp_kses with DIFF_ALLOWED_TAGS.
-										echo self::sanitize_diff_panel( $diff['after'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+											// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is sanitized by sanitize_diff_panel().
+											echo self::sanitize_diff_panel( $diff['after'] );
 										?>
 									</div>
 								</div>

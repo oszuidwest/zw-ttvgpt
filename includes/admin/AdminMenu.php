@@ -81,11 +81,7 @@ class AdminMenu {
 	public function enqueue_admin_assets( string $hook ): void {
 		$version = Helper::get_asset_version();
 
-		// Inline config blobs below print at admin_print_footer_scripts priority 5
-		// so they land in the document before wp_enqueue_script_module's deferred
-		// module tag executes and reads window.zwTTVGPT*. If encoding fails, we
-		// skip the enqueue so the module isn't loaded against missing config —
-		// the module would `console.warn` and the page would silently degrade.
+		// Inline config prints before the deferred module tags read window.zwTTVGPT*.
 		if ( 'tools_page_zw-ttvgpt-audit' === $hook ) {
 			wp_enqueue_style( 'zw-ttvgpt-audit', ZW_TTVGPT_URL . 'assets/audit.css', array(), $version );
 
@@ -146,8 +142,6 @@ class AdminMenu {
 			),
 		);
 
-		// ES module (WordPress 6.5+) is enqueued only if its inline config encoded
-		// successfully; otherwise we'd ship a module without the data it expects.
 		if ( $this->print_inline_config( 'zwTTVGPT', $inline_data ) ) {
 			wp_enqueue_script_module( 'zw-ttvgpt-admin', ZW_TTVGPT_URL . 'assets/admin.js', array(), $version );
 		}

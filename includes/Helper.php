@@ -80,12 +80,10 @@ class Helper {
 	}
 
 	/**
-	 * Liveness check for an OpenAI API key.
+	 * Checks whether an API key has the expected OpenAI prefix.
 	 *
-	 * Verifies the key is non-empty and carries the OpenAI 'sk-' prefix used by
-	 * all current key flavours (sk-, sk-proj-, sk-svcacct-, sk-admin-). This is
-	 * intentionally not a strict format validator — the canonical key shape has
-	 * shifted over time, and a tight regex would reject valid future keys.
+	 * Intentionally avoids strict key-shape validation so future key formats with
+	 * the same prefix are accepted.
 	 *
 	 * @since 1.0.0
 	 *

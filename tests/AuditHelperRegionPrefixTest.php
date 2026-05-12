@@ -8,6 +8,10 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ZW_TTVGPT_Core\AuditHelper;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 #[CoversClass(AuditHelper::class)]
 final class AuditHelperRegionPrefixTest extends TestCase {
 
@@ -37,11 +41,11 @@ final class AuditHelperRegionPrefixTest extends TestCase {
 			'leading whitespace stripped'    => array( '   LEIDEN - Bericht.', 'Bericht.' ),
 			'empty string passes through'    => array( '', '' ),
 			'whitespace-only collapses'      => array( "   \t  ", '' ),
-			// trim() runs first so the trailing space is gone, breaking the `\s-\s` anchor.
+			// trim() removes the trailing space, so the separator no longer matches.
 			'region without trailing body'   => array( 'LEIDEN - ', 'LEIDEN -' ),
-			// Listicle/enumeration markers are not regions; the regex requires ≥2 uppercase letters.
+			// One-letter list markers are not region prefixes.
 			'single-letter prefix preserved' => array( 'A - eerste optie', 'A - eerste optie' ),
-			// A real two-letter abbreviation still strips — conservative threshold, not strict.
+			// Two uppercase letters still count as a region prefix.
 			'two-letter prefix still strips' => array( 'EU - mededeling.', 'mededeling.' ),
 			// Regex requires ASCII hyphen; typographic dashes are not treated as separators.
 			'en-dash is not a separator'     => array( 'LEIDEN – Bericht.', 'LEIDEN – Bericht.' ),

@@ -10,6 +10,10 @@ use ReflectionClass;
 use ZW_TTVGPT_Core\Admin\AuditPage;
 use ZW_TTVGPT_Core\AuditHelper;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 #[CoversClass(AuditPage::class)]
 #[CoversClass(AuditHelper::class)]
 final class AuditPageDiffAllowlistTest extends TestCase {
@@ -43,8 +47,6 @@ final class AuditPageDiffAllowlistTest extends TestCase {
 	public function test_malicious_content_cannot_survive_diff_render_pipeline( string $ai_content, string $human_content ): void {
 		$diff = AuditHelper::generate_word_diff( $ai_content, $human_content );
 
-		// Call the same sanitizer the modal render path calls (AuditPage::sanitize_diff_panel)
-		// so removing wp_kses from that helper fails these tests, not just the constant lock-in.
 		$sanitized_before = AuditPage::sanitize_diff_panel( $diff['before'] );
 		$sanitized_after  = AuditPage::sanitize_diff_panel( $diff['after'] );
 
@@ -53,11 +55,10 @@ final class AuditPageDiffAllowlistTest extends TestCase {
 	}
 
 	/**
-	 * Strips diff-span open and close tags only (not their inner content) and
-	 * asserts no tag-shaped markup remains. Catches any unencoded `<...>` that
-	 * wp_kses failed to neutralize — including a hypothetical nested tag inside
-	 * a diff span — while tolerating dangerous *words* (onerror, javascript:)
-	 * appearing as inert text inside encoded fragments like `&lt;img ...&gt;`.
+	 * Asserts that only plugin diff spans remain as live HTML.
+	 *
+	 * @param string $sanitized Sanitized HTML.
+	 * @param string $pane_label Assertion label.
 	 */
 	private static function assertOnlyDiffSpansAsLiveHtml( string $sanitized, string $pane_label ): void {
 		$stripped = preg_replace( '#<span class="zw-diff-(?:added|removed)">|</span>#', '', $sanitized );
@@ -85,12 +86,9 @@ final class AuditPageDiffAllowlistTest extends TestCase {
 	}
 
 	/**
-	 * Direct helper test that bypasses generate_word_diff. WP's Text_Diff
-	 * renderer htmlspecialchars-encodes input before wrapping, so the integration
-	 * tests above would also pass if someone removed wp_kses from
-	 * sanitize_diff_panel. This test feeds un-encoded markup straight into the
-	 * helper, so removing the wp_kses call breaks here even though the diff
-	 * renderer's defence is gone.
+	 * Feeds raw markup into the sanitizer without relying on Text_Diff escaping.
+	 *
+	 * @param string $raw_input Raw diff HTML.
 	 */
 	#[DataProvider('rawSanitizerProvider')]
 	public function test_sanitize_diff_panel_strips_unencoded_markup( string $raw_input ): void {
@@ -108,9 +106,7 @@ final class AuditPageDiffAllowlistTest extends TestCase {
 			'raw iframe bypasses Text_Diff escaping'       => array( '<iframe src="https://evil.example/"></iframe><span class="zw-diff-removed">x</span>' ),
 			'raw javascript: anchor'                       => array( '<a href="javascript:alert(1)">klik</a>' ),
 			'nested script inside diff span'               => array( '<span class="zw-diff-added">ok<script>alert(1)</script></span>' ),
-			// wp_kses allows `class` as an attribute but does not validate its
-			// value, so a `class="evil"` span passes wp_kses(['span' => ['class' => true]]).
-			// The helper must enforce the class allowlist itself.
+			// wp_kses allows class values; the helper must enforce the allowlist.
 			'span with non-diff class'                     => array( '<span class="evil">x</span>' ),
 			'span with non-diff class plus legit diff'     => array( '<span class="evil">x</span><span class="zw-diff-added">ok</span>' ),
 			'span with extra class alongside diff class'   => array( '<span class="zw-diff-added evil">x</span>' ),
@@ -132,12 +128,10 @@ final class AuditPageDiffAllowlistTest extends TestCase {
 	}
 
 	/**
-	 * Pins exact sanitizer output for cases the looser tag-shape assertion misses:
-	 * nested disallowed spans (the regex's non-greedy `(.*?)` would otherwise leave
-	 * the inner span surviving as a top-level node), multi-class values that are
-	 * not exactly an allowlist entry, and entity-encoded class values that would
-	 * decode to an allowlist entry in the browser. The expected outputs are the
-	 * security contract: disallowed spans must collapse to inert text.
+	 * Pins exact sanitizer output for cases the looser tag-shape assertion misses.
+	 *
+	 * @param string $raw_input Raw diff HTML.
+	 * @param string $expected Expected sanitized output.
 	 */
 	#[DataProvider('strictSanitizerProvider')]
 	public function test_sanitize_diff_panel_strips_disallowed_to_inert_text( string $raw_input, string $expected ): void {
@@ -165,10 +159,7 @@ final class AuditPageDiffAllowlistTest extends TestCase {
 				'<span class="a"><span class="b"><span class="c">deep</span></span></span>',
 				'deep',
 			),
-			// Unbalanced input: outer disallowed has no matching </span>, so
-			// the paired regex strips the outer up to the inner close and
-			// leaves the inner open as an orphan. Must fail closed via
-			// wp_strip_all_tags rather than return the live inner open tag.
+			// Malformed nesting must fail closed instead of returning an orphan span.
 			'unbalanced outer disallowed leaks inner open if not fail-closed' => array(
 				'<span class="evil"><span class="also-evil">x</span>',
 				'x',
@@ -181,12 +172,9 @@ final class AuditPageDiffAllowlistTest extends TestCase {
 	}
 
 	/**
-	 * Guards against the iteration bound being too tight. A fixed cap (e.g. 20)
-	 * would fail open here: after exhausting iterations the function would
-	 * return a string that still contained a live disallowed span. The bound
-	 * must scale with the input — or fail closed by stripping all markup.
+	 * Guards against fixed iteration caps that could return live disallowed spans.
 	 *
-	 * @param int $depth Nesting depth to exercise.
+	 * @param int $depth Nesting depth.
 	 */
 	#[DataProvider('deepNestingDepthProvider')]
 	public function test_sanitize_diff_panel_handles_deep_nested_disallowed_spans( int $depth ): void {
