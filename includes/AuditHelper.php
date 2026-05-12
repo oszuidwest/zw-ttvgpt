@@ -68,21 +68,6 @@ class AuditHelper {
 	}
 
 	/**
-	 * Collapses whitespace runs in diff HTML; returns the input unchanged on PCRE failure.
-	 *
-	 * @param string $diff_html Diff HTML to normalize.
-	 */
-	private static function normalize_diff_whitespace( string $diff_html ): string {
-		$normalized = preg_replace( '/\s+/', ' ', $diff_html );
-
-		if ( null === $normalized ) {
-			self::log_pcre_failure( 'normalize_diff_whitespace' );
-		}
-
-		return null === $normalized ? $diff_html : $normalized;
-	}
-
-	/**
 	 * Plain-text fallback for both diff panes when highlighting cannot be trusted.
 	 *
 	 * @param string $old_clean      Original content after prefix stripping.
@@ -380,9 +365,21 @@ class AuditHelper {
 			return self::plain_diff_result( $old_clean, $modified_clean );
 		}
 
+		$before_normalized = preg_replace( '/\s+/', ' ', $before );
+		if ( null === $before_normalized ) {
+			self::log_pcre_failure( 'normalize_diff_whitespace' );
+			$before_normalized = $before;
+		}
+
+		$after_normalized = preg_replace( '/\s+/', ' ', $after );
+		if ( null === $after_normalized ) {
+			self::log_pcre_failure( 'normalize_diff_whitespace' );
+			$after_normalized = $after;
+		}
+
 		return array(
-			'before' => trim( self::normalize_diff_whitespace( $before ) ),
-			'after'  => trim( self::normalize_diff_whitespace( $after ) ),
+			'before' => trim( $before_normalized ),
+			'after'  => trim( $after_normalized ),
 		);
 	}
 

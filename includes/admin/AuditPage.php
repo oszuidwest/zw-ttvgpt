@@ -115,16 +115,6 @@ class AuditPage {
 	}
 
 	/**
-	 * Runs wp_kses(), including pre_kses callbacks that can return arbitrary
-	 * values. Callers must verify is_string() before echoing the result.
-	 *
-	 * @param string $diff_html Raw diff HTML.
-	 */
-	private static function kses_diff_html( string $diff_html ): mixed {
-		return wp_kses( $diff_html, self::DIFF_ALLOWED_TAGS );
-	}
-
-	/**
 	 * Sanitizes diff HTML for the audit modal.
 	 *
 	 * The diff renderer emits unadorned <ins>/<del> tags. Letting wp_kses()
@@ -133,7 +123,9 @@ class AuditPage {
 	 * @param string $diff_html Raw diff HTML emitted by AuditHelper::generate_word_diff.
 	 */
 	public static function sanitize_diff_panel( string $diff_html ): string {
-		$kses_out = self::kses_diff_html( $diff_html );
+		$kses_out = wp_kses( $diff_html, self::DIFF_ALLOWED_TAGS );
+		// wp_kses() runs filters, so keep the runtime guard despite the string stub.
+		// @phpstan-ignore-next-line function.alreadyNarrowedType.
 		if ( ! is_string( $kses_out ) ) {
 			self::report_diff_sanitizer_failure( 'wp_kses_non_string' );
 			return wp_strip_all_tags( $diff_html );
