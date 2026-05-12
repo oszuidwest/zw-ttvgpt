@@ -83,6 +83,56 @@ class AuditPage {
 	);
 
 	/**
+	 * Slices a list into a single page and returns clamped pagination state.
+	 *
+	 * Requested pages outside [1, total_pages] are clamped to the closest
+	 * valid page so an out-of-range ?paged= still renders the table instead
+	 * of a blank slice. Empty input returns paged=1, total_pages=0.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $items          Items to paginate (any indexed list).
+	 * @param int   $requested_page Page number the caller asked for.
+	 * @param int   $per_page       Page size; values < 1 are treated as "no slicing wanted".
+	 * @return array Pagination outcome including the slice, the clamped page, total pages, and total count.
+	 *
+	 * @phpstan-template T
+	 * @phpstan-param array<int, T> $items
+	 * @phpstan-return array{slice: array<int, T>, paged: int, total_pages: int, total: int}
+	 */
+	public static function paginate( array $items, int $requested_page, int $per_page ): array {
+		$total       = count( $items );
+		$total_pages = $per_page > 0 ? (int) ceil( $total / $per_page ) : 0;
+		$paged       = $total_pages > 0 ? min( max( 1, $requested_page ), $total_pages ) : 1;
+		$offset      = ( $paged - 1 ) * max( 0, $per_page );
+		$slice       = $per_page > 0 ? array_slice( $items, $offset, $per_page ) : array();
+
+		return array(
+			'slice'       => $slice,
+			'paged'       => $paged,
+			'total_pages' => $total_pages,
+			'total'       => $total,
+		);
+	}
+
+	/**
+	 * Sanitizes diff markup for display in the audit modal.
+	 *
+	 * Centralizes the wp_kses + DIFF_ALLOWED_TAGS application so the modal
+	 * render path and the regression test in AuditPageDiffAllowlistTest
+	 * exercise the same sanitizer. Removing this helper (or weakening it)
+	 * fails the malicious-content tests, not just the constant lock-in.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $diff_html Raw diff HTML emitted by AuditHelper::generate_word_diff.
+	 * @return string HTML safe to echo into the audit modal panes.
+	 */
+	public static function sanitize_diff_panel( string $diff_html ): string {
+		return wp_kses( $diff_html, self::DIFF_ALLOWED_TAGS );
+	}
+
+	/**
 	 * Renders the audit analysis page.
 	 *
 	 * @since 1.0.0
@@ -155,11 +205,11 @@ class AuditPage {
 		$available_months = AuditHelper::get_months();
 
 		// Slice filtered results for the requested page.
-		$total_filtered = count( $categorized_posts );
-		$total_pages    = (int) ceil( $total_filtered / self::POSTS_PER_PAGE );
-		$paged          = $total_pages > 0 ? min( $paged, $total_pages ) : 1;
-		$page_offset    = ( $paged - 1 ) * self::POSTS_PER_PAGE;
-		$page_slice     = array_slice( $categorized_posts, $page_offset, self::POSTS_PER_PAGE );
+		$pagination     = self::paginate( $categorized_posts, $paged, self::POSTS_PER_PAGE );
+		$page_slice     = $pagination['slice'];
+		$paged          = $pagination['paged'];
+		$total_pages    = $pagination['total_pages'];
+		$total_filtered = $pagination['total'];
 
 		// Stylesheet is enqueued by AdminMenu on the audit page hook.
 		add_thickbox();
@@ -595,7 +645,10 @@ class AuditPage {
 								</div>
 								<div class="inside">
 									<div style="max-height: 400px; overflow-y: auto; padding: 10px; font-size: 13px; line-height: 1.6;">
-										<?php echo wp_kses( $diff['before'], self::DIFF_ALLOWED_TAGS ); ?>
+										<?php
+										// sanitize_diff_panel applies wp_kses with DIFF_ALLOWED_TAGS.
+										echo self::sanitize_diff_panel( $diff['before'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+										?>
 									</div>
 								</div>
 							</div>
@@ -606,7 +659,10 @@ class AuditPage {
 								</div>
 								<div class="inside">
 									<div style="max-height: 400px; overflow-y: auto; padding: 10px; font-size: 13px; line-height: 1.6;">
-										<?php echo wp_kses( $diff['after'], self::DIFF_ALLOWED_TAGS ); ?>
+										<?php
+										// sanitize_diff_panel applies wp_kses with DIFF_ALLOWED_TAGS.
+										echo self::sanitize_diff_panel( $diff['after'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+										?>
 									</div>
 								</div>
 							</div>

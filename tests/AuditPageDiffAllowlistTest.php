@@ -15,9 +15,9 @@ use ZW_TTVGPT_Core\AuditHelper;
 final class AuditPageDiffAllowlistTest extends TestCase {
 
 	/**
-	 * Mirrors AuditPage::DIFF_ALLOWED_TAGS so the integration tests assert what
-	 * the renderer at AuditPage.php:583/594 actually uses. The first test below
-	 * fails the suite if the two ever drift.
+	 * The allowlist the constant lock-in test pins. Kept here, not derived from
+	 * AuditPage::DIFF_ALLOWED_TAGS, so widening the constant on the production
+	 * side fails this test instead of silently propagating into the assertions.
 	 *
 	 * @var array<string, array<string, bool>>
 	 */
@@ -43,8 +43,10 @@ final class AuditPageDiffAllowlistTest extends TestCase {
 	public function test_malicious_content_cannot_survive_diff_render_pipeline( string $ai_content, string $human_content ): void {
 		$diff = AuditHelper::generate_word_diff( $ai_content, $human_content );
 
-		$sanitized_before = wp_kses( $diff['before'], self::EXPECTED_ALLOWLIST );
-		$sanitized_after  = wp_kses( $diff['after'], self::EXPECTED_ALLOWLIST );
+		// Call the same sanitizer the modal render path calls (AuditPage::sanitize_diff_panel)
+		// so removing wp_kses from that helper fails these tests, not just the constant lock-in.
+		$sanitized_before = AuditPage::sanitize_diff_panel( $diff['before'] );
+		$sanitized_after  = AuditPage::sanitize_diff_panel( $diff['after'] );
 
 		self::assertOnlyDiffSpansAsLiveHtml( $sanitized_before, 'BEFORE pane' );
 		self::assertOnlyDiffSpansAsLiveHtml( $sanitized_after, 'AFTER pane' );
@@ -82,11 +84,38 @@ final class AuditPageDiffAllowlistTest extends TestCase {
 		);
 	}
 
+	/**
+	 * Direct helper test that bypasses generate_word_diff. WP's Text_Diff
+	 * renderer htmlspecialchars-encodes input before wrapping, so the integration
+	 * tests above would also pass if someone removed wp_kses from
+	 * sanitize_diff_panel. This test feeds un-encoded markup straight into the
+	 * helper, so removing the wp_kses call breaks here even though the diff
+	 * renderer's defence is gone.
+	 */
+	#[DataProvider('rawSanitizerProvider')]
+	public function test_sanitize_diff_panel_strips_unencoded_markup( string $raw_input ): void {
+		$sanitized = AuditPage::sanitize_diff_panel( $raw_input );
+		self::assertOnlyDiffSpansAsLiveHtml( $sanitized, 'direct helper input' );
+	}
+
+	/**
+	 * @return array<string, array{string}>
+	 */
+	public static function rawSanitizerProvider(): array {
+		return array(
+			'raw script tag bypasses Text_Diff escaping'   => array( '<span class="zw-diff-added">ok</span><script>alert(1)</script>' ),
+			'raw img onerror bypasses Text_Diff escaping'  => array( '<img src=x onerror="alert(1)"><span class="zw-diff-added">ok</span>' ),
+			'raw iframe bypasses Text_Diff escaping'       => array( '<iframe src="https://evil.example/"></iframe><span class="zw-diff-removed">x</span>' ),
+			'raw javascript: anchor'                       => array( '<a href="javascript:alert(1)">klik</a>' ),
+			'nested script inside diff span'               => array( '<span class="zw-diff-added">ok<script>alert(1)</script></span>' ),
+		);
+	}
+
 	public function test_legitimate_diff_spans_survive_sanitization(): void {
 		$diff = AuditHelper::generate_word_diff( 'het originele bericht hier', 'het bewerkte bericht hier' );
 
-		$sanitized_before = wp_kses( $diff['before'], self::EXPECTED_ALLOWLIST );
-		$sanitized_after  = wp_kses( $diff['after'], self::EXPECTED_ALLOWLIST );
+		$sanitized_before = AuditPage::sanitize_diff_panel( $diff['before'] );
+		$sanitized_after  = AuditPage::sanitize_diff_panel( $diff['after'] );
 
 		self::assertStringContainsString( '<span class="zw-diff-removed"', $sanitized_before, 'Removed-content spans must survive sanitization.' );
 		self::assertStringContainsString( '<span class="zw-diff-added"', $sanitized_after, 'Added-content spans must survive sanitization.' );

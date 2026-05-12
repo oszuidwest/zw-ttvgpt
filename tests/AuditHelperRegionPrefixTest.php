@@ -35,8 +35,10 @@ final class AuditHelperRegionPrefixTest extends TestCase {
 			'whitespace-only collapses'      => array( "   \t  ", '' ),
 			// trim() runs first so the trailing space is gone, breaking the `\s-\s` anchor.
 			'region without trailing body'   => array( 'LEIDEN - ', 'LEIDEN -' ),
-			// Single-letter prefix currently matches; documenting behaviour, not endorsing it.
-			'single-letter prefix matches'   => array( 'A - bericht', 'bericht' ),
+			// Listicle/enumeration markers are not regions; the regex requires ≥2 uppercase letters.
+			'single-letter prefix preserved' => array( 'A - eerste optie', 'A - eerste optie' ),
+			// A real two-letter abbreviation still strips — conservative threshold, not strict.
+			'two-letter prefix still strips' => array( 'EU - mededeling.', 'mededeling.' ),
 			// Regex requires ASCII hyphen; typographic dashes are not treated as separators.
 			'en-dash is not a separator'     => array( 'LEIDEN – Bericht.', 'LEIDEN – Bericht.' ),
 			'em-dash is not a separator'     => array( 'LEIDEN — Bericht.', 'LEIDEN — Bericht.' ),

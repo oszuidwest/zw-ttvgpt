@@ -16,6 +16,7 @@ parameters:
     # Audit types
     FilterParams: 'array{year: int|null, month: int|null, status_filter: string, change_filter: string, paged: int}'
     MonthData: 'array{year: int, month: int}'
+    PaginationResult: 'array{slice: array<int, mixed>, paged: int, total_pages: int, total: int}'
     PostAnalysis: 'array{status: ZW_TTVGPT_Core\AuditStatus, ai_content: string, human_content: string, change_percentage: int}'
     DiffResult: 'array{before: string, after: string}'
     # OpenAI types

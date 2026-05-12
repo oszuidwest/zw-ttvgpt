@@ -216,9 +216,11 @@ class AuditHelper {
 		// Region prefixes look like "LEIDEN - ", "DEN HAAG - ",
 		// "ROOSENDAAL/OUDENBOSCH - ", "ETTEN-LEUR - ", "CURAÇAO - ". The
 		// character class is Unicode-aware so diacritic uppercase letters
-		// (Ç, Ü, É, ...) still match.
+		// (Ç, Ü, É, ...) still match. The leading `\p{Lu}{2,}` requires at
+		// least two uppercase letters so single-letter listicle prefixes
+		// like "A - eerste optie" are not mistaken for a region.
 		$trimmed = trim( $content );
-		$result  = preg_replace( '/^\p{Lu}[\p{Lu}\s\/\-]*\s-\s/u', '', $trimmed );
+		$result  = preg_replace( '/^\p{Lu}{2,}[\p{Lu}\s\/\-]*\s-\s/u', '', $trimmed );
 		return null !== $result ? $result : $trimmed;
 	}
 
