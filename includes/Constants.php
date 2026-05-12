@@ -46,6 +46,14 @@ class Constants {
 	public const string SETTINGS_PAGE_SLUG = 'zw-ttvgpt-settings';
 
 	/**
+	 * Page slug for plugin audit page.
+	 *
+	 * @since 1.0.0
+	 * @var string
+	 */
+	public const string AUDIT_PAGE_SLUG = 'zw-ttvgpt-audit';
+
+	/**
 	 * Capability required to access plugin settings.
 	 *
 	 * @since 1.0.0

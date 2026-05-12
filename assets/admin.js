@@ -153,8 +153,6 @@ function injectGenerateButton() {
     button.addEventListener('click', handleGenerateClick);
 
     cachedAcfField.addEventListener('input', updateWordCounter);
-    cachedAcfField.addEventListener('change', updateWordCounter);
-    cachedAcfField.addEventListener('keyup', updateWordCounter);
 
     updateWordCounter();
 }
