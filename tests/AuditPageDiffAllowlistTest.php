@@ -165,6 +165,18 @@ final class AuditPageDiffAllowlistTest extends TestCase {
 				'<span class="a"><span class="b"><span class="c">deep</span></span></span>',
 				'deep',
 			),
+			// Unbalanced input: outer disallowed has no matching </span>, so
+			// the paired regex strips the outer up to the inner close and
+			// leaves the inner open as an orphan. Must fail closed via
+			// wp_strip_all_tags rather than return the live inner open tag.
+			'unbalanced outer disallowed leaks inner open if not fail-closed' => array(
+				'<span class="evil"><span class="also-evil">x</span>',
+				'x',
+			),
+			'unbalanced disallowed open with no close at all'                  => array(
+				'<span class="evil">trailing text',
+				'trailing text',
+			),
 		);
 	}
 

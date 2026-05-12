@@ -168,7 +168,14 @@ class AuditPage {
 		$kses_out = wp_kses( $diff_html, self::DIFF_ALLOWED_TAGS );
 
 		$class_pattern = implode( '|', array_map( 'preg_quote', self::DIFF_ALLOWED_CLASSES ) );
-		$pattern       = '#<(?i:span)(?![^>]*\b(?i:class)=(["\'])\s*(?:' . $class_pattern . ')\s*\1)[^>]*>(.*?)</(?i:span)>#s';
+		// Shared predicate: an opening <span...> whose class is NOT in the
+		// allowlist. The paired pattern below requires a matching </span>;
+		// the open-only pattern reuses the same predicate to catch orphan
+		// opens that survived the paired pass (e.g. malformed unbalanced
+		// input like `<span class="a"><span class="b">x</span>`).
+		$disallowed_open = '<(?i:span)(?![^>]*\b(?i:class)=(["\'])\s*(?:' . $class_pattern . ')\s*\1)[^>]*>';
+		$paired_pattern  = '#' . $disallowed_open . '(.*?)</(?i:span)>#s';
+		$open_pattern    = '#' . $disallowed_open . '#';
 
 		// Tight upper bound: one iteration per span in the input, plus one
 		// final stability check to confirm no further changes. Counted with
@@ -178,8 +185,14 @@ class AuditPage {
 
 		$current = $kses_out;
 		for ( $i = 0; $i < $max_iterations; $i++ ) {
-			$next = preg_replace( $pattern, '$2', $current );
+			$next = preg_replace( $paired_pattern, '$2', $current );
 			if ( ! is_string( $next ) || $next === $current ) {
+				// Stable, but the paired regex can only strip balanced
+				// disallowed spans. If a disallowed open survived without a
+				// matching close, fail closed rather than echo live markup.
+				if ( 1 === preg_match( $open_pattern, $current ) ) {
+					return wp_strip_all_tags( $current );
+				}
 				return $current;
 			}
 			$current = $next;
