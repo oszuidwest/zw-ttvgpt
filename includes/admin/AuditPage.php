@@ -36,9 +36,24 @@ class AuditPage {
 	private function get_filter_params(): array {
 		// Read-only page - nonce verification not required for display filters.
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended
+		$year  = isset( $_GET['year'] ) ? absint( $_GET['year'] ) : null;
+		$month = isset( $_GET['month'] ) ? absint( $_GET['month'] ) : null;
+
+		// Fallback for native form submit: the date <select> is named "m" and
+		// emits YYYYMM (e.g. "202604"). The audit.js module splits this into
+		// year+month before navigating, but if JS is unavailable (CSP, encode
+		// failure, etc.) the form posts ?m=YYYYMM directly. Parse it server-side.
+		if ( null === $year && null === $month && isset( $_GET['m'] ) ) {
+			$raw = sanitize_text_field( wp_unslash( $_GET['m'] ) );
+			if ( '' !== $raw && '0' !== $raw && preg_match( '/^\d{6}$/', $raw ) ) {
+				$year  = (int) substr( $raw, 0, 4 );
+				$month = (int) substr( $raw, 4, 2 );
+			}
+		}
+
 		return array(
-			'year'          => isset( $_GET['year'] ) ? absint( $_GET['year'] ) : null,
-			'month'         => isset( $_GET['month'] ) ? absint( $_GET['month'] ) : null,
+			'year'          => $year,
+			'month'         => $month,
 			'status_filter' => isset( $_GET['status'] ) ? sanitize_text_field( $_GET['status'] ) : '',
 			'change_filter' => isset( $_GET['change'] ) ? sanitize_text_field( $_GET['change'] ) : '',
 			'paged'         => isset( $_GET['paged'] ) ? max( 1, absint( $_GET['paged'] ) ) : 1,
