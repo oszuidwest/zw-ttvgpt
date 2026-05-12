@@ -171,8 +171,10 @@ class AuditPage {
 		$pattern       = '#<(?i:span)(?![^>]*\b(?i:class)=(["\'])\s*(?:' . $class_pattern . ')\s*\1)[^>]*>(.*?)</(?i:span)>#s';
 
 		// Tight upper bound: one iteration per span in the input, plus one
-		// final stability check to confirm no further changes.
-		$max_iterations = substr_count( $kses_out, '<span' ) + 1;
+		// final stability check to confirm no further changes. Counted with
+		// the same case-insensitive match the regex above uses so the bound
+		// never undershoots on non-normalized input.
+		$max_iterations = (int) preg_match_all( '/<span\b/i', $kses_out ) + 1;
 
 		$current = $kses_out;
 		for ( $i = 0; $i < $max_iterations; $i++ ) {
