@@ -1,10 +1,6 @@
 <?php
 /**
- * Minimal WordPress loader for unit tests that need real wp_kses() and Text_Diff.
- *
- * Pulls in just enough of WordPress core (from roots/wordpress-no-content) to
- * call wp_kses() and run the WP_Text_Diff_Renderer_inline pipeline, without
- * standing up a database, plugins, or themes. Tests opt in via setUpBeforeClass.
+ * Loads only the WordPress pieces needed for wp_kses() and Text_Diff tests.
  */
 
 declare(strict_types=1);

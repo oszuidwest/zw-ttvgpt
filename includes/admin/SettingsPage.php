@@ -18,9 +18,7 @@ use ZW_TTVGPT_Core\Logger;
 use ZW_TTVGPT_Core\SettingsManager;
 
 /**
- * Settings Page class.
- *
- * Handles settings page rendering and form processing.
+ * Registers, renders, and sanitizes plugin settings.
  *
  * @package ZW_TTVGPT
  * @since   1.0.0
@@ -194,7 +192,7 @@ class SettingsPage {
 	}
 
 	/**
-	 * Renders the API section description.
+	 * Settings API callback for the API section.
 	 *
 	 * @since 1.0.0
 	 */
@@ -203,7 +201,7 @@ class SettingsPage {
 	}
 
 	/**
-	 * Renders the summary section description.
+	 * Settings API callback for summary options.
 	 *
 	 * @since 1.0.0
 	 */
@@ -212,7 +210,7 @@ class SettingsPage {
 	}
 
 	/**
-	 * Renders the debug section description.
+	 * Settings API callback for debug options.
 	 *
 	 * @since 1.0.0
 	 */
@@ -339,8 +337,8 @@ class SettingsPage {
 				class="large-text code"><?php echo esc_textarea( $system_prompt ); ?></textarea>
 		<p class="description">
 			<?php
-			/* translators: %d is a placeholder for the word limit value */
-			esc_html_e( 'De instructies voor het AI-model. Gebruik %d als placeholder voor de woordlimiet.', 'zw-ttvgpt' );
+				/* translators: %d is a literal placeholder for the configured word limit. */
+				esc_html_e( 'De instructies voor het AI-model. Gebruik %d als placeholder voor de woordlimiet.', 'zw-ttvgpt' );
 			?>
 			<br>
 			<small style="color: #666;">
@@ -416,7 +414,6 @@ class SettingsPage {
 	public function sanitize_settings( array $input ): array {
 		$sanitized = array();
 
-		// API Key.
 		if ( isset( $input['api_key'] ) ) {
 			$api_key = sanitize_text_field( $input['api_key'] );
 			if ( ! empty( $api_key ) && ! Helper::is_valid_api_key( $api_key ) ) {
@@ -434,7 +431,6 @@ class SettingsPage {
 			$sanitized['api_key'] = $api_key;
 		}
 
-		// Model.
 		if ( isset( $input['model'] ) ) {
 			$model = sanitize_text_field( $input['model'] );
 			if ( empty( $model ) ) {
@@ -463,7 +459,6 @@ class SettingsPage {
 			$sanitized['model'] = $model;
 		}
 
-		// Word limit.
 		if ( isset( $input['word_limit'] ) ) {
 			$original_word_limit = absint( $input['word_limit'] );
 			$word_limit          = $original_word_limit;
@@ -486,7 +481,6 @@ class SettingsPage {
 			$sanitized['word_limit'] = $word_limit;
 		}
 
-		// System prompt.
 		if ( isset( $input['system_prompt'] ) ) {
 			$system_prompt = sanitize_textarea_field( $input['system_prompt'] );
 			if ( empty( $system_prompt ) ) {
@@ -501,7 +495,6 @@ class SettingsPage {
 			$sanitized['system_prompt'] = $system_prompt;
 		}
 
-		// Debug mode.
 		$sanitized['debug_mode'] = ! empty( $input['debug_mode'] );
 
 		// Redact api_key before logging; debug.log can be world-readable depending on host config.

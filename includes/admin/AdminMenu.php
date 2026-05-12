@@ -18,9 +18,7 @@ use ZW_TTVGPT_Core\Logger;
 use ZW_TTVGPT_Core\SettingsManager;
 
 /**
- * Admin Menu class.
- *
- * Handles WordPress admin menu registration and asset loading.
+ * Registers plugin admin pages and admin-only assets.
  *
  * @package ZW_TTVGPT
  * @since   1.0.0
@@ -49,7 +47,7 @@ class AdminMenu {
 	}
 
 	/**
-	 * Adds plugin settings page to WordPress admin menu.
+	 * Registers the settings and audit admin pages.
 	 *
 	 * @since 1.0.0
 	 */
@@ -148,13 +146,9 @@ class AdminMenu {
 	}
 
 	/**
-	 * Schedules an inline window.<global_name> = <json>; tag at footer priority 5.
+	 * Schedules window config before module execution.
 	 *
-	 * Encodes upfront so a wp_json_encode failure logs and aborts instead of
-	 * emitting `window.X = ;` — a SyntaxError that silently breaks the matching
-	 * ES module on the page. Returns a boolean so the caller can skip the
-	 * matching wp_enqueue_script_module() and avoid loading a module against
-	 * config that was never printed.
+	 * Pre-encodes JSON so callers can skip the module when config cannot be printed.
 	 *
 	 * @since 1.0.0
 	 *

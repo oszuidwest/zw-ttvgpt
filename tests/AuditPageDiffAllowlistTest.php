@@ -19,9 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class AuditPageDiffAllowlistTest extends TestCase {
 
 	/**
-	 * The allowlist the constant lock-in test pins. Kept here, not derived from
-	 * AuditPage::DIFF_ALLOWED_TAGS, so widening the constant on the production
-	 * side fails this test instead of silently propagating into the assertions.
+	 * Expected DIFF_ALLOWED_TAGS value, independent from production.
 	 *
 	 * @var array<string, array<string, bool>>
 	 */

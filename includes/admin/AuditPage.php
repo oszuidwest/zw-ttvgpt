@@ -16,9 +16,7 @@ use ZW_TTVGPT_Core\AuditHelper;
 use ZW_TTVGPT_Core\AuditStatus;
 
 /**
- * Audit Page class.
- *
- * Handles audit page rendering and analysis.
+ * Renders the audit tools page and diff review UI.
  *
  * @package ZW_TTVGPT
  * @since   1.0.0
@@ -39,10 +37,7 @@ class AuditPage {
 		$year  = isset( $_GET['year'] ) ? absint( $_GET['year'] ) : null;
 		$month = isset( $_GET['month'] ) ? absint( $_GET['month'] ) : null;
 
-		// Fallback for native form submit: the date <select> is named "m" and
-		// emits YYYYMM (e.g. "202604"). The audit.js module splits this into
-		// year+month before navigating, but if JS is unavailable (CSP, encode
-		// failure, etc.) the form posts ?m=YYYYMM directly. Parse it server-side.
+		// Fallback for native form submits when audit.js cannot split m=YYYYMM into year/month.
 		if ( null === $year && null === $month && isset( $_GET['m'] ) ) {
 			$raw = sanitize_text_field( wp_unslash( $_GET['m'] ) );
 			if ( '' !== $raw && '0' !== $raw && preg_match( '/^\d{6}$/', $raw ) ) {
@@ -75,10 +70,7 @@ class AuditPage {
 	private const int POSTS_PER_PAGE = 50;
 
 	/**
-	 * Allowed HTML for rendered diff markup. Currently emits via
-	 * AuditHelper::generate_word_diff, which only produces span.zw-diff-added
-	 * and span.zw-diff-removed — widen this allowlist only if that helper
-	 * starts emitting new tags, and update DIFF_ALLOWED_CLASSES in lockstep.
+	 * Allowed tags for diff output; keep in sync with generate_word_diff() and DIFF_ALLOWED_CLASSES.
 	 *
 	 * @since 1.0.0
 	 * @var array<string, array<string, bool>>
@@ -123,9 +115,7 @@ class AuditPage {
 	}
 
 	/**
-	 * Class values that survive the diff sanitizer. Anything else is stripped
-	 * to inert text. Mirrors the two class names AuditHelper::generate_word_diff
-	 * emits via str_replace, so widening either end requires touching both.
+	 * Allowed diff class values emitted by AuditHelper::generate_word_diff().
 	 *
 	 * @since 1.0.0
 	 * @var array<int, string>
@@ -133,7 +123,7 @@ class AuditPage {
 	private const array DIFF_ALLOWED_CLASSES = array( 'zw-diff-added', 'zw-diff-removed' );
 
 	/**
-	 * Reports sanitizer fail-closed paths without logging diff content.
+	 * Fires zw_ttvgpt_diff_sanitizer_failed without logging diff content.
 	 *
 	 * @since 1.0.0
 	 *
@@ -233,7 +223,7 @@ class AuditPage {
 	}
 
 	/**
-	 * Renders the audit analysis page.
+	 * Audit page callback for the Tools submenu.
 	 *
 	 * @since 1.0.0
 	 */
@@ -263,8 +253,6 @@ class AuditPage {
 			}
 		}
 
-		// Clean implementation - no benchmarking needed.
-
 		$posts  = AuditHelper::get_posts( $year, $month );
 		$counts = array(
 			AuditStatus::FullyHumanWritten->value  => 0,
@@ -282,10 +270,8 @@ class AuditPage {
 			$status   = $analysis['status'];
 			++$counts[ $status->value ];
 
-			// Apply status filter if set.
 			$status_match = empty( $status_filter ) || $status->value === $status_filter;
 
-			// Apply change filter if set (using match expression).
 			$change_match = match ( true ) {
 				empty( $change_filter )                       => true,
 				AuditStatus::AiWrittenEdited !== $status      => false,
@@ -304,7 +290,6 @@ class AuditPage {
 
 		$available_months = AuditHelper::get_months();
 
-		// Slice filtered results for the requested page.
 		$pagination     = self::paginate( $categorized_posts, $paged, self::POSTS_PER_PAGE );
 		$page_slice     = $pagination['slice'];
 		$paged          = $pagination['paged'];
@@ -723,7 +708,6 @@ class AuditPage {
 			</tfoot>
 		</table>
 		
-		<!-- ThickBox Inline Modals for Diff Display -->
 		<?php foreach ( $categorized_posts as $item ) : ?>
 			<?php if ( AuditStatus::AiWrittenEdited === $item['status'] ) : ?>
 				<?php

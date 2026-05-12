@@ -48,7 +48,6 @@ class SummaryGenerator {
 	 * @return never
 	 */
 	public function handle_ajax_request(): never {
-		// Nonce is verified in validate_ajax_request() method.
 		$this->validate_ajax_request( 'zw_ttvgpt_nonce', Constants::EDIT_CAPABILITY );
 
 		if ( empty( SettingsManager::get_api_key() ) ) {
@@ -186,7 +185,7 @@ class SummaryGenerator {
 			}
 		}
 
-		// All attempts exhausted - return last attempt for user to manually adjust.
+		// Return the last attempt so the user can adjust it manually.
 		$this->logger->debug(
 			sprintf( 'Summary retry limit reached (%d attempts), returning last attempt', Constants::MAX_RETRY_ATTEMPTS )
 		);

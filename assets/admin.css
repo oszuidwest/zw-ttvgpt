@@ -1,7 +1,3 @@
-/**
- * ZW TTVGPT Admin Styles
- */
-
 /* Status messages */
 .zw-ttvgpt-status {
     padding: 10px;
@@ -87,7 +83,7 @@
     color: #fff;
 }
 
-/* Add shimmer effect to button while generating */
+/* Button shimmer */
 .button.zw-ttvgpt-generating::after {
     position: absolute;
     top: -50%;

@@ -43,12 +43,10 @@ final class AuditHelperRegionPrefixTest extends TestCase {
 			'whitespace-only collapses'      => array( "   \t  ", '' ),
 			// trim() removes the trailing space, so the separator no longer matches.
 			'region without trailing body'   => array( 'LEIDEN - ', 'LEIDEN -' ),
-			// One-letter list markers are not region prefixes.
-			'single-letter prefix preserved' => array( 'A - eerste optie', 'A - eerste optie' ),
-			// Two uppercase letters still count as a region prefix.
-			'two-letter prefix still strips' => array( 'EU - mededeling.', 'mededeling.' ),
-			// Regex requires ASCII hyphen; typographic dashes are not treated as separators.
-			'en-dash is not a separator'     => array( 'LEIDEN – Bericht.', 'LEIDEN – Bericht.' ),
+				'single-letter prefix preserved' => array( 'A - eerste optie', 'A - eerste optie' ),
+				'two-letter prefix still strips' => array( 'EU - mededeling.', 'mededeling.' ),
+				// Only ASCII hyphen is a separator.
+				'en-dash is not a separator'     => array( 'LEIDEN – Bericht.', 'LEIDEN – Bericht.' ),
 			'em-dash is not a separator'     => array( 'LEIDEN — Bericht.', 'LEIDEN — Bericht.' ),
 		);
 	}
@@ -74,7 +72,7 @@ final class AuditHelperRegionPrefixTest extends TestCase {
 	}
 
 	public function test_calculate_change_percentage_half_changed(): void {
-		// AI=4 words, human=4 words, shared=2 ('the', 'cat'). Similarity = 2/4 = 0.5 → 50% change.
+		// Four words per side; two shared words means 50% change.
 		self::assertSame(
 			50.0,
 			AuditHelper::calculate_change_percentage( 'the cat sat down', 'the cat ran away' )

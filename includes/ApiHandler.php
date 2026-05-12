@@ -90,8 +90,7 @@ class ApiHandler {
 	 * @return string Cleaned content ready for API.
 	 */
 	public function prepare_content( string $content ): string {
-		// Remove script and style elements WITH their content.
-		// wp_strip_all_tags() only removes tags, not the content inside.
+		// Remove script-like elements including their content; wp_strip_all_tags() only removes tags.
 		$content = preg_replace( '/<script\b[^>]*>.*?<\/script>/is', '', $content ) ?? $content;
 		$content = preg_replace( '/<style\b[^>]*>.*?<\/style>/is', '', $content ) ?? $content;
 		$content = preg_replace( '/<noscript\b[^>]*>.*?<\/noscript>/is', '', $content ) ?? $content;
@@ -100,10 +99,8 @@ class ApiHandler {
 		$content = preg_replace( '/<\/(p|div|h[1-6]|li|tr|blockquote)>/i', "\n", $content ) ?? $content;
 		$content = preg_replace( '/<br\s*\/?>/i', "\n", $content ) ?? $content;
 
-		// Strip remaining tags.
 		$text = wp_strip_all_tags( $content );
 
-		// Decode HTML entities.
 		$text = html_entity_decode( $text, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
 
 		// Normalize whitespace.
@@ -184,8 +181,7 @@ class ApiHandler {
 	 * @phpstan-return array<string, mixed>
 	 */
 	private function build_responses_request( string $content, int $word_limit ): array {
-		// Using 'low' reasoning effort for quality summaries while maintaining speed.
-		// Using 'medium' verbosity for balanced response length.
+		// Tune Responses API output for fast, moderately detailed summaries.
 		return array(
 			'model'             => $this->model,
 			'input'             => $this->build_messages( $content, $word_limit ),
@@ -367,7 +363,6 @@ class ApiHandler {
 			);
 		}
 
-		// Build request based on API type.
 		if ( $is_gpt5 ) {
 			$request_data = $this->build_responses_request( $content, $word_limit );
 		} else {
@@ -428,7 +423,6 @@ class ApiHandler {
 			);
 		}
 
-		// Extract summary based on API type.
 		if ( $is_gpt5 ) {
 			$summary = $this->extract_responses_summary( $data );
 		} else {

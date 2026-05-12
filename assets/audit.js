@@ -1,12 +1,4 @@
-/**
- * ZW TTVGPT Audit page JavaScript (ES Module).
- *
- * Submits the filter form via plain navigation when any of the dropdowns
- * change, preserving WordPress' tablenav conventions without depending on
- * jQuery. Configuration arrives via window.zwTTVGPTAudit.
- *
- * @package ZW_TTVGPT
- */
+/** Submit audit filters via navigation to preserve WP tablenav behavior. */
 
 const config = window.zwTTVGPTAudit;
 if (!config) {

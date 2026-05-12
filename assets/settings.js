@@ -1,11 +1,4 @@
-/**
- * ZW TTVGPT Settings page JavaScript (ES Module).
- *
- * Toggles the legacy fine-tuned model input when the matching select option
- * is chosen. Configuration arrives via window.zwTTVGPTSettings.
- *
- * @package ZW_TTVGPT
- */
+/** Toggle the legacy fine-tuned model field. */
 
 const config = window.zwTTVGPTSettings;
 if (!config) {

@@ -29,7 +29,6 @@ unset( $zw_ttvgpt_plugin_data );
 define( 'ZW_TTVGPT_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ZW_TTVGPT_URL', plugin_dir_url( __FILE__ ) );
 
-// Load Composer autoloader.
 require_once ZW_TTVGPT_DIR . 'vendor/autoload.php';
 
 use ZW_TTVGPT_Core\ApiHandler;
@@ -67,12 +66,9 @@ function zw_ttvgpt_init(): void {
 add_action( 'init', 'zw_ttvgpt_init' );
 
 /**
- * Surfaces a persistent admin notice when ACF is not active.
+ * Shows an admin notice when ACF is missing.
  *
- * Without ACF the AJAX handler short-circuits with an `acf_unavailable` error
- * (see SummaryGenerator::handle_ajax_request). This notice surfaces the same
- * condition up front so admins can fix the dependency before users try to
- * generate summaries, instead of finding out via a failed AJAX response.
+ * This surfaces the dependency before AJAX generation fails with `acf_unavailable`.
  *
  * @since 1.0.0
  */
@@ -95,7 +91,7 @@ function zw_ttvgpt_acf_dependency_notice(): void {
 add_action( 'admin_notices', 'zw_ttvgpt_acf_dependency_notice' );
 
 /**
- * Validates environment and initializes plugin settings on activation.
+ * Initializes plugin settings on activation.
  *
  * @since 1.0.0
  */

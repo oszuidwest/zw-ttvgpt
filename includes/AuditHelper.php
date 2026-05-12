@@ -144,7 +144,7 @@ class AuditHelper {
 	public static function get_most_recent_month(): ?array {
 		global $wpdb;
 
-		// Turbo-optimized: Target only recent posts for faster scanning.
+		// Limit the scan to recent posts for audit performance.
 		$result = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT p.post_date
@@ -181,7 +181,6 @@ class AuditHelper {
 			return null;
 		}
 
-		// Extract year and month from date string.
 		$year  = (int) substr( $result, 0, 4 );
 		$month = (int) substr( $result, 5, 2 );
 
@@ -235,7 +234,6 @@ class AuditHelper {
 			)
 		);
 
-		// Convert database results to array format.
 		$unique_months = array();
 		foreach ( $results as $row ) {
 			$unique_months[] = array(
@@ -353,11 +351,9 @@ class AuditHelper {
 		$ai_content    = (string) get_post_meta( $post->ID, Constants::ACF_FIELD_AI_CONTENT, true );
 		$human_content = (string) get_post_meta( $post->ID, Constants::ACF_FIELD_HUMAN_CONTENT, true );
 
-		// Clean content for accurate comparison.
 		$ai_clean    = self::strip_region_prefix( $ai_content );
 		$human_clean = self::strip_region_prefix( $human_content );
 
-		// Determine status based on content analysis using enum.
 		$status = match ( true ) {
 			empty( $ai_content ) || '' === trim( $ai_content ) => AuditStatus::FullyHumanWritten,
 			$ai_clean === $human_clean                         => AuditStatus::AiWrittenNotEdited,
@@ -408,7 +404,6 @@ class AuditHelper {
 		$old_lines      = self::split_for_word_diff( $old_clean, 'split original diff text' );
 		$modified_lines = self::split_for_word_diff( $modified_clean, 'split modified diff text' );
 
-		// Create the diff.
 		$text_diff = new \Text_Diff( 'auto', array( $old_lines, $modified_lines ) );
 		$renderer  = new \WP_Text_Diff_Renderer_inline();
 		$diff_html = $renderer->render( $text_diff );
@@ -457,7 +452,6 @@ class AuditHelper {
 			return 100.0;
 		}
 
-		// Split into words for comparison.
 		$ai_words_result    = preg_split( '/\s+/', trim( $ai_content ) );
 		$human_words_result = preg_split( '/\s+/', trim( $human_content ) );
 
@@ -474,11 +468,9 @@ class AuditHelper {
 		// Calculate similarity using simple word matching.
 		$max_words = max( $ai_word_count, $human_word_count );
 
-		// Find words that appear in both versions.
 		$common_words   = array_intersect( $ai_words, $human_words );
 		$matching_words = count( $common_words );
 
-		// Calculate change percentage.
 		$similarity_ratio  = $matching_words / $max_words;
 		$change_percentage = ( 1 - $similarity_ratio ) * 100;
 

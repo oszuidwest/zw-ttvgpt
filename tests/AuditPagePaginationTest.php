@@ -12,7 +12,7 @@ use ZW_TTVGPT_Core\Admin\AuditPage;
 final class AuditPagePaginationTest extends TestCase {
 
 	/**
-	 * @param array<int, int>                                                                $items
+	 * @param array<int, int> $items
 	 * @param array{slice: array<int, int>, paged: int, total_pages: int, total: int} $expected
 	 */
 	#[DataProvider('paginationProvider')]

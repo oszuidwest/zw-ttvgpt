@@ -1,11 +1,4 @@
-/**
- * ZW TTVGPT Admin JavaScript (ES Module)
- *
- * Manages summary generation interface with typing animations and loading states.
- * Uses native ES modules (WordPress 6.5+) with wp_enqueue_script_module.
- *
- * @package ZW_TTVGPT
- */
+/** Admin editor summary generation UI. */
 
 const SELECTORS = {
     contentEditor: '.wp-editor-area',
@@ -51,24 +44,11 @@ function shuffle(array) {
     return result;
 }
 
-/**
- * Query selector helper
- *
- * @param {string}           selector CSS selector.
- * @param {Element|Document} context  Context element.
- * @return {Element|null} Found element or null.
- */
+// DOM query helpers.
 function $(selector, context = document) {
     return context.querySelector(selector);
 }
 
-/**
- * Query selector all helper
- *
- * @param {string}           selector CSS selector.
- * @param {Element|Document} context  Context element.
- * @return {NodeList} Found elements.
- */
 function $$(selector, context = document) {
     return context.querySelectorAll(selector);
 }
@@ -150,7 +130,6 @@ function injectGenerateButton() {
         return;
     }
 
-    // Create container for button and word counter
     const container = document.createElement('div');
     container.className = 'zw-ttvgpt-controls';
     container.style.cssText =
@@ -163,7 +142,6 @@ function injectGenerateButton() {
     button.dataset.postId = postIdField ? postIdField.value : '';
     button.textContent = window.zwTTVGPT.strings.buttonText;
 
-    // Create word counter element
     cachedWordCounter = document.createElement('span');
     cachedWordCounter.className = 'zw-ttvgpt-word-counter';
     cachedWordCounter.setAttribute('aria-live', 'polite');
@@ -174,12 +152,10 @@ function injectGenerateButton() {
 
     button.addEventListener('click', handleGenerateClick);
 
-    // Bind input events for real-time word count updates
     cachedAcfField.addEventListener('input', updateWordCounter);
     cachedAcfField.addEventListener('change', updateWordCounter);
     cachedAcfField.addEventListener('keyup', updateWordCounter);
 
-    // Initial word count update
     updateWordCounter();
 }
 
@@ -210,7 +186,6 @@ async function handleGenerateClick(e) {
 
     const regions = getSelectedRegions();
 
-    // Debug: log content being sent to API
     if (window.zwTTVGPT.debugMode) {
         console.log('ZW TTVGPT Debug - Content wordt verstuurd naar API:');
         console.log('Post ID:', postId);
@@ -246,12 +221,11 @@ async function handleGenerateClick(e) {
             throw new Error(`Server error: ${response.status}`);
         }
 
-        // Check for HTTP errors, but use server message if available
+        // Let server-provided error messages pass through.
         if (!response.ok && !data?.data?.message) {
             throw new Error(`Server error: ${response.status}`);
         }
 
-        // Debug: log API response
         if (window.zwTTVGPT.debugMode) {
             console.log('ZW TTVGPT Debug - API Response:', data);
         }
@@ -265,7 +239,6 @@ async function handleGenerateClick(e) {
                 data.data?.message || window.zwTTVGPT.strings.error;
             showStatus('error', errorMessage);
 
-            // Log error code for debugging.
             if (window.zwTTVGPT.debugMode && data.data?.code) {
                 console.error('ZW TTVGPT Error Code:', data.data.code);
             }
@@ -292,11 +265,9 @@ async function handleGenerateClick(e) {
  * @return {string} Plain text content.
  */
 function getBlockText(block) {
-    // Get inner HTML from block and strip tags using WordPress built-in
     const html = window.wp.blocks.getBlockContent(block);
     const text = window.wp.sanitize.stripTags(html);
 
-    // Process inner blocks recursively
     if (block.innerBlocks && block.innerBlocks.length > 0) {
         const innerText = block.innerBlocks
             .map(getBlockText)
@@ -316,7 +287,6 @@ function getBlockText(block) {
 function getEditorContent() {
     let content = '';
 
-    // Try Block Editor (Gutenberg) first
     if (
         typeof window.wp !== 'undefined' &&
         window.wp.data &&
@@ -326,7 +296,6 @@ function getEditorContent() {
         const blocks = editor.getBlocks();
 
         if (blocks && blocks.length > 0) {
-            // Extract text from each block
             const textParts = blocks.map(getBlockText).filter(Boolean);
             content = textParts.join('\n\n');
 
@@ -336,7 +305,6 @@ function getEditorContent() {
         }
     }
 
-    // Try TinyMCE (Classic Editor) - already returns plain text
     if (
         typeof window.tinyMCE !== 'undefined' &&
         window.tinyMCE.activeEditor &&
@@ -349,7 +317,6 @@ function getEditorContent() {
         }
     }
 
-    // Fallback to textarea - strip HTML for safety
     const textarea = $(SELECTORS.contentEditor);
     if (textarea) {
         content = textarea.value;
@@ -372,47 +339,30 @@ function cleanupWhitespace(text) {
         return '';
     }
 
+    // Normalize paragraph breaks and inline whitespace.
     return text
-        .replace(/\n{3,}/g, '\n\n') // Max 2 consecutive newlines
-        .replace(/[ \t]+/g, ' ') // Multiple spaces/tabs to single space
-        .trim(); // Remove leading/trailing whitespace
+        .replace(/\n{3,}/g, '\n\n')
+        .replace(/[ \t]+/g, ' ')
+        .trim();
 }
 
-/**
- * Check if checkbox is from Block Editor.
- *
- * @param {Element} checkbox Checkbox element.
- * @return {boolean} True if Block Editor checkbox.
- */
+// Editor checkbox label helpers.
 function isBlockEditorCheckbox(checkbox) {
     const id = checkbox.id;
     return id?.startsWith('inspector-checkbox-control') ?? false;
 }
 
-/**
- * Get label text for Block Editor checkbox.
- *
- * @param {Element} checkbox Checkbox element.
- * @return {string} Label text.
- */
 function getBlockEditorLabel(checkbox) {
     const label = $(`label[for="${checkbox.id}"]`);
     return label ? label.textContent.trim() : '';
 }
 
-/**
- * Get label text for Classic Editor checkbox.
- *
- * @param {Element} checkbox Checkbox element.
- * @return {string} Label text.
- */
 function getClassicEditorLabel(checkbox) {
     const parent = checkbox.parentElement;
     if (!parent) {
         return '';
     }
 
-    // Get text nodes only
     let text = '';
     for (const node of parent.childNodes) {
         if (node.nodeType === Node.TEXT_NODE) {
@@ -429,7 +379,6 @@ function getClassicEditorLabel(checkbox) {
  * @return {Array<string>} Array of selected region names.
  */
 function getSelectedRegions() {
-    // Try Block Editor first, fallback to Classic Editor
     let checkboxes = $$(
         '.editor-post-taxonomies__hierarchical-terms-list input[type="checkbox"]:checked',
     );
@@ -477,7 +426,6 @@ function startThinkingAnimation(element, text = '') {
     const interval = setInterval(() => {
         const char = THINKING_CHARS[index % THINKING_CHARS.length];
         if (isButton) {
-            // Use textContent for security (no HTML injection)
             element.textContent = char + (text ? ` ${text}` : '');
         } else {
             element.value = char;
@@ -498,8 +446,7 @@ function handleSuccess(data, button) {
     const state = elementState.get(cachedAcfField) || {};
     const messageCount = state.messageCount || 0;
 
-    // Calculate wait time based on how many loading messages have been shown.
-    // We want at least 2 messages displayed before showing the result.
+    // Wait until at least two loading messages have shown.
     let waitTime;
     if (messageCount === 0) {
         waitTime = MESSAGE_TIMING.waitForBothMessages;
@@ -528,14 +475,12 @@ function handleSuccess(data, button) {
 function animateText(element, text, button, warning = null) {
     let index = 0;
 
-    // Clear any loading messages interval
     const state = elementState.get(element);
     if (state?.messageInterval) {
         clearInterval(state.messageInterval);
         elementState.delete(element);
     }
 
-    // Small delay to prevent collision with loading messages
     setTimeout(() => {
         element.value = '';
         element.disabled = true;
@@ -544,17 +489,14 @@ function animateText(element, text, button, warning = null) {
 
     function typeCharacter() {
         if (index < text.length) {
-            // Type multiple characters at once - faster
             const charsToType = Math.floor(Math.random() * 6) + 2; // 2-7 chars
             const newText = text.slice(index, index + charsToType);
             index += newText.length;
 
             element.value += newText;
 
-            // Scroll to bottom if needed
             element.scrollTop = element.scrollHeight;
 
-            // Simplified delay calculation
             const lastChar = text.charAt(index - 1);
             let delayConfig = TYPING_DELAYS.default;
 
@@ -569,18 +511,14 @@ function animateText(element, text, button, warning = null) {
             const delay = delayConfig[0] + Math.random() * delayConfig[1];
             setTimeout(typeCharacter, delay);
         } else {
-            // Re-enable field immediately when done
             element.disabled = false;
 
-            // Update word counter with final text
             updateWordCounter();
 
-            // Show warning if validation failed
             if (warning) {
                 showStatus('warning', warning);
             }
 
-            // Ensure button is re-enabled when typing completes
             if (button && button.dataset.isGenerating === 'true') {
                 setLoadingState(button, false);
                 button.dataset.isGenerating = 'false';
@@ -600,14 +538,12 @@ function setLoadingState(button, isLoading) {
         button.disabled = true;
         button.classList.add('zw-ttvgpt-generating');
 
-        // Start thinking animation
         const interval = startThinkingAnimation(
             button,
             window.zwTTVGPT.strings.generating,
         );
         elementState.set(button, { thinkingInterval: interval });
     } else {
-        // Clear thinking animation
         const state = elementState.get(button);
         if (state?.thinkingInterval) {
             clearInterval(state.thinkingInterval);
@@ -627,12 +563,10 @@ function setLoadingState(button, isLoading) {
  * @param {string} message Message text to display.
  */
 function showStatus(type, message) {
-    // Create a temporary notice above the ACF field
     if (!cachedAcfField) {
         return;
     }
 
-    // Remove any existing status
     const existingStatus = $('.zw-ttvgpt-status');
     if (existingStatus) {
         existingStatus.remove();
@@ -648,14 +582,13 @@ function showStatus(type, message) {
     status.className = `notice ${cssClass} zw-ttvgpt-status`;
     status.style.margin = '10px 0';
 
-    // Create paragraph element safely without innerHTML
+    // Avoid innerHTML for untrusted messages.
     const paragraph = document.createElement('p');
     paragraph.textContent = message;
     status.appendChild(paragraph);
 
     cachedAcfField.parentElement.insertBefore(status, cachedAcfField);
 
-    // Auto-hide success and warning messages
     if (type === 'success' || type === 'warning') {
         const timeouts = {
             warning: 8000,
@@ -701,22 +634,18 @@ function showLoadingMessages() {
         return;
     }
 
-    // Create a shuffled copy of messages
     let messages = shuffle(window.zwTTVGPT.strings.loadingMessages);
     let messageIndex = 0;
     let messageCount = 0;
     let activeTransition = null;
 
-    // Clear the field and disable it
     cachedAcfField.disabled = true;
     cachedAcfField.placeholder = '';
 
-    // Show first message immediately
     cachedAcfField.value = messages[messageIndex];
     messageIndex++;
     messageCount++;
 
-    // Update state helper
     function updateState() {
         elementState.set(cachedAcfField, {
             messageInterval,
@@ -725,24 +654,19 @@ function showLoadingMessages() {
         });
     }
 
-    // Function to show next message
     function showNextMessage() {
         if (messageIndex >= messages.length) {
-            // Reshuffle when we've shown all messages
             messages = shuffle(messages);
             messageIndex = 0;
         }
 
-        // Get next message
         const nextMessage = messages[messageIndex];
         let charIndex = 0;
 
-        // Clear any existing transition
         if (activeTransition) {
             clearInterval(activeTransition);
         }
 
-        // Gradually replace current text with next message
         activeTransition = setInterval(() => {
             if (charIndex <= nextMessage.length) {
                 cachedAcfField.value = nextMessage.substring(0, charIndex);
@@ -759,18 +683,14 @@ function showLoadingMessages() {
         updateState();
     }
 
-    // Show second message quickly, then normal speed for rest
     setTimeout(showNextMessage, MESSAGE_TIMING.firstMessageDelay);
 
-    // Then cycle through remaining messages at normal speed
     const messageInterval = setInterval(
         showNextMessage,
         MESSAGE_TIMING.messageInterval,
     );
 
-    // Store initial state
     updateState();
 }
 
-// Initialize when ready
 init();
