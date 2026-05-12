@@ -22,6 +22,117 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class AuditHelper {
 	/**
+	 * Diff class used for content added by a human edit.
+	 *
+	 * @since 1.0.0
+	 * @var string
+	 */
+	private const string DIFF_CLASS_ADDED = 'zw-diff-added';
+
+	/**
+	 * Diff class used for content removed from the AI version.
+	 *
+	 * @since 1.0.0
+	 * @var string
+	 */
+	private const string DIFF_CLASS_REMOVED = 'zw-diff-removed';
+
+	/**
+	 * Reports a PCRE failure from static audit helpers.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $operation Operation that failed.
+	 */
+	private static function report_regex_failure( string $operation ): void {
+		$error_code    = preg_last_error();
+		$error_message = preg_last_error_msg();
+
+		if ( function_exists( 'do_action' ) ) {
+			do_action( 'zw_ttvgpt_audit_regex_failed', $operation, $error_code, $error_message );
+		}
+
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Static helper has no injected Logger, and regex failures need production visibility.
+		error_log( sprintf( '[ZW_TTVGPT] Audit regex failed during %s: %s', $operation, $error_message ) );
+	}
+
+	/**
+	 * Splits content for the WordPress diff renderer.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $content   Content to split.
+	 * @param string $operation Operation label for telemetry.
+	 * @return array<int, string> Split content chunks.
+	 */
+	private static function split_for_word_diff( string $content, string $operation ): array {
+		$parts = preg_split( '/([.!?]\s+)/', $content, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY );
+		if ( false === $parts ) {
+			self::report_regex_failure( $operation );
+			return '' === $content ? array() : array( $content );
+		}
+
+		return $parts;
+	}
+
+	/**
+	 * Removes a diff class from the combined diff HTML.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $diff_html Combined diff HTML.
+	 * @param string $class_name Diff class to remove.
+	 * @param string $operation Operation label for telemetry.
+	 * @return string|null Filtered HTML, or null when PCRE failed.
+	 */
+	private static function remove_diff_class( string $diff_html, string $class_name, string $operation ): ?string {
+		$pattern = '/<span class="' . preg_quote( $class_name, '/' ) . '">.*?<\/span>/s';
+		$result  = preg_replace( $pattern, '', $diff_html );
+
+		if ( null === $result ) {
+			self::report_regex_failure( $operation );
+			return null;
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Normalizes whitespace in generated diff HTML.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $diff_html  Diff HTML to normalize.
+	 * @param string $operation  Operation label for telemetry.
+	 * @return string Normalized HTML, or the original string if normalization fails.
+	 */
+	private static function normalize_diff_whitespace( string $diff_html, string $operation ): string {
+		$normalized = preg_replace( '/\s+/', ' ', $diff_html );
+		if ( null === $normalized ) {
+			self::report_regex_failure( $operation );
+			return $diff_html;
+		}
+
+		return $normalized;
+	}
+
+	/**
+	 * Builds a safe plain-text fallback diff when highlighting cannot be trusted.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $old_clean      Original content after prefix stripping.
+	 * @param string $modified_clean Modified content after prefix stripping.
+	 * @return array{before: string, after: string} Safe before/after panes.
+	 */
+	private static function plain_diff_result( string $old_clean, string $modified_clean ): array {
+		return array(
+			'before' => trim( htmlspecialchars( $old_clean, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8' ) ),
+			'after'  => trim( htmlspecialchars( $modified_clean, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8' ) ),
+		);
+	}
+
+	/**
 	 * Retrieves the most recent month that has relevant posts for audit analysis.
 	 *
 	 * @since 1.0.0
@@ -221,7 +332,12 @@ class AuditHelper {
 		// like "A - eerste optie" are not mistaken for a region.
 		$trimmed = trim( $content );
 		$result  = preg_replace( '/^\p{Lu}{2,}[\p{Lu}\s\/\-]*\s-\s/u', '', $trimmed );
-		return null !== $result ? $result : $trimmed;
+		if ( null === $result ) {
+			self::report_regex_failure( 'strip region prefix' );
+			return $trimmed;
+		}
+
+		return $result;
 	}
 
 	/**
@@ -293,8 +409,8 @@ class AuditHelper {
 		}
 
 		// Split into lines for WordPress diff (works better with sentences).
-		$old_lines      = preg_split( '/([.!?]\s+)/', $old_clean, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY );
-		$modified_lines = preg_split( '/([.!?]\s+)/', $modified_clean, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY );
+		$old_lines      = self::split_for_word_diff( $old_clean, 'split original diff text' );
+		$modified_lines = self::split_for_word_diff( $modified_clean, 'split modified diff text' );
 
 		// Create the diff.
 		$text_diff = new \Text_Diff( 'auto', array( $old_lines, $modified_lines ) );
@@ -305,29 +421,25 @@ class AuditHelper {
 		$diff_html = str_replace(
 			array( '<ins>', '</ins>', '<del>', '</del>' ),
 			array(
-				'<span class="zw-diff-added">',
+				'<span class="' . self::DIFF_CLASS_ADDED . '">',
 				'</span>',
-				'<span class="zw-diff-removed">',
+				'<span class="' . self::DIFF_CLASS_REMOVED . '">',
 				'</span>',
 			),
 			$diff_html
 		);
 
 		// Split the diff into before/after by removing the opposite tags.
-		$before = preg_replace( '/<span class="zw-diff-added">.*?<\/span>/s', '', $diff_html );
-		$after  = preg_replace( '/<span class="zw-diff-removed">.*?<\/span>/s', '', $diff_html );
+		$before = self::remove_diff_class( $diff_html, self::DIFF_CLASS_ADDED, 'remove added diff span for before pane' );
+		$after  = self::remove_diff_class( $diff_html, self::DIFF_CLASS_REMOVED, 'remove removed diff span for after pane' );
 
-		// Clean up any double spaces - handle potential null from preg_replace.
-		$before = is_string( $before ) ? preg_replace( '/\s+/', ' ', $before ) : $diff_html;
-		$after  = is_string( $after ) ? preg_replace( '/\s+/', ' ', $after ) : $diff_html;
-
-		// Ensure before and after are strings before trimming.
-		$before = is_string( $before ) ? $before : '';
-		$after  = is_string( $after ) ? $after : '';
+		if ( null === $before || null === $after ) {
+			return self::plain_diff_result( $old_clean, $modified_clean );
+		}
 
 		return array(
-			'before' => trim( $before ),
-			'after'  => trim( $after ),
+			'before' => trim( self::normalize_diff_whitespace( $before, 'normalize before diff whitespace' ) ),
+			'after'  => trim( self::normalize_diff_whitespace( $after, 'normalize after diff whitespace' ) ),
 		);
 	}
 

@@ -420,11 +420,16 @@ class SettingsPage {
 		if ( isset( $input['api_key'] ) ) {
 			$api_key = sanitize_text_field( $input['api_key'] );
 			if ( ! empty( $api_key ) && ! Helper::is_valid_api_key( $api_key ) ) {
+				$this->logger->error(
+					'Invalid OpenAI API key submitted in settings',
+					array( 'user_id' => get_current_user_id() )
+				);
 				add_settings_error(
 					Constants::SETTINGS_OPTION_NAME,
 					'invalid_api_key',
-					__( 'API-sleutel moet beginnen met "sk-"', 'zw-ttvgpt' )
+					__( 'API-sleutel moet beginnen met "sk-". De ongeldige waarde is niet opgeslagen.', 'zw-ttvgpt' )
 				);
+				$api_key = '';
 			}
 			$sanitized['api_key'] = $api_key;
 		}

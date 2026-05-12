@@ -219,4 +219,75 @@ final class AuditPageDiffAllowlistTest extends TestCase {
 		self::assertOnlyDiffSpansAsLiveHtml( $sanitized_before, 'BEFORE pane' );
 		self::assertOnlyDiffSpansAsLiveHtml( $sanitized_after, 'AFTER pane' );
 	}
+
+	public function test_sanitize_diff_panel_reports_orphan_disallowed_open_fail_closed(): void {
+		$events = array();
+
+		add_action(
+			'zw_ttvgpt_diff_sanitizer_failed',
+			static function ( string $reason, string $error_message ) use ( &$events ): void {
+				$events[] = array(
+					'reason'  => $reason,
+					'message' => $error_message,
+				);
+			},
+			10,
+			2
+		);
+
+		try {
+			self::assertSame( 'trailing text', AuditPage::sanitize_diff_panel( '<span class="evil">trailing text' ) );
+		} finally {
+			remove_all_actions( 'zw_ttvgpt_diff_sanitizer_failed' );
+		}
+
+		self::assertSame(
+			array(
+				array(
+					'reason'  => 'orphan_disallowed_span',
+					'message' => '',
+				),
+			),
+			$events
+		);
+	}
+
+	public function test_sanitize_diff_panel_fails_closed_when_kses_filter_returns_non_string(): void {
+		$events = array();
+
+		add_filter(
+			'pre_kses',
+			static fn (): array => array( 'unexpected' ),
+			10,
+			0
+		);
+		add_action(
+			'zw_ttvgpt_diff_sanitizer_failed',
+			static function ( string $reason, string $error_message ) use ( &$events ): void {
+				$events[] = array(
+					'reason'  => $reason,
+					'message' => $error_message,
+				);
+			},
+			10,
+			2
+		);
+
+		try {
+			self::assertSame( 'x', AuditPage::sanitize_diff_panel( '<span class="evil">x</span>' ) );
+		} finally {
+			remove_all_filters( 'pre_kses' );
+			remove_all_actions( 'zw_ttvgpt_diff_sanitizer_failed' );
+		}
+
+		self::assertSame(
+			array(
+				array(
+					'reason'  => 'wp_kses_non_string',
+					'message' => '',
+				),
+			),
+			$events
+		);
+	}
 }

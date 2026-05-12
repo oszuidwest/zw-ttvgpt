@@ -33,6 +33,25 @@ $GLOBALS['allowedxmlentitynames'] = $GLOBALS['allowedxmlentitynames'] ?? array()
 
 // Order matters: each file pulls helpers from the ones above it.
 require_once $zw_wp_path . 'wp-includes/plugin.php';
+
+if ( ! function_exists( 'absint' ) ) {
+	function absint( mixed $maybeint ): int {
+		return abs( (int) $maybeint );
+	}
+}
+
+if ( ! function_exists( 'is_utf8_charset' ) ) {
+	function is_utf8_charset( ?string $blog_charset = null ): bool {
+		return null === $blog_charset || in_array( strtolower( $blog_charset ), array( 'utf8', 'utf-8' ), true );
+	}
+}
+
+if ( ! function_exists( 'wp_is_valid_utf8' ) ) {
+	function wp_is_valid_utf8( string $text ): bool {
+		return 1 === preg_match( '//u', $text );
+	}
+}
+
 require_once $zw_wp_path . 'wp-includes/formatting.php';
 require_once $zw_wp_path . 'wp-includes/kses.php';
 

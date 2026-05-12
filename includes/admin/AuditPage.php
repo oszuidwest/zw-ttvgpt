@@ -46,8 +46,11 @@ class AuditPage {
 		if ( null === $year && null === $month && isset( $_GET['m'] ) ) {
 			$raw = sanitize_text_field( wp_unslash( $_GET['m'] ) );
 			if ( '' !== $raw && '0' !== $raw && preg_match( '/^\d{6}$/', $raw ) ) {
-				$year  = (int) substr( $raw, 0, 4 );
-				$month = (int) substr( $raw, 4, 2 );
+				$parsed_month = (int) substr( $raw, 4, 2 );
+				if ( $parsed_month >= 1 && $parsed_month <= 12 ) {
+					$year  = (int) substr( $raw, 0, 4 );
+					$month = $parsed_month;
+				}
 			}
 		}
 
@@ -130,6 +133,36 @@ class AuditPage {
 	private const array DIFF_ALLOWED_CLASSES = array( 'zw-diff-added', 'zw-diff-removed' );
 
 	/**
+	 * Reports sanitizer fail-closed paths without logging diff content.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $reason        Stable reason code.
+	 * @param string $error_message Optional lower-level error message.
+	 */
+	private static function report_diff_sanitizer_failure( string $reason, string $error_message = '' ): void {
+		if ( function_exists( 'do_action' ) ) {
+			do_action( 'zw_ttvgpt_diff_sanitizer_failed', $reason, $error_message );
+		}
+	}
+
+	/**
+	 * Runs wp_kses across the plugin/filter boundary.
+	 *
+	 * WordPress documents wp_kses() as returning string, but the pre_kses filter
+	 * can return arbitrary values. Keep the boundary typed as mixed so the caller
+	 * can guard before passing the value into PCRE functions.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $diff_html Raw diff HTML.
+	 * @return mixed Filtered diff output.
+	 */
+	private static function kses_diff_html( string $diff_html ): mixed {
+		return wp_kses( $diff_html, self::DIFF_ALLOWED_TAGS );
+	}
+
+	/**
 	 * Sanitizes diff markup for display in the audit modal.
 	 *
 	 * Note: `wp_kses` with `['span' => ['class' => true]]` strips disallowed
@@ -165,9 +198,19 @@ class AuditPage {
 	 * @return string HTML safe to echo into the audit modal panes.
 	 */
 	public static function sanitize_diff_panel( string $diff_html ): string {
-		$kses_out = wp_kses( $diff_html, self::DIFF_ALLOWED_TAGS );
+		$kses_out = self::kses_diff_html( $diff_html );
+		if ( ! is_string( $kses_out ) ) {
+			self::report_diff_sanitizer_failure( 'wp_kses_non_string' );
+			return wp_strip_all_tags( $diff_html );
+		}
 
-		$class_pattern = implode( '|', array_map( 'preg_quote', self::DIFF_ALLOWED_CLASSES ) );
+		$class_pattern = implode(
+			'|',
+			array_map(
+				static fn ( string $class_name ): string => preg_quote( $class_name, '#' ),
+				self::DIFF_ALLOWED_CLASSES
+			)
+		);
 		// Shared predicate: an opening <span...> whose class is NOT in the
 		// allowlist. The paired pattern below requires a matching </span>;
 		// the open-only pattern reuses the same predicate to catch orphan
@@ -181,16 +224,31 @@ class AuditPage {
 		// final stability check to confirm no further changes. Counted with
 		// the same case-insensitive match the regex above uses so the bound
 		// never undershoots on non-normalized input.
-		$max_iterations = (int) preg_match_all( '/<span\b/i', $kses_out ) + 1;
+		$span_count = preg_match_all( '/<span\b/i', $kses_out );
+		if ( false === $span_count ) {
+			self::report_diff_sanitizer_failure( 'span_count_regex_failed', preg_last_error_msg() );
+			return wp_strip_all_tags( $kses_out );
+		}
+		$max_iterations = $span_count + 1;
 
 		$current = $kses_out;
 		for ( $i = 0; $i < $max_iterations; $i++ ) {
 			$next = preg_replace( $paired_pattern, '$2', $current );
-			if ( ! is_string( $next ) || $next === $current ) {
+			if ( null === $next ) {
+				self::report_diff_sanitizer_failure( 'paired_regex_failed', preg_last_error_msg() );
+				return wp_strip_all_tags( $current );
+			}
+			if ( $next === $current ) {
 				// Stable, but the paired regex can only strip balanced
 				// disallowed spans. If a disallowed open survived without a
 				// matching close, fail closed rather than echo live markup.
-				if ( 1 === preg_match( $open_pattern, $current ) ) {
+				$open_match = preg_match( $open_pattern, $current );
+				if ( false === $open_match ) {
+					self::report_diff_sanitizer_failure( 'open_regex_failed', preg_last_error_msg() );
+					return wp_strip_all_tags( $current );
+				}
+				if ( 1 === $open_match ) {
+					self::report_diff_sanitizer_failure( 'orphan_disallowed_span' );
 					return wp_strip_all_tags( $current );
 				}
 				return $current;
@@ -198,6 +256,7 @@ class AuditPage {
 			$current = $next;
 		}
 
+		self::report_diff_sanitizer_failure( 'iteration_cap_exceeded' );
 		return wp_strip_all_tags( $current );
 	}
 

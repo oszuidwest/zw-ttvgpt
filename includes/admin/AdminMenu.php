@@ -173,7 +173,10 @@ class AdminMenu {
 	private function print_inline_config( string $global_name, array $config ): bool {
 		$json = wp_json_encode( $config );
 		if ( false === $json ) {
-			$this->logger->error( sprintf( 'Failed to encode inline config for window.%s', $global_name ) );
+			$this->logger->error(
+				sprintf( 'Failed to encode inline config for window.%s', $global_name ),
+				array( 'json_error' => json_last_error_msg() )
+			);
 			return false;
 		}
 
