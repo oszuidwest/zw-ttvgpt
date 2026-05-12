@@ -116,12 +116,30 @@ class AuditPage {
 	}
 
 	/**
+	 * Class values that survive the diff sanitizer. Anything else is stripped
+	 * to inert text. Mirrors the two class names AuditHelper::generate_word_diff
+	 * emits via str_replace, so widening either end requires touching both.
+	 *
+	 * @since 1.0.0
+	 * @var array<int, string>
+	 */
+	private const array DIFF_ALLOWED_CLASSES = array( 'zw-diff-added', 'zw-diff-removed' );
+
+	/**
 	 * Sanitizes diff markup for display in the audit modal.
 	 *
-	 * Centralizes the wp_kses + DIFF_ALLOWED_TAGS application so the modal
-	 * render path and the regression test in AuditPageDiffAllowlistTest
-	 * exercise the same sanitizer. Removing this helper (or weakening it)
-	 * fails the malicious-content tests, not just the constant lock-in.
+	 * Note: `wp_kses` with `['span' => ['class' => true]]` strips disallowed
+	 * tags but does NOT validate the class attribute value — any class string
+	 * passes. That breaks the "safe to echo" contract on raw input like
+	 * `<span class="evil">x</span>`. We therefore run a second pass that
+	 * drops every <span> whose class is not exactly zw-diff-added or
+	 * zw-diff-removed, keeping its inner content as text. The pattern
+	 * tolerates the variations wp_kses leaves intact: single/double quotes,
+	 * uppercase tag/attribute names, whitespace padding inside the value.
+	 *
+	 * Centralizing here keeps the modal render path and the regression
+	 * tests in AuditPageDiffAllowlistTest exercising the same sanitizer —
+	 * removing either pass fails those tests, not just the constant lock-in.
 	 *
 	 * @since 1.0.0
 	 *
@@ -129,7 +147,16 @@ class AuditPage {
 	 * @return string HTML safe to echo into the audit modal panes.
 	 */
 	public static function sanitize_diff_panel( string $diff_html ): string {
-		return wp_kses( $diff_html, self::DIFF_ALLOWED_TAGS );
+		$kses_out = wp_kses( $diff_html, self::DIFF_ALLOWED_TAGS );
+
+		$class_pattern = implode( '|', array_map( 'preg_quote', self::DIFF_ALLOWED_CLASSES ) );
+		$result        = preg_replace(
+			'#<(?i:span)(?![^>]*\b(?i:class)=(["\'])\s*(?:' . $class_pattern . ')\s*\1)[^>]*>(.*?)</(?i:span)>#s',
+			'$2',
+			$kses_out
+		);
+
+		return is_string( $result ) ? $result : $kses_out;
 	}
 
 	/**

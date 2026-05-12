@@ -108,6 +108,14 @@ final class AuditPageDiffAllowlistTest extends TestCase {
 			'raw iframe bypasses Text_Diff escaping'       => array( '<iframe src="https://evil.example/"></iframe><span class="zw-diff-removed">x</span>' ),
 			'raw javascript: anchor'                       => array( '<a href="javascript:alert(1)">klik</a>' ),
 			'nested script inside diff span'               => array( '<span class="zw-diff-added">ok<script>alert(1)</script></span>' ),
+			// wp_kses allows `class` as an attribute but does not validate its
+			// value, so a `class="evil"` span passes wp_kses(['span' => ['class' => true]]).
+			// The helper must enforce the class allowlist itself.
+			'span with non-diff class'                     => array( '<span class="evil">x</span>' ),
+			'span with non-diff class plus legit diff'     => array( '<span class="evil">x</span><span class="zw-diff-added">ok</span>' ),
+			'span with extra class alongside diff class'   => array( '<span class="zw-diff-added evil">x</span>' ),
+			'span with no class attribute at all'          => array( '<span>x</span><span class="zw-diff-added">ok</span>' ),
+			'span with single-quoted non-diff class'       => array( "<span class='evil'>x</span>" ),
 		);
 	}
 
