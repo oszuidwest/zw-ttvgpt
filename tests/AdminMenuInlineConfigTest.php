@@ -16,49 +16,6 @@ namespace {
 	if ( ! function_exists( 'add_action' ) ) {
 		require_once ABSPATH . 'wp-includes/plugin.php';
 	}
-
-	if ( ! function_exists( 'wp_json_encode' ) ) {
-		function wp_json_encode( mixed $value, int $flags = 0, int $depth = 512 ): string|false {
-			return json_encode( $value, $flags, $depth );
-		}
-	}
-
-	if ( ! function_exists( 'admin_url' ) ) {
-		function admin_url( string $path = '', string $scheme = 'admin' ): string {
-			return 'https://example.test/wp-admin/' . $path;
-		}
-	}
-
-	if ( ! function_exists( 'wp_cache_get' ) ) {
-		function wp_cache_get( string $key, string $group = '', bool $force = false, ?bool &$found = null ): mixed {
-			$found = false;
-			return false;
-		}
-	}
-
-	if ( ! function_exists( 'wp_cache_set' ) ) {
-		function wp_cache_set( string $key, mixed $data, string $group = '', int $expire = 0 ): bool {
-			return true;
-		}
-	}
-
-	if ( ! function_exists( 'get_option' ) ) {
-		function get_option( string $option, mixed $default_value = false ): mixed {
-			return $default_value;
-		}
-	}
-
-	if ( ! function_exists( 'wp_enqueue_script_module' ) ) {
-		function wp_enqueue_script_module( string $id, string $src = '', array $deps = array(), mixed $version = false, array $args = array() ): void {
-			$GLOBALS['zw_test_script_modules'][] = array(
-				'id'      => $id,
-				'src'     => $src,
-				'deps'    => $deps,
-				'version' => $version,
-				'args'    => $args,
-			);
-		}
-	}
 }
 
 namespace ZW_TTVGPT_Core\Tests {

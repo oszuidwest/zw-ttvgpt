@@ -43,10 +43,10 @@ final class AuditHelperRegionPrefixTest extends TestCase {
 			'whitespace-only collapses'      => array( "   \t  ", '' ),
 			// trim() removes the trailing space, so the separator no longer matches.
 			'region without trailing body'   => array( 'LEIDEN - ', 'LEIDEN -' ),
-				'single-letter prefix preserved' => array( 'A - eerste optie', 'A - eerste optie' ),
-				'two-letter prefix still strips' => array( 'EU - mededeling.', 'mededeling.' ),
-				// Only ASCII hyphen is a separator.
-				'en-dash is not a separator'     => array( 'LEIDEN – Bericht.', 'LEIDEN – Bericht.' ),
+			'single-letter prefix preserved' => array( 'A - eerste optie', 'A - eerste optie' ),
+			'two-letter prefix still strips' => array( 'EU - mededeling.', 'mededeling.' ),
+			// Only ASCII hyphen is a separator.
+			'en-dash is not a separator'     => array( 'LEIDEN – Bericht.', 'LEIDEN – Bericht.' ),
 			'em-dash is not a separator'     => array( 'LEIDEN — Bericht.', 'LEIDEN — Bericht.' ),
 		);
 	}

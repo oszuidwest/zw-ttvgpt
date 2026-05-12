@@ -21,32 +21,15 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @since   1.0.0
  */
 class AuditHelper {
-	/**
-	 * Diff class used for content added by a human edit.
-	 *
-	 * @since 1.0.0
-	 * @var string
-	 */
-	private const string DIFF_CLASS_ADDED = 'zw-diff-added';
-
-	/**
-	 * Diff class used for content removed from the AI version.
-	 *
-	 * @since 1.0.0
-	 * @var string
-	 */
+	private const string DIFF_CLASS_ADDED   = 'zw-diff-added';
 	private const string DIFF_CLASS_REMOVED = 'zw-diff-removed';
 
 	/**
-	 * Splits content for the WordPress diff renderer.
-	 *
-	 * Fails closed by returning the original content as a single chunk so the
-	 * caller still renders the unsplit text instead of an empty diff.
-	 *
-	 * @since 1.0.0
+	 * Splits content for Text_Diff. Returns the unsplit text on PCRE failure so
+	 * the caller still renders something instead of an empty diff.
 	 *
 	 * @param string $content Content to split.
-	 * @return array<int, string> Split content chunks.
+	 * @return array<int, string>
 	 */
 	private static function split_for_word_diff( string $content ): array {
 		$parts = preg_split( '/([.!?]\s+)/', $content, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY );
@@ -58,50 +41,37 @@ class AuditHelper {
 	}
 
 	/**
-	 * Removes a diff class from the combined diff HTML.
-	 *
-	 * @since 1.0.0
+	 * Strips spans of the given diff class. Returns null on PCRE failure so the
+	 * caller can fall back to a plain-text pane.
 	 *
 	 * @param string $diff_html  Combined diff HTML.
 	 * @param string $class_name Diff class to remove.
-	 * @return string|null Filtered HTML, or null when PCRE failed so the caller can fall back to plain text.
 	 */
 	private static function remove_diff_class( string $diff_html, string $class_name ): ?string {
 		$pattern = '/<span class="' . preg_quote( $class_name, '/' ) . '">.*?<\/span>/s';
 		$result  = preg_replace( $pattern, '', $diff_html );
 
-		if ( null === $result ) {
-			return null;
-		}
-
-		return $result;
+		return null === $result ? null : $result;
 	}
 
 	/**
-	 * Normalizes whitespace in generated diff HTML.
-	 *
-	 * @since 1.0.0
+	 * Collapses whitespace runs in diff HTML; returns the input unchanged on PCRE failure.
 	 *
 	 * @param string $diff_html Diff HTML to normalize.
-	 * @return string Normalized HTML, or the original string if normalization fails.
 	 */
 	private static function normalize_diff_whitespace( string $diff_html ): string {
 		$normalized = preg_replace( '/\s+/', ' ', $diff_html );
-		if ( null === $normalized ) {
-			return $diff_html;
-		}
 
-		return $normalized;
+		return null === $normalized ? $diff_html : $normalized;
 	}
 
 	/**
-	 * Builds a safe plain-text fallback diff when highlighting cannot be trusted.
-	 *
-	 * @since 1.0.0
+	 * Plain-text fallback for both diff panes when highlighting cannot be trusted.
 	 *
 	 * @param string $old_clean      Original content after prefix stripping.
 	 * @param string $modified_clean Modified content after prefix stripping.
-	 * @return array{before: string, after: string} Safe before/after panes.
+	 *
+	 * @phpstan-return DiffResult
 	 */
 	private static function plain_diff_result( string $old_clean, string $modified_clean ): array {
 		return array(

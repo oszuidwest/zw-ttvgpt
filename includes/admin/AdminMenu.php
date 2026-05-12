@@ -25,9 +25,8 @@ use ZW_TTVGPT_Core\SettingsManager;
  */
 class AdminMenu {
 	/**
-	 * Cached SettingsPage instance so menu registration and asset enqueuing share state.
+	 * Cached so add_admin_menu() and enqueue_admin_assets() use the same instance.
 	 *
-	 * @since 1.0.0
 	 * @var SettingsPage
 	 */
 	private readonly SettingsPage $settings_page;
@@ -146,15 +145,10 @@ class AdminMenu {
 	}
 
 	/**
-	 * Schedules window config before module execution.
-	 *
-	 * Pre-encodes JSON so callers can skip the module when config cannot be printed.
-	 *
-	 * @since 1.0.0
+	 * Pre-encodes JSON so callers can skip enqueueing the module when encoding fails.
 	 *
 	 * @param string $global_name Bare window property name (without `window.` prefix).
 	 * @param array  $config      Configuration to expose to the module.
-	 * @return bool True when the inline tag was scheduled; false when encoding failed.
 	 *
 	 * @phpstan-param array<string, mixed> $config
 	 */

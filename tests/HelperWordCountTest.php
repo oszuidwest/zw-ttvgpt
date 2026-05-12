@@ -37,8 +37,8 @@ final class HelperWordCountTest extends TestCase {
 			'pure numeric is not a word'            => array( '3,5', 0 ),
 			'currency-prefixed number is not a word' => array( '€10', 0 ),
 			'mixed number and word counts the word' => array( '3,5 miljoen', 1 ),
-				// Regression: old str_word_count overcounted these cases and triggered retries.
-				'regression: 15x diacritic sentence'    => array( str_repeat( 'Het café serveert crème brûlée. ', 15 ), 75 ),
+			// Regression: old str_word_count overcounted these cases and triggered retries.
+			'regression: 15x diacritic sentence'    => array( str_repeat( 'Het café serveert crème brûlée. ', 15 ), 75 ),
 			'regression: 18x em-dash sentence'      => array( str_repeat( 'Bergen op Zoom – Breda blijft bereikbaar. ', 18 ), 108 ),
 		);
 	}

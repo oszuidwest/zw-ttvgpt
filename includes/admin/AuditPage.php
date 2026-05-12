@@ -59,20 +59,12 @@ class AuditPage {
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 	}
 
-	/**
-	 * Posts per page on the audit overview.
-	 *
-	 * The page renders a hidden modal per row, so large pages are expensive.
-	 *
-	 * @since 1.0.0
-	 * @var int
-	 */
+	/** The page emits a hidden modal per row, so large pages are expensive. */
 	private const int POSTS_PER_PAGE = 50;
 
 	/**
-	 * Allowed tags for diff output; keep in sync with generate_word_diff() and DIFF_ALLOWED_CLASSES.
+	 * Keep in sync with generate_word_diff() and DIFF_ALLOWED_CLASSES.
 	 *
-	 * @since 1.0.0
 	 * @var array<string, array<string, bool>>
 	 */
 	private const array DIFF_ALLOWED_TAGS = array(
@@ -80,20 +72,11 @@ class AuditPage {
 	);
 
 	/**
-	 * Slices a list into a single page and returns clamped pagination state.
+	 * Clamps out-of-range pages so a stale ?paged= still renders the table.
 	 *
-	 * Requested pages outside [1, total_pages] are clamped to the closest
-	 * valid page so an out-of-range ?paged= still renders the table instead
-	 * of a blank slice. Empty input returns paged=1, total_pages=0.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array $items          Items to paginate (any indexed list).
-	 * @param int   $requested_page Page number the caller asked for.
-	 * @param int   $per_page       Page size; values < 1 are treated as "no slicing wanted".
-	 * @return array{slice: array, paged: int, total_pages: int, total: int} Pagination outcome:
-	 *                  the slice for the requested page, the clamped page number, total page
-	 *                  count, and total item count before slicing.
+	 * @param array $items          Items to slice.
+	 * @param int   $requested_page Requested page (1-indexed; clamped to a valid page).
+	 * @param int   $per_page       Page size; values < 1 are treated as "no slicing".
 	 *
 	 * @phpstan-template T
 	 * @phpstan-param array<int, T> $items
@@ -115,17 +98,14 @@ class AuditPage {
 	}
 
 	/**
-	 * Allowed diff class values emitted by AuditHelper::generate_word_diff().
+	 * Diff class names emitted by AuditHelper::generate_word_diff().
 	 *
-	 * @since 1.0.0
 	 * @var array<int, string>
 	 */
 	private const array DIFF_ALLOWED_CLASSES = array( 'zw-diff-added', 'zw-diff-removed' );
 
 	/**
-	 * Fires zw_ttvgpt_diff_sanitizer_failed without logging diff content.
-	 *
-	 * @since 1.0.0
+	 * Reports a sanitizer failure without leaking diff content.
 	 *
 	 * @param string $reason        Stable reason code.
 	 * @param string $error_message Optional lower-level error message.
@@ -137,33 +117,24 @@ class AuditPage {
 	}
 
 	/**
-	 * Runs wp_kses across the plugin/filter boundary.
-	 *
-	 * WordPress documents wp_kses() as returning string, but the pre_kses filter
-	 * can return arbitrary values. Keep the boundary typed as mixed so the caller
-	 * can guard before passing the value into PCRE functions.
-	 *
-	 * @since 1.0.0
+	 * Runs wp_kses across the pre_kses filter, which can return arbitrary
+	 * values; the caller must guard before handing the result to PCRE.
 	 *
 	 * @param string $diff_html Raw diff HTML.
-	 * @return mixed Filtered diff output.
 	 */
 	private static function kses_diff_html( string $diff_html ): mixed {
 		return wp_kses( $diff_html, self::DIFF_ALLOWED_TAGS );
 	}
 
 	/**
-	 * Sanitizes diff markup for display in the audit modal.
+	 * Sanitizes diff HTML for the audit modal.
 	 *
-	 * WordPress allows any class value when class is allowed in wp_kses(), so this
-	 * adds a second pass that keeps only the plugin's diff classes and converts
-	 * all other span markup to inert text. Malformed or untrusted output fails
-	 * closed by stripping all remaining tags.
-	 *
-	 * @since 1.0.0
+	 * Because wp_kses() accepts any class value when class is in the allowlist,
+	 * this adds a pass that keeps only the plugin's diff classes and converts
+	 * other span markup to inert text. Fails closed by stripping remaining tags
+	 * on any sign of malformed or untrusted output.
 	 *
 	 * @param string $diff_html Raw diff HTML emitted by AuditHelper::generate_word_diff.
-	 * @return string HTML safe to echo into the audit modal panes.
 	 */
 	public static function sanitize_diff_panel( string $diff_html ): string {
 		$kses_out = self::kses_diff_html( $diff_html );
@@ -172,18 +143,21 @@ class AuditPage {
 			return wp_strip_all_tags( $diff_html );
 		}
 
-		$class_pattern = implode(
-			'|',
-			array_map(
-				static fn ( string $class_name ): string => preg_quote( $class_name, '#' ),
-				self::DIFF_ALLOWED_CLASSES
-			)
-		);
-		// Shared predicate for disallowed span opens, reused for paired and
-		// orphan-span checks.
-		$disallowed_open = '<(?i:span)(?![^>]*\b(?i:class)=(["\'])\s*(?:' . $class_pattern . ')\s*\1)[^>]*>';
-		$paired_pattern  = '#' . $disallowed_open . '(.*?)</(?i:span)>#s';
-		$open_pattern    = '#' . $disallowed_open . '#';
+		// DIFF_ALLOWED_CLASSES is constant, so build the predicate once per process.
+		static $paired_pattern = null;
+		static $open_pattern   = null;
+		if ( null === $paired_pattern ) {
+			$class_pattern   = implode(
+				'|',
+				array_map(
+					static fn ( string $class_name ): string => preg_quote( $class_name, '#' ),
+					self::DIFF_ALLOWED_CLASSES
+				)
+			);
+			$disallowed_open = '<(?i:span)(?![^>]*\b(?i:class)=(["\'])\s*(?:' . $class_pattern . ')\s*\1)[^>]*>';
+			$paired_pattern  = '#' . $disallowed_open . '(.*?)</(?i:span)>#s';
+			$open_pattern    = '#' . $disallowed_open . '#';
+		}
 
 		// Bound iteration to the number of input spans, plus one stability check.
 		$span_count = preg_match_all( '/<span\b/i', $kses_out );
@@ -480,7 +454,18 @@ class AuditPage {
 					);
 					?>
 				</span>
-				<?php $this->render_pagination_links( $paged, $total_pages, $year, $month, $status_filter, $change_filter ); ?>
+				<?php
+				$this->render_pagination_links(
+					array(
+						'year'          => $year,
+						'month'         => $month,
+						'status_filter' => $status_filter,
+						'change_filter' => $change_filter,
+						'paged'         => $paged,
+					),
+					$total_pages
+				);
+				?>
 			</div>
 			<br class="clear">
 		</div>
@@ -488,40 +473,27 @@ class AuditPage {
 	}
 
 	/**
-	 * Renders WordPress-style pagination links preserving current filters.
-	 *
-	 * Builds the base URL from a known allowlist of args (the audit page slug
-	 * plus active filters) so unrelated query parameters present in
-	 * REQUEST_URI — e.g. _wp_http_referer, settings-updated, filter_action —
-	 * do not leak into pagination hrefs.
+	 * Renders pagination links from a known arg allowlist so unrelated REQUEST_URI
+	 * params (filter_action, _wp_http_referer, etc.) cannot leak into hrefs.
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param int    $paged         Current page (1-indexed).
-	 * @param int    $total_pages   Total number of pages.
-	 * @param int    $year          Active year filter.
-	 * @param int    $month         Active month filter.
-	 * @param string $status_filter Active status filter (empty when none).
-	 * @param string $change_filter Active change-percentage filter (empty when none).
+	 * @param array $filters     Active filters; pass `paged` set to the clamped current page.
+	 * @param int   $total_pages Total number of pages.
+	 *
+	 * @phpstan-param FilterParams $filters
 	 */
-	private function render_pagination_links(
-		int $paged,
-		int $total_pages,
-		int $year,
-		int $month,
-		string $status_filter,
-		string $change_filter
-	): void {
+	private function render_pagination_links( array $filters, int $total_pages ): void {
 		if ( $total_pages < 2 ) {
 			return;
 		}
 
 		$base_args = array(
 			'page'   => 'zw-ttvgpt-audit',
-			'year'   => $year,
-			'month'  => $month,
-			'status' => '' !== $status_filter ? $status_filter : false,
-			'change' => '' !== $change_filter ? $change_filter : false,
+			'year'   => $filters['year'],
+			'month'  => $filters['month'],
+			'status' => '' !== $filters['status_filter'] ? $filters['status_filter'] : false,
+			'change' => '' !== $filters['change_filter'] ? $filters['change_filter'] : false,
 			'paged'  => '%#%',
 		);
 
@@ -532,7 +504,7 @@ class AuditPage {
 				'prev_text' => __( '&laquo;', 'zw-ttvgpt' ),
 				'next_text' => __( '&raquo;', 'zw-ttvgpt' ),
 				'total'     => $total_pages,
-				'current'   => $paged,
+				'current'   => $filters['paged'],
 				'type'      => 'plain',
 			)
 		);
