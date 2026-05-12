@@ -63,7 +63,7 @@ class AdminMenu {
 			__( 'Tekst TV Audit', 'zw-ttvgpt' ),
 			__( 'Tekst TV Audit', 'zw-ttvgpt' ),
 			Constants::REQUIRED_CAPABILITY,
-			'zw-ttvgpt-audit',
+			Constants::AUDIT_PAGE_SLUG,
 			array( new AuditPage(), 'render' )
 		);
 	}
@@ -79,10 +79,14 @@ class AdminMenu {
 		$version = Helper::get_asset_version();
 
 		// Inline config prints before the deferred module tags read window.zwTTVGPT*.
-		if ( 'tools_page_zw-ttvgpt-audit' === $hook ) {
+		if ( 'tools_page_' . Constants::AUDIT_PAGE_SLUG === $hook ) {
 			wp_enqueue_style( 'zw-ttvgpt-audit', ZW_TTVGPT_URL . 'assets/audit.css', array(), $version );
 
-			if ( $this->print_inline_config( 'zwTTVGPTAudit', array( 'baseUrl' => admin_url( 'tools.php' ) ) ) ) {
+			$audit_config = array(
+				'baseUrl'  => admin_url( 'tools.php' ),
+				'pageSlug' => Constants::AUDIT_PAGE_SLUG,
+			);
+			if ( $this->print_inline_config( 'zwTTVGPTAudit', $audit_config ) ) {
 				wp_enqueue_script_module( 'zw-ttvgpt-audit', ZW_TTVGPT_URL . 'assets/audit.js', array(), $version );
 			}
 			return;

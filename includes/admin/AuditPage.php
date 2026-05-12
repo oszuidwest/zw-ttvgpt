@@ -14,6 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use ZW_TTVGPT_Core\AuditHelper;
 use ZW_TTVGPT_Core\AuditStatus;
+use ZW_TTVGPT_Core\Constants;
 
 /**
  * Renders the audit tools page and diff review UI.
@@ -280,7 +281,7 @@ class AuditPage {
 			<?php $this->render_status_links( $year, $month, $status_filter, $counts ); ?>
 
 			<form id="posts-filter" method="get">
-				<input type="hidden" name="page" value="zw-ttvgpt-audit">
+				<input type="hidden" name="page" value="<?php echo esc_attr( Constants::AUDIT_PAGE_SLUG ); ?>">
 				<?php
 				$this->render_tablenav(
 					$year,
@@ -328,7 +329,7 @@ class AuditPage {
 	 */
 	private function render_status_links( int $year, int $month, string $status_filter, array $counts ): void {
 		$total          = array_sum( $counts );
-		$base_url       = admin_url( 'tools.php?page=zw-ttvgpt-audit' );
+		$base_url       = admin_url( 'tools.php?page=' . Constants::AUDIT_PAGE_SLUG );
 		$current_params = array(
 			'year'  => $year,
 			'month' => $month,
@@ -489,7 +490,7 @@ class AuditPage {
 		}
 
 		$base_args = array(
-			'page'   => 'zw-ttvgpt-audit',
+			'page'   => Constants::AUDIT_PAGE_SLUG,
 			'year'   => $filters['year'],
 			'month'  => $filters['month'],
 			'status' => '' !== $filters['status_filter'] ? $filters['status_filter'] : false,

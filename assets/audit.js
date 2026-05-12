@@ -13,7 +13,7 @@ if (!config) {
 
     function applyFilters() {
         const params = new URLSearchParams();
-        params.set('page', 'zw-ttvgpt-audit');
+        params.set('page', config.pageSlug);
 
         const dateValue = date?.value ?? '';
         if (dateValue && dateValue !== '0') {
