@@ -2,6 +2,10 @@
 declare(strict_types=1);
 
 namespace {
+	if ( ! defined( 'ABSPATH' ) ) {
+		exit;
+	}
+
 	if ( ! defined( 'ZW_TTVGPT_VERSION' ) ) {
 		define( 'ZW_TTVGPT_VERSION', '1.0.0' );
 	}

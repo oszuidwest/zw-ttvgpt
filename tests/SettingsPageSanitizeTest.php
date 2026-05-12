@@ -2,6 +2,10 @@
 declare(strict_types=1);
 
 namespace {
+	if ( ! defined( 'ABSPATH' ) ) {
+		exit;
+	}
+
 	if ( ! function_exists( 'add_settings_error' ) ) {
 		function add_settings_error( string $setting, string $code, string $message, string $type = 'error' ): void {
 			$GLOBALS['zw_test_settings_errors'][] = array(
