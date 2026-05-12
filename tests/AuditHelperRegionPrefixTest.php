@@ -21,16 +21,25 @@ final class AuditHelperRegionPrefixTest extends TestCase {
 	 */
 	public static function regionPrefixProvider(): array {
 		return array(
-			'simple uppercase region'      => array( 'LEIDEN - Een nieuwsbericht.', 'Een nieuwsbericht.' ),
-			'multi-word region'            => array( 'DEN HAAG - Een nieuwsbericht.', 'Een nieuwsbericht.' ),
-			'slash-separated regions'      => array( 'ROOSENDAAL/OUDENBOSCH - Bericht.', 'Bericht.' ),
-			'hyphenated region'            => array( 'ETTEN-LEUR - Bericht.', 'Bericht.' ),
+			'simple uppercase region'        => array( 'LEIDEN - Een nieuwsbericht.', 'Een nieuwsbericht.' ),
+			'multi-word region'              => array( 'DEN HAAG - Een nieuwsbericht.', 'Een nieuwsbericht.' ),
+			'slash-separated regions'        => array( 'ROOSENDAAL/OUDENBOSCH - Bericht.', 'Bericht.' ),
+			'hyphenated region'              => array( 'ETTEN-LEUR - Bericht.', 'Bericht.' ),
 			// Regression: pre-fix ASCII-only character class skipped diacritics.
-			'diacritic region (cedilla)'   => array( 'CURAÇAO - Bericht.', 'Bericht.' ),
-			'diacritic region (umlaut)'   => array( 'ZÜRICH - Bericht.', 'Bericht.' ),
-			'no prefix is left untouched'  => array( 'Geen prefix hier.', 'Geen prefix hier.' ),
-			'lowercase is not a prefix'    => array( 'leiden - geen prefix.', 'leiden - geen prefix.' ),
-			'leading whitespace stripped'  => array( '   LEIDEN - Bericht.', 'Bericht.' ),
+			'diacritic region (cedilla)'     => array( 'CURAÇAO - Bericht.', 'Bericht.' ),
+			'diacritic region (umlaut)'      => array( 'ZÜRICH - Bericht.', 'Bericht.' ),
+			'no prefix is left untouched'    => array( 'Geen prefix hier.', 'Geen prefix hier.' ),
+			'lowercase is not a prefix'      => array( 'leiden - geen prefix.', 'leiden - geen prefix.' ),
+			'leading whitespace stripped'    => array( '   LEIDEN - Bericht.', 'Bericht.' ),
+			'empty string passes through'    => array( '', '' ),
+			'whitespace-only collapses'      => array( "   \t  ", '' ),
+			// trim() runs first so the trailing space is gone, breaking the `\s-\s` anchor.
+			'region without trailing body'   => array( 'LEIDEN - ', 'LEIDEN -' ),
+			// Single-letter prefix currently matches; documenting behaviour, not endorsing it.
+			'single-letter prefix matches'   => array( 'A - bericht', 'bericht' ),
+			// Regex requires ASCII hyphen; typographic dashes are not treated as separators.
+			'en-dash is not a separator'     => array( 'LEIDEN – Bericht.', 'LEIDEN – Bericht.' ),
+			'em-dash is not a separator'     => array( 'LEIDEN — Bericht.', 'LEIDEN — Bericht.' ),
 		);
 	}
 

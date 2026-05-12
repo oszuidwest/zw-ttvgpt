@@ -8,7 +8,11 @@
  */
 
 const config = window.zwTTVGPTSettings;
-if (config) {
+if (!config) {
+    console.warn(
+        'zw-ttvgpt: settings config missing, legacy model toggle inactive',
+    );
+} else {
     const select = document.getElementById('zw_ttvgpt_model_select');
     const wrapper = document.getElementById(
         'zw_ttvgpt_legacy_fine_tuned_wrapper',

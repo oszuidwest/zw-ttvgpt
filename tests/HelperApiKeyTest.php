@@ -26,6 +26,9 @@ final class HelperApiKeyTest extends TestCase {
 			'project key is accepted'         => array( 'sk-proj-ABCDEF1234567890', true ),
 			'service account key is accepted' => array( 'sk-svcacct-ABCDEF1234567890', true ),
 			'admin key is accepted'           => array( 'sk-admin-ABCDEF1234567890', true ),
+			// Pin the intentional looseness: anything with the sk- prefix should pass,
+			// so a future OpenAI key flavour does not need a code change to be accepted.
+			'unknown future flavour passes'   => array( 'sk-future-flavor-xyz', true ),
 			'no prefix is rejected'           => array( 'totally-not-a-key', false ),
 			'uppercase prefix is rejected'    => array( 'SK-AAAAAAAAAAAA', false ),
 			'partial prefix is rejected'      => array( 's-AAAAAAAAAAAA', false ),

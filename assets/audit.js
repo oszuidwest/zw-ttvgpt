@@ -9,7 +9,11 @@
  */
 
 const config = window.zwTTVGPTAudit;
-if (config) {
+if (!config) {
+    console.warn(
+        'zw-ttvgpt: audit config missing, filter handlers not attached',
+    );
+} else {
     const date = document.getElementById('filter-by-date');
     const status = document.getElementById('filter-by-status');
     const change = document.getElementById('filter-by-change');
