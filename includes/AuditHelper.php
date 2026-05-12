@@ -38,37 +38,19 @@ class AuditHelper {
 	private const string DIFF_CLASS_REMOVED = 'zw-diff-removed';
 
 	/**
-	 * Reports a PCRE failure from static audit helpers.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param string $operation Operation that failed.
-	 */
-	private static function report_regex_failure( string $operation ): void {
-		$error_code    = preg_last_error();
-		$error_message = preg_last_error_msg();
-
-		if ( function_exists( 'do_action' ) ) {
-			do_action( 'zw_ttvgpt_audit_regex_failed', $operation, $error_code, $error_message );
-		}
-
-		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Static helper has no injected Logger.
-		error_log( sprintf( '[ZW_TTVGPT] Audit regex failed during %s: %s', $operation, $error_message ) );
-	}
-
-	/**
 	 * Splits content for the WordPress diff renderer.
 	 *
+	 * Fails closed by returning the original content as a single chunk so the
+	 * caller still renders the unsplit text instead of an empty diff.
+	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $content   Content to split.
-	 * @param string $operation Operation label for telemetry.
+	 * @param string $content Content to split.
 	 * @return array<int, string> Split content chunks.
 	 */
-	private static function split_for_word_diff( string $content, string $operation ): array {
+	private static function split_for_word_diff( string $content ): array {
 		$parts = preg_split( '/([.!?]\s+)/', $content, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY );
 		if ( false === $parts ) {
-			self::report_regex_failure( $operation );
 			return '' === $content ? array() : array( $content );
 		}
 
@@ -80,17 +62,15 @@ class AuditHelper {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $diff_html Combined diff HTML.
+	 * @param string $diff_html  Combined diff HTML.
 	 * @param string $class_name Diff class to remove.
-	 * @param string $operation Operation label for telemetry.
-	 * @return string|null Filtered HTML, or null when PCRE failed.
+	 * @return string|null Filtered HTML, or null when PCRE failed so the caller can fall back to plain text.
 	 */
-	private static function remove_diff_class( string $diff_html, string $class_name, string $operation ): ?string {
+	private static function remove_diff_class( string $diff_html, string $class_name ): ?string {
 		$pattern = '/<span class="' . preg_quote( $class_name, '/' ) . '">.*?<\/span>/s';
 		$result  = preg_replace( $pattern, '', $diff_html );
 
 		if ( null === $result ) {
-			self::report_regex_failure( $operation );
 			return null;
 		}
 
@@ -102,14 +82,12 @@ class AuditHelper {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $diff_html  Diff HTML to normalize.
-	 * @param string $operation  Operation label for telemetry.
+	 * @param string $diff_html Diff HTML to normalize.
 	 * @return string Normalized HTML, or the original string if normalization fails.
 	 */
-	private static function normalize_diff_whitespace( string $diff_html, string $operation ): string {
+	private static function normalize_diff_whitespace( string $diff_html ): string {
 		$normalized = preg_replace( '/\s+/', ' ', $diff_html );
 		if ( null === $normalized ) {
-			self::report_regex_failure( $operation );
 			return $diff_html;
 		}
 
@@ -327,7 +305,6 @@ class AuditHelper {
 		$trimmed = trim( $content );
 		$result  = preg_replace( '/^\p{Lu}{2,}[\p{Lu}\s\/\-]*\s-\s/u', '', $trimmed );
 		if ( null === $result ) {
-			self::report_regex_failure( 'strip region prefix' );
 			return $trimmed;
 		}
 
@@ -401,8 +378,8 @@ class AuditHelper {
 		}
 
 		// Split into lines for WordPress diff (works better with sentences).
-		$old_lines      = self::split_for_word_diff( $old_clean, 'split original diff text' );
-		$modified_lines = self::split_for_word_diff( $modified_clean, 'split modified diff text' );
+		$old_lines      = self::split_for_word_diff( $old_clean );
+		$modified_lines = self::split_for_word_diff( $modified_clean );
 
 		$text_diff = new \Text_Diff( 'auto', array( $old_lines, $modified_lines ) );
 		$renderer  = new \WP_Text_Diff_Renderer_inline();
@@ -421,16 +398,16 @@ class AuditHelper {
 		);
 
 		// Split the diff into before/after by removing the opposite tags.
-		$before = self::remove_diff_class( $diff_html, self::DIFF_CLASS_ADDED, 'remove added diff span for before pane' );
-		$after  = self::remove_diff_class( $diff_html, self::DIFF_CLASS_REMOVED, 'remove removed diff span for after pane' );
+		$before = self::remove_diff_class( $diff_html, self::DIFF_CLASS_ADDED );
+		$after  = self::remove_diff_class( $diff_html, self::DIFF_CLASS_REMOVED );
 
 		if ( null === $before || null === $after ) {
 			return self::plain_diff_result( $old_clean, $modified_clean );
 		}
 
 		return array(
-			'before' => trim( self::normalize_diff_whitespace( $before, 'normalize before diff whitespace' ) ),
-			'after'  => trim( self::normalize_diff_whitespace( $after, 'normalize after diff whitespace' ) ),
+			'before' => trim( self::normalize_diff_whitespace( $before ) ),
+			'after'  => trim( self::normalize_diff_whitespace( $after ) ),
 		);
 	}
 

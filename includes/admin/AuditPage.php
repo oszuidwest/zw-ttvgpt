@@ -99,7 +99,7 @@ class AuditPage {
 	 * @phpstan-param array<int, T> $items
 	 * @phpstan-return array{slice: array<int, T>, paged: int, total_pages: int, total: int}
 	 */
-	public static function paginate( array $items, int $requested_page, int $per_page ): array {
+	private static function paginate( array $items, int $requested_page, int $per_page ): array {
 		$total       = count( $items );
 		$total_pages = $per_page > 0 ? (int) ceil( $total / $per_page ) : 0;
 		$paged       = $total_pages > 0 ? min( max( 1, $requested_page ), $total_pages ) : 1;

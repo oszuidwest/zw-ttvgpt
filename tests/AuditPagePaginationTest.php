@@ -6,6 +6,7 @@ namespace ZW_TTVGPT_Core\Tests;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 use ZW_TTVGPT_Core\Admin\AuditPage;
 
 #[CoversClass(AuditPage::class)]
@@ -17,7 +18,8 @@ final class AuditPagePaginationTest extends TestCase {
 	 */
 	#[DataProvider('paginationProvider')]
 	public function test_paginate_clamps_and_slices( array $items, int $requested_page, int $per_page, array $expected ): void {
-		self::assertSame( $expected, AuditPage::paginate( $items, $requested_page, $per_page ) );
+		$paginate = new ReflectionMethod( AuditPage::class, 'paginate' );
+		self::assertSame( $expected, $paginate->invoke( null, $items, $requested_page, $per_page ) );
 	}
 
 	/**
