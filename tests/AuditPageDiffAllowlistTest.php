@@ -168,6 +168,34 @@ final class AuditPageDiffAllowlistTest extends TestCase {
 		);
 	}
 
+	/**
+	 * Guards against the iteration bound being too tight. A fixed cap (e.g. 20)
+	 * would fail open here: after exhausting iterations the function would
+	 * return a string that still contained a live disallowed span. The bound
+	 * must scale with the input — or fail closed by stripping all markup.
+	 *
+	 * @param int $depth Nesting depth to exercise.
+	 */
+	#[DataProvider('deepNestingDepthProvider')]
+	public function test_sanitize_diff_panel_handles_deep_nested_disallowed_spans( int $depth ): void {
+		$input  = str_repeat( '<span class="evil">', $depth ) . 'x' . str_repeat( '</span>', $depth );
+		$output = AuditPage::sanitize_diff_panel( $input );
+
+		self::assertSame( 'x', $output, sprintf( 'Depth %d must collapse to inert text.', $depth ) );
+		self::assertOnlyDiffSpansAsLiveHtml( $output, sprintf( 'depth %d output', $depth ) );
+	}
+
+	/**
+	 * @return array<string, array{int}>
+	 */
+	public static function deepNestingDepthProvider(): array {
+		return array(
+			'21 deep (just past the old fixed cap)' => array( 21 ),
+			'25 deep'                               => array( 25 ),
+			'50 deep'                               => array( 50 ),
+		);
+	}
+
 	public function test_legitimate_diff_with_angle_brackets_renders_as_entities(): void {
 		$diff = AuditHelper::generate_word_diff( '5 < 10 of niet', '5 < 11 of niet' );
 

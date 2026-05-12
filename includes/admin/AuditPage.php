@@ -141,13 +141,19 @@ class AuditPage {
 	 * tolerates the variations wp_kses leaves intact: single/double quotes,
 	 * uppercase tag/attribute names, whitespace padding inside the value.
 	 *
-	 * The regex is iterated until the output is stable. A single pass uses
-	 * non-greedy `(.*?)` and so binds the outer disallowed span to the FIRST
-	 * `</span>` it sees — for nested disallowed spans like
-	 * `<span class="a"><span class="b">x</span></span>` that leaves the inner
-	 * span as a top-level survivor. Re-running peels one level per pass.
-	 * Every replacement strictly shrinks the string, so the loop terminates;
-	 * the iteration cap is a defensive bound against pathological input.
+	 * The regex is iterated because a single pass uses non-greedy `(.*?)`
+	 * and binds the outer disallowed span to the FIRST `</span>` it sees —
+	 * for nested disallowed spans like `<span class="a"><span class="b">x
+	 * </span></span>` that leaves the inner span as a top-level survivor.
+	 * Re-running peels one level per pass.
+	 *
+	 * Iterations are bounded by the count of `<span` markers in the
+	 * kses-normalized input: each pass removes at least one disallowed
+	 * span (otherwise the stability check exits), and the substitution is
+	 * `$2` — content between the matched open/close pair — so new `<span`
+	 * markers can never be introduced. If the bound is somehow exceeded we
+	 * MUST NOT return the partially-stripped string (it can still contain
+	 * a live disallowed span); fail closed by stripping all remaining tags.
 	 *
 	 * Centralizing here keeps the modal render path and the regression
 	 * tests in AuditPageDiffAllowlistTest exercising the same sanitizer —
@@ -164,8 +170,12 @@ class AuditPage {
 		$class_pattern = implode( '|', array_map( 'preg_quote', self::DIFF_ALLOWED_CLASSES ) );
 		$pattern       = '#<(?i:span)(?![^>]*\b(?i:class)=(["\'])\s*(?:' . $class_pattern . ')\s*\1)[^>]*>(.*?)</(?i:span)>#s';
 
+		// Tight upper bound: one iteration per span in the input, plus one
+		// final stability check to confirm no further changes.
+		$max_iterations = substr_count( $kses_out, '<span' ) + 1;
+
 		$current = $kses_out;
-		for ( $i = 0; $i < 20; $i++ ) {
+		for ( $i = 0; $i < $max_iterations; $i++ ) {
 			$next = preg_replace( $pattern, '$2', $current );
 			if ( ! is_string( $next ) || $next === $current ) {
 				return $current;
@@ -173,7 +183,7 @@ class AuditPage {
 			$current = $next;
 		}
 
-		return $current;
+		return wp_strip_all_tags( $current );
 	}
 
 	/**
