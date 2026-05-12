@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Helper {
 
 	/**
-	 * Removes all plugin-related transients from the database.
+	 * Removes plugin-owned transient rows from wp_options.
 	 *
 	 * Only called on deactivation and uninstall, so any persistent-object-cache
 	 * entries that survive this DB cleanup have no live reader and expire on
@@ -80,12 +80,15 @@ class Helper {
 	}
 
 	/**
-	 * Validates OpenAI API key format.
+	 * Checks whether an API key has the expected OpenAI prefix.
+	 *
+	 * Intentionally avoids strict key-shape validation so future key formats with
+	 * the same prefix are accepted.
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $api_key API key to validate.
-	 * @return bool True if key format is valid (starts with 'sk-'), false otherwise.
+	 * @param string $api_key API key to inspect.
+	 * @return bool True if the key looks like an OpenAI key, false otherwise.
 	 */
 	public static function is_valid_api_key( string $api_key ): bool {
 		return ! empty( $api_key ) && str_starts_with( $api_key, 'sk-' );

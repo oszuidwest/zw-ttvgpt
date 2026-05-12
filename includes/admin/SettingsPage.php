@@ -18,9 +18,7 @@ use ZW_TTVGPT_Core\Logger;
 use ZW_TTVGPT_Core\SettingsManager;
 
 /**
- * Settings Page class.
- *
- * Handles settings page rendering and form processing.
+ * Registers, renders, and sanitizes plugin settings.
  *
  * @package ZW_TTVGPT
  * @since   1.0.0
@@ -194,7 +192,7 @@ class SettingsPage {
 	}
 
 	/**
-	 * Renders the API section description.
+	 * Settings API callback for the API section.
 	 *
 	 * @since 1.0.0
 	 */
@@ -203,7 +201,7 @@ class SettingsPage {
 	}
 
 	/**
-	 * Renders the summary section description.
+	 * Settings API callback for summary options.
 	 *
 	 * @since 1.0.0
 	 */
@@ -212,7 +210,7 @@ class SettingsPage {
 	}
 
 	/**
-	 * Renders the debug section description.
+	 * Settings API callback for debug options.
 	 *
 	 * @since 1.0.0
 	 */
@@ -285,32 +283,21 @@ class SettingsPage {
 		<p class="description">
 			<?php esc_html_e( 'Aanbevolen: gpt-5.5 (beste kwaliteit)', 'zw-ttvgpt' ); ?>
 		</p>
-
-		<script>
-		(function() {
-			const select = document.getElementById('zw_ttvgpt_model_select');
-			const wrapper = document.getElementById('zw_ttvgpt_legacy_fine_tuned_wrapper');
-			const legacyInput = document.getElementById('zw_ttvgpt_legacy_fine_tuned_model');
-			const fieldName = <?php echo wp_json_encode( $field_name ); ?>;
-			const legacyOptionValue = <?php echo wp_json_encode( self::LEGACY_FINE_TUNED_SELECT_VALUE ); ?>;
-
-			select.addEventListener('change', function() {
-				const isLegacyFineTuned = this.value === legacyOptionValue;
-				wrapper.style.display = isLegacyFineTuned ? 'block' : 'none';
-
-				if (isLegacyFineTuned) {
-					select.removeAttribute('name');
-					legacyInput.setAttribute('name', fieldName);
-					legacyInput.setAttribute('required', 'required');
-				} else {
-					select.setAttribute('name', fieldName);
-					legacyInput.removeAttribute('name');
-					legacyInput.removeAttribute('required');
-				}
-			});
-		})();
-		</script>
 		<?php
+	}
+
+	/**
+	 * Returns the inline JS config consumed by the settings ES module.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return array{fieldName: string, legacyOptionValue: string}
+	 */
+	public function get_legacy_model_toggle_config(): array {
+		return array(
+			'fieldName'         => $this->get_field_name( 'model' ),
+			'legacyOptionValue' => self::LEGACY_FINE_TUNED_SELECT_VALUE,
+		);
 	}
 
 	/**
@@ -350,8 +337,8 @@ class SettingsPage {
 				class="large-text code"><?php echo esc_textarea( $system_prompt ); ?></textarea>
 		<p class="description">
 			<?php
-			/* translators: %d is a placeholder for the word limit value */
-			esc_html_e( 'De instructies voor het AI-model. Gebruik %d als placeholder voor de woordlimiet.', 'zw-ttvgpt' );
+				/* translators: %d is a literal placeholder for the configured word limit. */
+				esc_html_e( 'De instructies voor het AI-model. Gebruik %d als placeholder voor de woordlimiet.', 'zw-ttvgpt' );
 			?>
 			<br>
 			<small style="color: #666;">
@@ -427,20 +414,23 @@ class SettingsPage {
 	public function sanitize_settings( array $input ): array {
 		$sanitized = array();
 
-		// API Key.
 		if ( isset( $input['api_key'] ) ) {
 			$api_key = sanitize_text_field( $input['api_key'] );
 			if ( ! empty( $api_key ) && ! Helper::is_valid_api_key( $api_key ) ) {
+				$this->logger->error(
+					'Invalid OpenAI API key submitted in settings',
+					array( 'user_id' => get_current_user_id() )
+				);
 				add_settings_error(
 					Constants::SETTINGS_OPTION_NAME,
 					'invalid_api_key',
-					__( 'API-sleutel moet beginnen met "sk-"', 'zw-ttvgpt' )
+					__( 'API-sleutel moet beginnen met "sk-". De ongeldige waarde is niet opgeslagen.', 'zw-ttvgpt' )
 				);
+				$api_key = '';
 			}
 			$sanitized['api_key'] = $api_key;
 		}
 
-		// Model.
 		if ( isset( $input['model'] ) ) {
 			$model = sanitize_text_field( $input['model'] );
 			if ( empty( $model ) ) {
@@ -469,7 +459,6 @@ class SettingsPage {
 			$sanitized['model'] = $model;
 		}
 
-		// Word limit.
 		if ( isset( $input['word_limit'] ) ) {
 			$original_word_limit = absint( $input['word_limit'] );
 			$word_limit          = $original_word_limit;
@@ -492,7 +481,6 @@ class SettingsPage {
 			$sanitized['word_limit'] = $word_limit;
 		}
 
-		// System prompt.
 		if ( isset( $input['system_prompt'] ) ) {
 			$system_prompt = sanitize_textarea_field( $input['system_prompt'] );
 			if ( empty( $system_prompt ) ) {
@@ -507,7 +495,6 @@ class SettingsPage {
 			$sanitized['system_prompt'] = $system_prompt;
 		}
 
-		// Debug mode.
 		$sanitized['debug_mode'] = ! empty( $input['debug_mode'] );
 
 		// Redact api_key before logging; debug.log can be world-readable depending on host config.

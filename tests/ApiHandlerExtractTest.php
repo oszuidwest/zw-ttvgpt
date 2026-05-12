@@ -91,7 +91,7 @@ final class ApiHandlerExtractTest extends TestCase {
 
 		$context = $this->logger->errors[0]['context'];
 		self::assertSame( 'chatcmpl-y', $context['id'] );
-		// Configured model must survive into the log even when the response payload omits it.
+		// Fall back to the configured model when the payload omits it.
 		self::assertSame( 'gpt-5.5', $context['model'] );
 	}
 
@@ -166,7 +166,7 @@ final class ApiHandlerExtractTest extends TestCase {
 		self::assertCount( 1, $this->logger->errors );
 		$context = $this->logger->errors[0]['context'];
 		self::assertSame( 'Responses', $context['api_type'] );
-		// Configured model must survive into the log even when the response payload omits it.
+		// Fall back to the configured model when the payload omits it.
 		self::assertSame( 'gpt-5.5', $context['model'] );
 	}
 

@@ -21,6 +21,65 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @since   1.0.0
  */
 class AuditHelper {
+	private const string DIFF_CLASS_ADDED   = 'zw-diff-added';
+	private const string DIFF_CLASS_REMOVED = 'zw-diff-removed';
+
+	/**
+	 * Splits content for Text_Diff. Returns the unsplit text on PCRE failure so
+	 * the caller still renders something instead of an empty diff.
+	 *
+	 * @param string $content Content to split.
+	 * @return array<int, string>
+	 */
+	private static function split_for_word_diff( string $content ): array {
+		$parts = preg_split( '/([.!?]\s+)/', $content, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY );
+		if ( false === $parts ) {
+			return '' === $content ? array() : array( $content );
+		}
+
+		return $parts;
+	}
+
+	/**
+	 * Strips spans of the given diff class. Returns null on PCRE failure so the
+	 * caller can fall back to a plain-text pane.
+	 *
+	 * @param string $diff_html  Combined diff HTML.
+	 * @param string $class_name Diff class to remove.
+	 */
+	private static function remove_diff_class( string $diff_html, string $class_name ): ?string {
+		$pattern = '/<span class="' . preg_quote( $class_name, '/' ) . '">.*?<\/span>/s';
+		$result  = preg_replace( $pattern, '', $diff_html );
+
+		return null === $result ? null : $result;
+	}
+
+	/**
+	 * Collapses whitespace runs in diff HTML; returns the input unchanged on PCRE failure.
+	 *
+	 * @param string $diff_html Diff HTML to normalize.
+	 */
+	private static function normalize_diff_whitespace( string $diff_html ): string {
+		$normalized = preg_replace( '/\s+/', ' ', $diff_html );
+
+		return null === $normalized ? $diff_html : $normalized;
+	}
+
+	/**
+	 * Plain-text fallback for both diff panes when highlighting cannot be trusted.
+	 *
+	 * @param string $old_clean      Original content after prefix stripping.
+	 * @param string $modified_clean Modified content after prefix stripping.
+	 *
+	 * @phpstan-return DiffResult
+	 */
+	private static function plain_diff_result( string $old_clean, string $modified_clean ): array {
+		return array(
+			'before' => trim( htmlspecialchars( $old_clean, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8' ) ),
+			'after'  => trim( htmlspecialchars( $modified_clean, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8' ) ),
+		);
+	}
+
 	/**
 	 * Retrieves the most recent month that has relevant posts for audit analysis.
 	 *
@@ -33,7 +92,7 @@ class AuditHelper {
 	public static function get_most_recent_month(): ?array {
 		global $wpdb;
 
-		// Turbo-optimized: Target only recent posts for faster scanning.
+		// Limit the scan to recent posts for audit performance.
 		$result = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT p.post_date
@@ -70,7 +129,6 @@ class AuditHelper {
 			return null;
 		}
 
-		// Extract year and month from date string.
 		$year  = (int) substr( $result, 0, 4 );
 		$month = (int) substr( $result, 5, 2 );
 
@@ -124,7 +182,6 @@ class AuditHelper {
 			)
 		);
 
-		// Convert database results to array format.
 		$unique_months = array();
 		foreach ( $results as $row ) {
 			$unique_months[] = array(
@@ -213,10 +270,15 @@ class AuditHelper {
 	 * @return string Cleaned content without region prefix.
 	 */
 	public static function strip_region_prefix( string $content ): string {
-		// Remove region prefixes like "LEIDEN - ", "DEN HAAG - ", "ROOSENDAAL/OUDENBOSCH - ", "ETTEN-LEUR - ".
-		// Matches: uppercase letters, spaces, forward slashes, hyphens, followed by " - ".
-		$result = preg_replace( '/^[A-Z][A-Z\s\/\-]*\s-\s/', '', trim( $content ) );
-		return null !== $result ? $result : trim( $content );
+		// Match Unicode uppercase region prefixes while preserving one-letter
+		// list markers such as "A - eerste optie".
+		$trimmed = trim( $content );
+		$result  = preg_replace( '/^\p{Lu}{2,}[\p{Lu}\s\/\-]*\s-\s/u', '', $trimmed );
+		if ( null === $result ) {
+			return $trimmed;
+		}
+
+		return $result;
 	}
 
 	/**
@@ -236,11 +298,9 @@ class AuditHelper {
 		$ai_content    = (string) get_post_meta( $post->ID, Constants::ACF_FIELD_AI_CONTENT, true );
 		$human_content = (string) get_post_meta( $post->ID, Constants::ACF_FIELD_HUMAN_CONTENT, true );
 
-		// Clean content for accurate comparison.
 		$ai_clean    = self::strip_region_prefix( $ai_content );
 		$human_clean = self::strip_region_prefix( $human_content );
 
-		// Determine status based on content analysis using enum.
 		$status = match ( true ) {
 			empty( $ai_content ) || '' === trim( $ai_content ) => AuditStatus::FullyHumanWritten,
 			$ai_clean === $human_clean                         => AuditStatus::AiWrittenNotEdited,
@@ -288,10 +348,9 @@ class AuditHelper {
 		}
 
 		// Split into lines for WordPress diff (works better with sentences).
-		$old_lines      = preg_split( '/([.!?]\s+)/', $old_clean, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY );
-		$modified_lines = preg_split( '/([.!?]\s+)/', $modified_clean, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY );
+		$old_lines      = self::split_for_word_diff( $old_clean );
+		$modified_lines = self::split_for_word_diff( $modified_clean );
 
-		// Create the diff.
 		$text_diff = new \Text_Diff( 'auto', array( $old_lines, $modified_lines ) );
 		$renderer  = new \WP_Text_Diff_Renderer_inline();
 		$diff_html = $renderer->render( $text_diff );
@@ -300,29 +359,25 @@ class AuditHelper {
 		$diff_html = str_replace(
 			array( '<ins>', '</ins>', '<del>', '</del>' ),
 			array(
-				'<span class="zw-diff-added">',
+				'<span class="' . self::DIFF_CLASS_ADDED . '">',
 				'</span>',
-				'<span class="zw-diff-removed">',
+				'<span class="' . self::DIFF_CLASS_REMOVED . '">',
 				'</span>',
 			),
 			$diff_html
 		);
 
 		// Split the diff into before/after by removing the opposite tags.
-		$before = preg_replace( '/<span class="zw-diff-added">.*?<\/span>/s', '', $diff_html );
-		$after  = preg_replace( '/<span class="zw-diff-removed">.*?<\/span>/s', '', $diff_html );
+		$before = self::remove_diff_class( $diff_html, self::DIFF_CLASS_ADDED );
+		$after  = self::remove_diff_class( $diff_html, self::DIFF_CLASS_REMOVED );
 
-		// Clean up any double spaces - handle potential null from preg_replace.
-		$before = is_string( $before ) ? preg_replace( '/\s+/', ' ', $before ) : $diff_html;
-		$after  = is_string( $after ) ? preg_replace( '/\s+/', ' ', $after ) : $diff_html;
-
-		// Ensure before and after are strings before trimming.
-		$before = is_string( $before ) ? $before : '';
-		$after  = is_string( $after ) ? $after : '';
+		if ( null === $before || null === $after ) {
+			return self::plain_diff_result( $old_clean, $modified_clean );
+		}
 
 		return array(
-			'before' => trim( $before ),
-			'after'  => trim( $after ),
+			'before' => trim( self::normalize_diff_whitespace( $before ) ),
+			'after'  => trim( self::normalize_diff_whitespace( $after ) ),
 		);
 	}
 
@@ -344,7 +399,6 @@ class AuditHelper {
 			return 100.0;
 		}
 
-		// Split into words for comparison.
 		$ai_words_result    = preg_split( '/\s+/', trim( $ai_content ) );
 		$human_words_result = preg_split( '/\s+/', trim( $human_content ) );
 
@@ -361,11 +415,9 @@ class AuditHelper {
 		// Calculate similarity using simple word matching.
 		$max_words = max( $ai_word_count, $human_word_count );
 
-		// Find words that appear in both versions.
 		$common_words   = array_intersect( $ai_words, $human_words );
 		$matching_words = count( $common_words );
 
-		// Calculate change percentage.
 		$similarity_ratio  = $matching_words / $max_words;
 		$change_percentage = ( 1 - $similarity_ratio ) * 100;
 

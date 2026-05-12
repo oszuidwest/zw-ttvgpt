@@ -6,10 +6,7 @@ namespace ZW_TTVGPT_Core\Tests;
 use ZW_TTVGPT_Core\Logger;
 
 /**
- * Test double that records error/debug calls instead of writing to error_log.
- *
- * Lets tests assert on logger interactions without depending on WP's logging
- * stack or the global error_log destination.
+ * Test logger that records error/debug calls for assertions.
  */
 final class RecordingLogger extends Logger {
 	/** @var list<array{message: string, context: array<string, mixed>}> */

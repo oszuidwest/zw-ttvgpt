@@ -16,9 +16,7 @@ use ZW_TTVGPT_Core\AuditHelper;
 use ZW_TTVGPT_Core\AuditStatus;
 
 /**
- * Audit Page class.
- *
- * Handles audit page rendering and analysis.
+ * Renders the audit tools page and diff review UI.
  *
  * @package ZW_TTVGPT
  * @since   1.0.0
@@ -36,9 +34,24 @@ class AuditPage {
 	private function get_filter_params(): array {
 		// Read-only page - nonce verification not required for display filters.
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended
+		$year  = isset( $_GET['year'] ) ? absint( $_GET['year'] ) : null;
+		$month = isset( $_GET['month'] ) ? absint( $_GET['month'] ) : null;
+
+		// Fallback for native form submits when audit.js cannot split m=YYYYMM into year/month.
+		if ( null === $year && null === $month && isset( $_GET['m'] ) ) {
+			$raw = sanitize_text_field( wp_unslash( $_GET['m'] ) );
+			if ( '' !== $raw && '0' !== $raw && preg_match( '/^\d{6}$/', $raw ) ) {
+				$parsed_month = (int) substr( $raw, 4, 2 );
+				if ( $parsed_month >= 1 && $parsed_month <= 12 ) {
+					$year  = (int) substr( $raw, 0, 4 );
+					$month = $parsed_month;
+				}
+			}
+		}
+
 		return array(
-			'year'          => isset( $_GET['year'] ) ? absint( $_GET['year'] ) : null,
-			'month'         => isset( $_GET['month'] ) ? absint( $_GET['month'] ) : null,
+			'year'          => $year,
+			'month'         => $month,
 			'status_filter' => isset( $_GET['status'] ) ? sanitize_text_field( $_GET['status'] ) : '',
 			'change_filter' => isset( $_GET['change'] ) ? sanitize_text_field( $_GET['change'] ) : '',
 			'paged'         => isset( $_GET['paged'] ) ? max( 1, absint( $_GET['paged'] ) ) : 1,
@@ -46,16 +59,145 @@ class AuditPage {
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 	}
 
-	/**
-	 * Posts shown per page on the audit overview.
-	 *
-	 * @since 1.0.0
-	 * @var int
-	 */
+	/** The page emits a hidden modal per row, so large pages are expensive. */
 	private const int POSTS_PER_PAGE = 50;
 
 	/**
-	 * Renders the audit analysis page.
+	 * Keep in sync with generate_word_diff() and DIFF_ALLOWED_CLASSES.
+	 *
+	 * @var array<string, array<string, bool>>
+	 */
+	private const array DIFF_ALLOWED_TAGS = array(
+		'span' => array( 'class' => true ),
+	);
+
+	/**
+	 * Clamps out-of-range pages so a stale ?paged= still renders the table.
+	 *
+	 * @param array $items          Items to slice.
+	 * @param int   $requested_page Requested page (1-indexed; clamped to a valid page).
+	 * @param int   $per_page       Page size; values < 1 are treated as "no slicing".
+	 *
+	 * @phpstan-template T
+	 * @phpstan-param array<int, T> $items
+	 * @phpstan-return array{slice: array<int, T>, paged: int, total_pages: int, total: int}
+	 */
+	private static function paginate( array $items, int $requested_page, int $per_page ): array {
+		$total       = count( $items );
+		$total_pages = $per_page > 0 ? (int) ceil( $total / $per_page ) : 0;
+		$paged       = $total_pages > 0 ? min( max( 1, $requested_page ), $total_pages ) : 1;
+		$offset      = ( $paged - 1 ) * max( 0, $per_page );
+		$slice       = $per_page > 0 ? array_slice( $items, $offset, $per_page ) : array();
+
+		return array(
+			'slice'       => $slice,
+			'paged'       => $paged,
+			'total_pages' => $total_pages,
+			'total'       => $total,
+		);
+	}
+
+	/**
+	 * Diff class names emitted by AuditHelper::generate_word_diff().
+	 *
+	 * @var array<int, string>
+	 */
+	private const array DIFF_ALLOWED_CLASSES = array( 'zw-diff-added', 'zw-diff-removed' );
+
+	/**
+	 * Reports a sanitizer failure without leaking diff content.
+	 *
+	 * @param string $reason        Stable reason code.
+	 * @param string $error_message Optional lower-level error message.
+	 */
+	private static function report_diff_sanitizer_failure( string $reason, string $error_message = '' ): void {
+		if ( function_exists( 'do_action' ) ) {
+			do_action( 'zw_ttvgpt_diff_sanitizer_failed', $reason, $error_message );
+		}
+	}
+
+	/**
+	 * Runs wp_kses across the pre_kses filter, which can return arbitrary
+	 * values; the caller must guard before handing the result to PCRE.
+	 *
+	 * @param string $diff_html Raw diff HTML.
+	 */
+	private static function kses_diff_html( string $diff_html ): mixed {
+		return wp_kses( $diff_html, self::DIFF_ALLOWED_TAGS );
+	}
+
+	/**
+	 * Sanitizes diff HTML for the audit modal.
+	 *
+	 * Because wp_kses() accepts any class value when class is in the allowlist,
+	 * this adds a pass that keeps only the plugin's diff classes and converts
+	 * other span markup to inert text. Fails closed by stripping remaining tags
+	 * on any sign of malformed or untrusted output.
+	 *
+	 * @param string $diff_html Raw diff HTML emitted by AuditHelper::generate_word_diff.
+	 */
+	public static function sanitize_diff_panel( string $diff_html ): string {
+		$kses_out = self::kses_diff_html( $diff_html );
+		if ( ! is_string( $kses_out ) ) {
+			self::report_diff_sanitizer_failure( 'wp_kses_non_string' );
+			return wp_strip_all_tags( $diff_html );
+		}
+
+		// DIFF_ALLOWED_CLASSES is constant, so build the predicate once per process.
+		static $paired_pattern = null;
+		static $open_pattern   = null;
+		if ( null === $paired_pattern ) {
+			$class_pattern   = implode(
+				'|',
+				array_map(
+					static fn ( string $class_name ): string => preg_quote( $class_name, '#' ),
+					self::DIFF_ALLOWED_CLASSES
+				)
+			);
+			$disallowed_open = '<(?i:span)(?![^>]*\b(?i:class)=(["\'])\s*(?:' . $class_pattern . ')\s*\1)[^>]*>';
+			$paired_pattern  = '#' . $disallowed_open . '(.*?)</(?i:span)>#s';
+			$open_pattern    = '#' . $disallowed_open . '#';
+		}
+
+		// Bound iteration to the number of input spans, plus one stability check.
+		$span_count = preg_match_all( '/<span\b/i', $kses_out );
+		if ( false === $span_count ) {
+			self::report_diff_sanitizer_failure( 'span_count_regex_failed', preg_last_error_msg() );
+			return wp_strip_all_tags( $kses_out );
+		}
+		$max_iterations = $span_count + 1;
+
+		$current = $kses_out;
+		for ( $i = 0; $i < $max_iterations; $i++ ) {
+			$next = preg_replace( $paired_pattern, '$2', $current );
+			if ( null === $next ) {
+				self::report_diff_sanitizer_failure( 'paired_regex_failed', preg_last_error_msg() );
+				return wp_strip_all_tags( $current );
+			}
+			if ( $next === $current ) {
+				// Stable, but the paired regex can only strip balanced
+				// disallowed spans. If a disallowed open survived without a
+				// matching close, fail closed rather than echo live markup.
+				$open_match = preg_match( $open_pattern, $current );
+				if ( false === $open_match ) {
+					self::report_diff_sanitizer_failure( 'open_regex_failed', preg_last_error_msg() );
+					return wp_strip_all_tags( $current );
+				}
+				if ( 1 === $open_match ) {
+					self::report_diff_sanitizer_failure( 'orphan_disallowed_span' );
+					return wp_strip_all_tags( $current );
+				}
+				return $current;
+			}
+			$current = $next;
+		}
+
+		self::report_diff_sanitizer_failure( 'iteration_cap_exceeded' );
+		return wp_strip_all_tags( $current );
+	}
+
+	/**
+	 * Audit page callback for the Tools submenu.
 	 *
 	 * @since 1.0.0
 	 */
@@ -85,8 +227,6 @@ class AuditPage {
 			}
 		}
 
-		// Clean implementation - no benchmarking needed.
-
 		$posts  = AuditHelper::get_posts( $year, $month );
 		$counts = array(
 			AuditStatus::FullyHumanWritten->value  => 0,
@@ -104,10 +244,8 @@ class AuditPage {
 			$status   = $analysis['status'];
 			++$counts[ $status->value ];
 
-			// Apply status filter if set.
 			$status_match = empty( $status_filter ) || $status->value === $status_filter;
 
-			// Apply change filter if set (using match expression).
 			$change_match = match ( true ) {
 				empty( $change_filter )                       => true,
 				AuditStatus::AiWrittenEdited !== $status      => false,
@@ -126,12 +264,11 @@ class AuditPage {
 
 		$available_months = AuditHelper::get_months();
 
-		// Slice filtered results for the requested page.
-		$total_filtered = count( $categorized_posts );
-		$total_pages    = (int) ceil( $total_filtered / self::POSTS_PER_PAGE );
-		$paged          = $total_pages > 0 ? min( $paged, $total_pages ) : 1;
-		$page_offset    = ( $paged - 1 ) * self::POSTS_PER_PAGE;
-		$page_slice     = array_slice( $categorized_posts, $page_offset, self::POSTS_PER_PAGE );
+		$pagination     = self::paginate( $categorized_posts, $paged, self::POSTS_PER_PAGE );
+		$page_slice     = $pagination['slice'];
+		$paged          = $pagination['paged'];
+		$total_pages    = $pagination['total_pages'];
+		$total_filtered = $pagination['total'];
 
 		// Stylesheet is enqueued by AdminMenu on the audit page hook.
 		add_thickbox();
@@ -317,7 +454,18 @@ class AuditPage {
 					);
 					?>
 				</span>
-				<?php $this->render_pagination_links( $paged, $total_pages ); ?>
+				<?php
+				$this->render_pagination_links(
+					array(
+						'year'          => $year,
+						'month'         => $month,
+						'status_filter' => $status_filter,
+						'change_filter' => $change_filter,
+						'paged'         => $paged,
+					),
+					$total_pages
+				);
+				?>
 			</div>
 			<br class="clear">
 		</div>
@@ -325,26 +473,38 @@ class AuditPage {
 	}
 
 	/**
-	 * Renders WordPress-style pagination links preserving current filters.
+	 * Renders pagination links from a known arg allowlist so unrelated REQUEST_URI
+	 * params (filter_action, _wp_http_referer, etc.) cannot leak into hrefs.
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param int $paged       Current page (1-indexed).
-	 * @param int $total_pages Total number of pages.
+	 * @param array $filters     Active filters; pass `paged` set to the clamped current page.
+	 * @param int   $total_pages Total number of pages.
+	 *
+	 * @phpstan-param FilterParams $filters
 	 */
-	private function render_pagination_links( int $paged, int $total_pages ): void {
+	private function render_pagination_links( array $filters, int $total_pages ): void {
 		if ( $total_pages < 2 ) {
 			return;
 		}
 
+		$base_args = array(
+			'page'   => 'zw-ttvgpt-audit',
+			'year'   => $filters['year'],
+			'month'  => $filters['month'],
+			'status' => '' !== $filters['status_filter'] ? $filters['status_filter'] : false,
+			'change' => '' !== $filters['change_filter'] ? $filters['change_filter'] : false,
+			'paged'  => '%#%',
+		);
+
 		$links = paginate_links(
 			array(
-				'base'      => add_query_arg( 'paged', '%#%' ),
+				'base'      => add_query_arg( $base_args, admin_url( 'tools.php' ) ),
 				'format'    => '',
 				'prev_text' => __( '&laquo;', 'zw-ttvgpt' ),
 				'next_text' => __( '&raquo;', 'zw-ttvgpt' ),
 				'total'     => $total_pages,
-				'current'   => $paged,
+				'current'   => $filters['paged'],
 				'type'      => 'plain',
 			)
 		);
@@ -520,7 +680,6 @@ class AuditPage {
 			</tfoot>
 		</table>
 		
-		<!-- ThickBox Inline Modals for Diff Display -->
 		<?php foreach ( $categorized_posts as $item ) : ?>
 			<?php if ( AuditStatus::AiWrittenEdited === $item['status'] ) : ?>
 				<?php
@@ -542,7 +701,10 @@ class AuditPage {
 								</div>
 								<div class="inside">
 									<div style="max-height: 400px; overflow-y: auto; padding: 10px; font-size: 13px; line-height: 1.6;">
-										<?php echo wp_kses_post( $diff['before'] ); ?>
+										<?php
+											// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is sanitized by sanitize_diff_panel().
+											echo self::sanitize_diff_panel( $diff['before'] );
+										?>
 									</div>
 								</div>
 							</div>
@@ -553,7 +715,10 @@ class AuditPage {
 								</div>
 								<div class="inside">
 									<div style="max-height: 400px; overflow-y: auto; padding: 10px; font-size: 13px; line-height: 1.6;">
-										<?php echo wp_kses_post( $diff['after'] ); ?>
+										<?php
+											// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is sanitized by sanitize_diff_panel().
+											echo self::sanitize_diff_panel( $diff['after'] );
+										?>
 									</div>
 								</div>
 							</div>
@@ -562,35 +727,6 @@ class AuditPage {
 				</div>
 			<?php endif; ?>
 		<?php endforeach; ?>
-		
-		<script>
-		jQuery(function($) {
-			function applyFilters() {
-				var date = $('#filter-by-date').val();
-				var status = $('#filter-by-status').val();
-				var change = $('#filter-by-change').val();
-				var url = '<?php echo esc_js( admin_url( 'tools.php?page=zw-ttvgpt-audit' ) ); ?>';
-				var params = [];
-				
-				if (date && date !== '0') {
-					params.push('year=' + date.substring(0, 4));
-					params.push('month=' + parseInt(date.substring(4, 6), 10));
-				}
-				
-				if (status) params.push('status=' + status);
-				if (change) params.push('change=' + change);
-				
-				if (params.length) url += '&' + params.join('&');
-				window.location.href = url;
-			}
-			
-			$('#filter-by-date, #filter-by-status, #filter-by-change').on('change', applyFilters);
-			$('#post-query-submit').on('click', function(e) {
-				e.preventDefault();
-				applyFilters();
-			});
-		});
-		</script>
 		<?php
 	}
 }

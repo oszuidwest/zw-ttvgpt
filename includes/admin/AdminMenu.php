@@ -18,14 +18,19 @@ use ZW_TTVGPT_Core\Logger;
 use ZW_TTVGPT_Core\SettingsManager;
 
 /**
- * Admin Menu class.
- *
- * Handles WordPress admin menu registration and asset loading.
+ * Registers plugin admin pages and admin-only assets.
  *
  * @package ZW_TTVGPT
  * @since   1.0.0
  */
 class AdminMenu {
+	/**
+	 * Cached so add_admin_menu() and enqueue_admin_assets() use the same instance.
+	 *
+	 * @var SettingsPage
+	 */
+	private readonly SettingsPage $settings_page;
+
 	/**
 	 * Initializes the admin menu and registers WordPress hooks.
 	 *
@@ -34,12 +39,14 @@ class AdminMenu {
 	 * @param Logger $logger Logger instance for debugging.
 	 */
 	public function __construct( private readonly Logger $logger ) {
+		$this->settings_page = new SettingsPage( $this->logger );
+
 		add_action( 'admin_menu', $this->add_admin_menu( ... ) );
 		add_action( 'admin_enqueue_scripts', $this->enqueue_admin_assets( ... ) );
 	}
 
 	/**
-	 * Adds plugin settings page to WordPress admin menu.
+	 * Registers the settings and audit admin pages.
 	 *
 	 * @since 1.0.0
 	 */
@@ -49,7 +56,7 @@ class AdminMenu {
 			__( 'Tekst TV GPT', 'zw-ttvgpt' ),
 			Constants::REQUIRED_CAPABILITY,
 			Constants::SETTINGS_PAGE_SLUG,
-			array( new SettingsPage( $this->logger ), 'render' )
+			array( $this->settings_page, 'render' )
 		);
 
 		add_management_page(
@@ -71,13 +78,23 @@ class AdminMenu {
 	public function enqueue_admin_assets( string $hook ): void {
 		$version = Helper::get_asset_version();
 
-		// Enqueue audit CSS on audit page.
+		// Inline config prints before the deferred module tags read window.zwTTVGPT*.
 		if ( 'tools_page_zw-ttvgpt-audit' === $hook ) {
 			wp_enqueue_style( 'zw-ttvgpt-audit', ZW_TTVGPT_URL . 'assets/audit.css', array(), $version );
+
+			if ( $this->print_inline_config( 'zwTTVGPTAudit', array( 'baseUrl' => admin_url( 'tools.php' ) ) ) ) {
+				wp_enqueue_script_module( 'zw-ttvgpt-audit', ZW_TTVGPT_URL . 'assets/audit.js', array(), $version );
+			}
 			return;
 		}
 
-		// Enqueue admin assets on post edit screens.
+		if ( 'settings_page_' . Constants::SETTINGS_PAGE_SLUG === $hook ) {
+			if ( $this->print_inline_config( 'zwTTVGPTSettings', $this->settings_page->get_legacy_model_toggle_config() ) ) {
+				wp_enqueue_script_module( 'zw-ttvgpt-settings', ZW_TTVGPT_URL . 'assets/settings.js', array(), $version );
+			}
+			return;
+		}
+
 		if ( ! in_array( $hook, array( 'post.php', 'post-new.php' ), true ) ) {
 			return;
 		}
@@ -87,7 +104,6 @@ class AdminMenu {
 			return;
 		}
 
-		// Enqueue CSS.
 		wp_enqueue_style( 'zw-ttvgpt-admin', ZW_TTVGPT_URL . 'assets/admin.css', array(), $version );
 
 		// Inline script data before module loads (wp_enqueue_script_module doesn't support wp_localize_script).
@@ -123,16 +139,36 @@ class AdminMenu {
 			),
 		);
 
-		// Print inline config data before module loads.
+		if ( $this->print_inline_config( 'zwTTVGPT', $inline_data ) ) {
+			wp_enqueue_script_module( 'zw-ttvgpt-admin', ZW_TTVGPT_URL . 'assets/admin.js', array(), $version );
+		}
+	}
+
+	/**
+	 * Pre-encodes JSON so callers can skip enqueueing the module when encoding fails.
+	 *
+	 * @param string $global_name Bare window property name (without `window.` prefix).
+	 * @param array  $config      Configuration to expose to the module.
+	 *
+	 * @phpstan-param array<string, mixed> $config
+	 */
+	private function print_inline_config( string $global_name, array $config ): bool {
+		$json = wp_json_encode( $config );
+		if ( false === $json ) {
+			$this->logger->error(
+				sprintf( 'Failed to encode inline config for window.%s', $global_name ),
+				array( 'json_error' => json_last_error_msg() )
+			);
+			return false;
+		}
+
 		add_action(
 			'admin_print_footer_scripts',
-			static function () use ( $inline_data ): void {
-				wp_print_inline_script_tag( 'window.zwTTVGPT = ' . wp_json_encode( $inline_data ) . ';' );
+			static function () use ( $global_name, $json ): void {
+				wp_print_inline_script_tag( sprintf( 'window.%s = %s;', $global_name, $json ) );
 			},
 			5
 		);
-
-		// Enqueue ES module (WordPress 6.5+).
-		wp_enqueue_script_module( 'zw-ttvgpt-admin', ZW_TTVGPT_URL . 'assets/admin.js', array(), $version );
+		return true;
 	}
 }

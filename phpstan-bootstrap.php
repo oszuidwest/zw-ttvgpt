@@ -1,11 +1,9 @@
 <?php
 /**
- * PHPStan bootstrap file - never loaded by WordPress.
+ * PHPStan bootstrap; not loaded by WordPress.
  *
- * The canonical ABSPATH guard satisfies WordPress plugin-check's direct-access
- * rule. PHPStan can still execute the rest of this file because
- * szepeviktor/phpstan-wordpress runtime-defines ABSPATH in its extension
- * bootstrap, so the guard short-circuits during analysis.
+ * ABSPATH is runtime-defined by phpstan-wordpress, so the direct-access guard
+ * remains plugin-check compatible.
  *
  * @package ZW_TTVGPT
  */

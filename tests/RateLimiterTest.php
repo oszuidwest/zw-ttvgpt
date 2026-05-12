@@ -39,11 +39,7 @@ final class RateLimiterTest extends TestCase {
 		self::assertSame( Constants::RATE_LIMIT_MAX_REQUESTS, $GLOBALS['zw_test_transients'][ $key ] );
 	}
 
-	/**
-	 * Regression: at the cap the call must return true *and* must not write,
-	 * because writing refreshes the transient TTL on most cache backends and
-	 * lets a spam-clicking user indefinitely extend their own 60-second lockout.
-	 */
+	/** Regression: blocked requests must not refresh the transient TTL. */
 	public function test_request_at_cap_returns_true_without_refreshing_transient(): void {
 		$key                                   = Constants::get_rate_limit_key( self::USER_ID );
 		$GLOBALS['zw_test_transients'][ $key ] = Constants::RATE_LIMIT_MAX_REQUESTS;

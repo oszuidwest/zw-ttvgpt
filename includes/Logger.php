@@ -91,7 +91,6 @@ class Logger {
 			$log_message .= ' | Context: ' . wp_json_encode( $context );
 		}
 
-		// Log to PHP error log for consistent error tracking.
 		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Design choice for error tracking
 		error_log( $log_message );
 	}
