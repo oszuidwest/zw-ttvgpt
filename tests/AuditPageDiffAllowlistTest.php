@@ -51,14 +51,14 @@ final class AuditPageDiffAllowlistTest extends TestCase {
 	}
 
 	/**
-	 * Strips the only HTML the renderer is supposed to emit (zw-diff-added /
-	 * zw-diff-removed spans) and asserts nothing tag-shaped remains. Catches
-	 * any unencoded `<...>` that wp_kses failed to neutralize, while
-	 * tolerating dangerous *words* (onerror, javascript:) appearing as inert
-	 * text inside encoded fragments like `&lt;img onerror=...&gt;`.
+	 * Strips diff-span open and close tags only (not their inner content) and
+	 * asserts no tag-shaped markup remains. Catches any unencoded `<...>` that
+	 * wp_kses failed to neutralize — including a hypothetical nested tag inside
+	 * a diff span — while tolerating dangerous *words* (onerror, javascript:)
+	 * appearing as inert text inside encoded fragments like `&lt;img ...&gt;`.
 	 */
 	private static function assertOnlyDiffSpansAsLiveHtml( string $sanitized, string $pane_label ): void {
-		$stripped = preg_replace( '#<span class="zw-diff-(?:added|removed)">.*?</span>#s', '', $sanitized );
+		$stripped = preg_replace( '#<span class="zw-diff-(?:added|removed)">|</span>#', '', $sanitized );
 		self::assertIsString( $stripped, 'preg_replace must return a string.' );
 		self::assertDoesNotMatchRegularExpression(
 			'/<[a-zA-Z!?\/]/',
