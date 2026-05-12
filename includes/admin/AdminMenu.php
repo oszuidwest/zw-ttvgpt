@@ -83,24 +83,25 @@ class AdminMenu {
 
 		// Inline config blobs below print at admin_print_footer_scripts priority 5
 		// so they land in the document before wp_enqueue_script_module's deferred
-		// module tag executes and reads window.zwTTVGPT*.
-		// Enqueue audit assets on audit page.
+		// module tag executes and reads window.zwTTVGPT*. If encoding fails, we
+		// skip the enqueue so the module isn't loaded against missing config —
+		// the module would `console.warn` and the page would silently degrade.
 		if ( 'tools_page_zw-ttvgpt-audit' === $hook ) {
 			wp_enqueue_style( 'zw-ttvgpt-audit', ZW_TTVGPT_URL . 'assets/audit.css', array(), $version );
 
-			$this->print_inline_config( 'zwTTVGPTAudit', array( 'baseUrl' => admin_url( 'tools.php' ) ) );
-			wp_enqueue_script_module( 'zw-ttvgpt-audit', ZW_TTVGPT_URL . 'assets/audit.js', array(), $version );
+			if ( $this->print_inline_config( 'zwTTVGPTAudit', array( 'baseUrl' => admin_url( 'tools.php' ) ) ) ) {
+				wp_enqueue_script_module( 'zw-ttvgpt-audit', ZW_TTVGPT_URL . 'assets/audit.js', array(), $version );
+			}
 			return;
 		}
 
-		// Enqueue settings JS on the settings page.
 		if ( 'settings_page_' . Constants::SETTINGS_PAGE_SLUG === $hook ) {
-			$this->print_inline_config( 'zwTTVGPTSettings', $this->settings_page->get_legacy_model_toggle_config() );
-			wp_enqueue_script_module( 'zw-ttvgpt-settings', ZW_TTVGPT_URL . 'assets/settings.js', array(), $version );
+			if ( $this->print_inline_config( 'zwTTVGPTSettings', $this->settings_page->get_legacy_model_toggle_config() ) ) {
+				wp_enqueue_script_module( 'zw-ttvgpt-settings', ZW_TTVGPT_URL . 'assets/settings.js', array(), $version );
+			}
 			return;
 		}
 
-		// Enqueue admin assets on post edit screens.
 		if ( ! in_array( $hook, array( 'post.php', 'post-new.php' ), true ) ) {
 			return;
 		}
@@ -110,7 +111,6 @@ class AdminMenu {
 			return;
 		}
 
-		// Enqueue CSS.
 		wp_enqueue_style( 'zw-ttvgpt-admin', ZW_TTVGPT_URL . 'assets/admin.css', array(), $version );
 
 		// Inline script data before module loads (wp_enqueue_script_module doesn't support wp_localize_script).
@@ -146,11 +146,11 @@ class AdminMenu {
 			),
 		);
 
-		// Print inline config data before module loads.
-		$this->print_inline_config( 'zwTTVGPT', $inline_data );
-
-		// Enqueue ES module (WordPress 6.5+).
-		wp_enqueue_script_module( 'zw-ttvgpt-admin', ZW_TTVGPT_URL . 'assets/admin.js', array(), $version );
+		// ES module (WordPress 6.5+) is enqueued only if its inline config encoded
+		// successfully; otherwise we'd ship a module without the data it expects.
+		if ( $this->print_inline_config( 'zwTTVGPT', $inline_data ) ) {
+			wp_enqueue_script_module( 'zw-ttvgpt-admin', ZW_TTVGPT_URL . 'assets/admin.js', array(), $version );
+		}
 	}
 
 	/**
@@ -158,20 +158,23 @@ class AdminMenu {
 	 *
 	 * Encodes upfront so a wp_json_encode failure logs and aborts instead of
 	 * emitting `window.X = ;` — a SyntaxError that silently breaks the matching
-	 * ES module on the page.
+	 * ES module on the page. Returns a boolean so the caller can skip the
+	 * matching wp_enqueue_script_module() and avoid loading a module against
+	 * config that was never printed.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @param string $global_name Bare window property name (without `window.` prefix).
 	 * @param array  $config      Configuration to expose to the module.
+	 * @return bool True when the inline tag was scheduled; false when encoding failed.
 	 *
 	 * @phpstan-param array<string, mixed> $config
 	 */
-	private function print_inline_config( string $global_name, array $config ): void {
+	private function print_inline_config( string $global_name, array $config ): bool {
 		$json = wp_json_encode( $config );
 		if ( false === $json ) {
 			$this->logger->error( sprintf( 'Failed to encode inline config for window.%s', $global_name ) );
-			return;
+			return false;
 		}
 
 		add_action(
@@ -181,5 +184,6 @@ class AdminMenu {
 			},
 			5
 		);
+		return true;
 	}
 }

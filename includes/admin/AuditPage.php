@@ -72,8 +72,10 @@ class AuditPage {
 	private const int POSTS_PER_PAGE = 50;
 
 	/**
-	 * Allowed HTML for rendered diff markup. The renderer only ever emits
-	 * span.zw-diff-added / span.zw-diff-removed, so the allowlist is tight.
+	 * Allowed HTML for rendered diff markup. Currently emits via
+	 * AuditHelper::generate_word_diff, which only produces span.zw-diff-added
+	 * and span.zw-diff-removed — widen this allowlist only if that helper
+	 * starts emitting new tags, and update DIFF_ALLOWED_CLASSES in lockstep.
 	 *
 	 * @since 1.0.0
 	 * @var array<string, array<string, bool>>
@@ -94,7 +96,9 @@ class AuditPage {
 	 * @param array $items          Items to paginate (any indexed list).
 	 * @param int   $requested_page Page number the caller asked for.
 	 * @param int   $per_page       Page size; values < 1 are treated as "no slicing wanted".
-	 * @return array Pagination outcome including the slice, the clamped page, total pages, and total count.
+	 * @return array{slice: array, paged: int, total_pages: int, total: int} Pagination outcome:
+	 *                  the slice for the requested page, the clamped page number, total page
+	 *                  count, and total item count before slicing.
 	 *
 	 * @phpstan-template T
 	 * @phpstan-param array<int, T> $items
@@ -137,6 +141,14 @@ class AuditPage {
 	 * tolerates the variations wp_kses leaves intact: single/double quotes,
 	 * uppercase tag/attribute names, whitespace padding inside the value.
 	 *
+	 * The regex is iterated until the output is stable. A single pass uses
+	 * non-greedy `(.*?)` and so binds the outer disallowed span to the FIRST
+	 * `</span>` it sees — for nested disallowed spans like
+	 * `<span class="a"><span class="b">x</span></span>` that leaves the inner
+	 * span as a top-level survivor. Re-running peels one level per pass.
+	 * Every replacement strictly shrinks the string, so the loop terminates;
+	 * the iteration cap is a defensive bound against pathological input.
+	 *
 	 * Centralizing here keeps the modal render path and the regression
 	 * tests in AuditPageDiffAllowlistTest exercising the same sanitizer —
 	 * removing either pass fails those tests, not just the constant lock-in.
@@ -150,13 +162,18 @@ class AuditPage {
 		$kses_out = wp_kses( $diff_html, self::DIFF_ALLOWED_TAGS );
 
 		$class_pattern = implode( '|', array_map( 'preg_quote', self::DIFF_ALLOWED_CLASSES ) );
-		$result        = preg_replace(
-			'#<(?i:span)(?![^>]*\b(?i:class)=(["\'])\s*(?:' . $class_pattern . ')\s*\1)[^>]*>(.*?)</(?i:span)>#s',
-			'$2',
-			$kses_out
-		);
+		$pattern       = '#<(?i:span)(?![^>]*\b(?i:class)=(["\'])\s*(?:' . $class_pattern . ')\s*\1)[^>]*>(.*?)</(?i:span)>#s';
 
-		return is_string( $result ) ? $result : $kses_out;
+		$current = $kses_out;
+		for ( $i = 0; $i < 20; $i++ ) {
+			$next = preg_replace( $pattern, '$2', $current );
+			if ( ! is_string( $next ) || $next === $current ) {
+				return $current;
+			}
+			$current = $next;
+		}
+
+		return $current;
 	}
 
 	/**

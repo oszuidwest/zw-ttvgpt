@@ -130,4 +130,53 @@ final class AuditPageDiffAllowlistTest extends TestCase {
 		self::assertStringContainsString( 'bericht', $sanitized_before );
 		self::assertStringContainsString( 'bericht', $sanitized_after );
 	}
+
+	/**
+	 * Pins exact sanitizer output for cases the looser tag-shape assertion misses:
+	 * nested disallowed spans (the regex's non-greedy `(.*?)` would otherwise leave
+	 * the inner span surviving as a top-level node), multi-class values that are
+	 * not exactly an allowlist entry, and entity-encoded class values that would
+	 * decode to an allowlist entry in the browser. The expected outputs are the
+	 * security contract: disallowed spans must collapse to inert text.
+	 */
+	#[DataProvider('strictSanitizerProvider')]
+	public function test_sanitize_diff_panel_strips_disallowed_to_inert_text( string $raw_input, string $expected ): void {
+		self::assertSame( $expected, AuditPage::sanitize_diff_panel( $raw_input ) );
+	}
+
+	/**
+	 * @return array<string, array{string, string}>
+	 */
+	public static function strictSanitizerProvider(): array {
+		return array(
+			'nested disallowed spans (both stripped, no orphan markup)' => array(
+				'<span class="evil"><span class="also-evil">x</span></span>',
+				'x',
+			),
+			'multi-class value is not a partial allowlist match' => array(
+				'<span class="zw-diff-added evil">x</span>',
+				'x',
+			),
+			'entity-encoded class does not decode into allowlist' => array(
+				'<span class="zw-diff-&#x61;dded">x</span>',
+				'x',
+			),
+			'three-deep disallowed nesting collapses to text' => array(
+				'<span class="a"><span class="b"><span class="c">deep</span></span></span>',
+				'deep',
+			),
+		);
+	}
+
+	public function test_legitimate_diff_with_angle_brackets_renders_as_entities(): void {
+		$diff = AuditHelper::generate_word_diff( '5 < 10 of niet', '5 < 11 of niet' );
+
+		$sanitized_before = AuditPage::sanitize_diff_panel( $diff['before'] );
+		$sanitized_after  = AuditPage::sanitize_diff_panel( $diff['after'] );
+
+		self::assertStringContainsString( '&lt;', $sanitized_before, 'Literal `<` from user text must survive as entity in BEFORE pane.' );
+		self::assertStringContainsString( '&lt;', $sanitized_after, 'Literal `<` from user text must survive as entity in AFTER pane.' );
+		self::assertOnlyDiffSpansAsLiveHtml( $sanitized_before, 'BEFORE pane' );
+		self::assertOnlyDiffSpansAsLiveHtml( $sanitized_after, 'AFTER pane' );
+	}
 }
