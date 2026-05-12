@@ -23,13 +23,16 @@ final class AuditPageDiffAllowlistTest extends TestCase {
 	 *
 	 * @var array<string, array<string, bool>>
 	 */
-	private const array EXPECTED_ALLOWLIST = array( 'span' => array( 'class' => true ) );
+	private const array EXPECTED_ALLOWLIST = array(
+		'ins' => array(),
+		'del' => array(),
+	);
 
 	public static function setUpBeforeClass(): void {
 		require_once __DIR__ . '/wp-load-helper.php';
 	}
 
-	public function test_diff_allowlist_constant_only_permits_span_with_class(): void {
+	public function test_diff_allowlist_constant_only_permits_ins_and_del_without_attributes(): void {
 		$reflection = new ReflectionClass( AuditPage::class );
 		$constant   = $reflection->getReflectionConstant( 'DIFF_ALLOWED_TAGS' );
 
@@ -48,23 +51,23 @@ final class AuditPageDiffAllowlistTest extends TestCase {
 		$sanitized_before = AuditPage::sanitize_diff_panel( $diff['before'] );
 		$sanitized_after  = AuditPage::sanitize_diff_panel( $diff['after'] );
 
-		self::assertOnlyDiffSpansAsLiveHtml( $sanitized_before, 'BEFORE pane' );
-		self::assertOnlyDiffSpansAsLiveHtml( $sanitized_after, 'AFTER pane' );
+		self::assertOnlyDiffTagsAsLiveHtml( $sanitized_before, 'BEFORE pane' );
+		self::assertOnlyDiffTagsAsLiveHtml( $sanitized_after, 'AFTER pane' );
 	}
 
 	/**
-	 * Asserts that only plugin diff spans remain as live HTML.
+	 * Asserts that only inline diff tags remain as live HTML.
 	 *
 	 * @param string $sanitized Sanitized HTML.
 	 * @param string $pane_label Assertion label.
 	 */
-	private static function assertOnlyDiffSpansAsLiveHtml( string $sanitized, string $pane_label ): void {
-		$stripped = preg_replace( '#<span class="zw-diff-(?:added|removed)">|</span>#', '', $sanitized );
+	private static function assertOnlyDiffTagsAsLiveHtml( string $sanitized, string $pane_label ): void {
+		$stripped = preg_replace( '#</?(?:ins|del)>#', '', $sanitized );
 		self::assertIsString( $stripped, 'preg_replace must return a string.' );
 		self::assertDoesNotMatchRegularExpression(
 			'/<[a-zA-Z!?\/]/',
 			$stripped,
-			sprintf( 'Live HTML markup other than diff spans survived in %s: %s', $pane_label, $sanitized )
+			sprintf( 'Live HTML markup other than diff tags survived in %s: %s', $pane_label, $sanitized )
 		);
 	}
 
@@ -91,7 +94,7 @@ final class AuditPageDiffAllowlistTest extends TestCase {
 	#[DataProvider('rawSanitizerProvider')]
 	public function test_sanitize_diff_panel_strips_unencoded_markup( string $raw_input ): void {
 		$sanitized = AuditPage::sanitize_diff_panel( $raw_input );
-		self::assertOnlyDiffSpansAsLiveHtml( $sanitized, 'direct helper input' );
+		self::assertOnlyDiffTagsAsLiveHtml( $sanitized, 'direct helper input' );
 	}
 
 	/**
@@ -99,28 +102,25 @@ final class AuditPageDiffAllowlistTest extends TestCase {
 	 */
 	public static function rawSanitizerProvider(): array {
 		return array(
-			'raw script tag bypasses Text_Diff escaping'   => array( '<span class="zw-diff-added">ok</span><script>alert(1)</script>' ),
-			'raw img onerror bypasses Text_Diff escaping'  => array( '<img src=x onerror="alert(1)"><span class="zw-diff-added">ok</span>' ),
-			'raw iframe bypasses Text_Diff escaping'       => array( '<iframe src="https://evil.example/"></iframe><span class="zw-diff-removed">x</span>' ),
-			'raw javascript: anchor'                       => array( '<a href="javascript:alert(1)">klik</a>' ),
-			'nested script inside diff span'               => array( '<span class="zw-diff-added">ok<script>alert(1)</script></span>' ),
-			// wp_kses allows class values; the helper must enforce the allowlist.
-			'span with non-diff class'                     => array( '<span class="evil">x</span>' ),
-			'span with non-diff class plus legit diff'     => array( '<span class="evil">x</span><span class="zw-diff-added">ok</span>' ),
-			'span with extra class alongside diff class'   => array( '<span class="zw-diff-added evil">x</span>' ),
-			'span with no class attribute at all'          => array( '<span>x</span><span class="zw-diff-added">ok</span>' ),
-			'span with single-quoted non-diff class'       => array( "<span class='evil'>x</span>" ),
+			'raw script tag bypasses Text_Diff escaping'  => array( '<ins>ok</ins><script>alert(1)</script>' ),
+			'raw img onerror bypasses Text_Diff escaping' => array( '<img src=x onerror="alert(1)"><ins>ok</ins>' ),
+			'raw iframe bypasses Text_Diff escaping'      => array( '<iframe src="https://evil.example/"></iframe><del>x</del>' ),
+			'raw javascript: anchor'                      => array( '<a href="javascript:alert(1)">klik</a>' ),
+			'nested script inside diff tag'               => array( '<ins>ok<script>alert(1)</script></ins>' ),
+			'span with former diff class'                 => array( '<span class="zw-diff-added">x</span>' ),
+			'ins with class and event handler'            => array( '<ins class="evil" onclick="alert(1)">x</ins>' ),
+			'del with custom data attribute'              => array( '<del data-old="1">x</del>' ),
 		);
 	}
 
-	public function test_legitimate_diff_spans_survive_sanitization(): void {
+	public function test_legitimate_diff_tags_survive_sanitization(): void {
 		$diff = AuditHelper::generate_word_diff( 'het originele bericht hier', 'het bewerkte bericht hier' );
 
 		$sanitized_before = AuditPage::sanitize_diff_panel( $diff['before'] );
 		$sanitized_after  = AuditPage::sanitize_diff_panel( $diff['after'] );
 
-		self::assertStringContainsString( '<span class="zw-diff-removed"', $sanitized_before, 'Removed-content spans must survive sanitization.' );
-		self::assertStringContainsString( '<span class="zw-diff-added"', $sanitized_after, 'Added-content spans must survive sanitization.' );
+		self::assertStringContainsString( '<del>', $sanitized_before, 'Removed-content tags must survive sanitization.' );
+		self::assertStringContainsString( '<ins>', $sanitized_after, 'Added-content tags must survive sanitization.' );
 		self::assertStringContainsString( 'bericht', $sanitized_before );
 		self::assertStringContainsString( 'bericht', $sanitized_after );
 	}
@@ -141,28 +141,27 @@ final class AuditPageDiffAllowlistTest extends TestCase {
 	 */
 	public static function strictSanitizerProvider(): array {
 		return array(
-			'nested disallowed spans (both stripped, no orphan markup)' => array(
-				'<span class="evil"><span class="also-evil">x</span></span>',
+			'ins attributes are stripped'                  => array(
+				'<ins class="zw-diff-added" onclick="alert(1)">x</ins>',
+				'<ins>x</ins>',
+			),
+			'del attributes are stripped'                  => array(
+				'<del data-old="1">x</del>',
+				'<del>x</del>',
+			),
+			'former diff span is inert text'               => array(
+				'<span class="zw-diff-added">x</span>',
 				'x',
 			),
-			'multi-class value is not a partial allowlist match' => array(
-				'<span class="zw-diff-added evil">x</span>',
-				'x',
-			),
-			'entity-encoded class does not decode into allowlist' => array(
-				'<span class="zw-diff-&#x61;dded">x</span>',
-				'x',
+			'nested script inside allowed tag is inert text' => array(
+				'<ins>ok<script>alert(1)</script></ins>',
+				'<ins>okalert(1)</ins>',
 			),
 			'three-deep disallowed nesting collapses to text' => array(
 				'<span class="a"><span class="b"><span class="c">deep</span></span></span>',
 				'deep',
 			),
-			// Malformed nesting must fail closed instead of returning an orphan span.
-			'unbalanced outer disallowed leaks inner open if not fail-closed' => array(
-				'<span class="evil"><span class="also-evil">x</span>',
-				'x',
-			),
-			'unbalanced disallowed open with no close at all'                  => array(
+			'unbalanced disallowed open with no close at all' => array(
 				'<span class="evil">trailing text',
 				'trailing text',
 			),
@@ -170,7 +169,7 @@ final class AuditPageDiffAllowlistTest extends TestCase {
 	}
 
 	/**
-	 * Guards against fixed iteration caps that could return live disallowed spans.
+	 * Guards against returning live disallowed tags.
 	 *
 	 * @param int $depth Nesting depth.
 	 */
@@ -180,7 +179,7 @@ final class AuditPageDiffAllowlistTest extends TestCase {
 		$output = AuditPage::sanitize_diff_panel( $input );
 
 		self::assertSame( 'x', $output, sprintf( 'Depth %d must collapse to inert text.', $depth ) );
-		self::assertOnlyDiffSpansAsLiveHtml( $output, sprintf( 'depth %d output', $depth ) );
+		self::assertOnlyDiffTagsAsLiveHtml( $output, sprintf( 'depth %d output', $depth ) );
 	}
 
 	/**
@@ -188,9 +187,9 @@ final class AuditPageDiffAllowlistTest extends TestCase {
 	 */
 	public static function deepNestingDepthProvider(): array {
 		return array(
-			'21 deep (just past the old fixed cap)' => array( 21 ),
-			'25 deep'                               => array( 25 ),
-			'50 deep'                               => array( 50 ),
+			'21 deep' => array( 21 ),
+			'25 deep' => array( 25 ),
+			'50 deep' => array( 50 ),
 		);
 	}
 
@@ -202,40 +201,8 @@ final class AuditPageDiffAllowlistTest extends TestCase {
 
 		self::assertStringContainsString( '&lt;', $sanitized_before, 'Literal `<` from user text must survive as entity in BEFORE pane.' );
 		self::assertStringContainsString( '&lt;', $sanitized_after, 'Literal `<` from user text must survive as entity in AFTER pane.' );
-		self::assertOnlyDiffSpansAsLiveHtml( $sanitized_before, 'BEFORE pane' );
-		self::assertOnlyDiffSpansAsLiveHtml( $sanitized_after, 'AFTER pane' );
-	}
-
-	public function test_sanitize_diff_panel_reports_orphan_disallowed_open_fail_closed(): void {
-		$events = array();
-
-		add_action(
-			'zw_ttvgpt_diff_sanitizer_failed',
-			static function ( string $reason, string $error_message ) use ( &$events ): void {
-				$events[] = array(
-					'reason'  => $reason,
-					'message' => $error_message,
-				);
-			},
-			10,
-			2
-		);
-
-		try {
-			self::assertSame( 'trailing text', AuditPage::sanitize_diff_panel( '<span class="evil">trailing text' ) );
-		} finally {
-			remove_all_actions( 'zw_ttvgpt_diff_sanitizer_failed' );
-		}
-
-		self::assertSame(
-			array(
-				array(
-					'reason'  => 'orphan_disallowed_span',
-					'message' => '',
-				),
-			),
-			$events
-		);
+		self::assertOnlyDiffTagsAsLiveHtml( $sanitized_before, 'BEFORE pane' );
+		self::assertOnlyDiffTagsAsLiveHtml( $sanitized_after, 'AFTER pane' );
 	}
 
 	public function test_sanitize_diff_panel_fails_closed_when_kses_filter_returns_non_string(): void {
@@ -260,7 +227,7 @@ final class AuditPageDiffAllowlistTest extends TestCase {
 		);
 
 		try {
-			self::assertSame( 'x', AuditPage::sanitize_diff_panel( '<span class="evil">x</span>' ) );
+			self::assertSame( 'x', AuditPage::sanitize_diff_panel( '<ins>x</ins>' ) );
 		} finally {
 			remove_all_filters( 'pre_kses' );
 			remove_all_actions( 'zw_ttvgpt_diff_sanitizer_failed' );

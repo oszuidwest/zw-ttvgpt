@@ -21,9 +21,6 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @since   1.0.0
  */
 class AuditHelper {
-	private const string DIFF_CLASS_ADDED   = 'zw-diff-added';
-	private const string DIFF_CLASS_REMOVED = 'zw-diff-removed';
-
 	/**
 	 * Splits content for Text_Diff. Returns the unsplit text on PCRE failure so
 	 * the caller still renders something instead of an empty diff.
@@ -41,14 +38,15 @@ class AuditHelper {
 	}
 
 	/**
-	 * Strips spans of the given diff class. Returns null on PCRE failure so the
+	 * Strips the given inline diff tag. Returns null on PCRE failure so the
 	 * caller can fall back to a plain-text pane.
 	 *
-	 * @param string $diff_html  Combined diff HTML.
-	 * @param string $class_name Diff class to remove.
+	 * @param string $diff_html Combined diff HTML.
+	 * @param string $tag_name  Inline diff tag name to remove.
 	 */
-	private static function remove_diff_class( string $diff_html, string $class_name ): ?string {
-		$pattern = '/<span class="' . preg_quote( $class_name, '/' ) . '">.*?<\/span>/s';
+	private static function remove_diff_tag( string $diff_html, string $tag_name ): ?string {
+		$tag     = preg_quote( $tag_name, '/' );
+		$pattern = '/<' . $tag . '\b[^>]*>.*?<\/' . $tag . '>/is';
 		$result  = preg_replace( $pattern, '', $diff_html );
 
 		return null === $result ? null : $result;
@@ -355,21 +353,9 @@ class AuditHelper {
 		$renderer  = new \WP_Text_Diff_Renderer_inline();
 		$diff_html = $renderer->render( $text_diff );
 
-		// WordPress uses <ins> and <del>, convert to our classes.
-		$diff_html = str_replace(
-			array( '<ins>', '</ins>', '<del>', '</del>' ),
-			array(
-				'<span class="' . self::DIFF_CLASS_ADDED . '">',
-				'</span>',
-				'<span class="' . self::DIFF_CLASS_REMOVED . '">',
-				'</span>',
-			),
-			$diff_html
-		);
-
 		// Split the diff into before/after by removing the opposite tags.
-		$before = self::remove_diff_class( $diff_html, self::DIFF_CLASS_ADDED );
-		$after  = self::remove_diff_class( $diff_html, self::DIFF_CLASS_REMOVED );
+		$before = self::remove_diff_tag( $diff_html, 'ins' );
+		$after  = self::remove_diff_tag( $diff_html, 'del' );
 
 		if ( null === $before || null === $after ) {
 			return self::plain_diff_result( $old_clean, $modified_clean );
