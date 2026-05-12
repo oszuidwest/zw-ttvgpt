@@ -43,6 +43,22 @@ class AdminMenu {
 
 		add_action( 'admin_menu', $this->add_admin_menu( ... ) );
 		add_action( 'admin_enqueue_scripts', $this->enqueue_admin_assets( ... ) );
+		add_action( 'zw_ttvgpt_diff_sanitizer_failed', $this->log_diff_sanitizer_failure( ... ), 10, 2 );
+	}
+
+	/**
+	 * Logs sanitizer failures reported by the audit diff panel.
+	 *
+	 * @param string $reason        Stable failure reason.
+	 * @param string $error_message Optional lower-level error message.
+	 */
+	private function log_diff_sanitizer_failure( string $reason, string $error_message = '' ): void {
+		$context = array( 'reason' => $reason );
+		if ( '' !== $error_message ) {
+			$context['error_message'] = $error_message;
+		}
+
+		$this->logger->error( 'Diff sanitizer failed', $context );
 	}
 
 	/**

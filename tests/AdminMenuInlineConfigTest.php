@@ -51,6 +51,11 @@ namespace ZW_TTVGPT_Core\Tests {
 
 		protected function setUp(): void {
 			$GLOBALS['zw_test_script_modules'] = array();
+			remove_all_actions( 'zw_ttvgpt_diff_sanitizer_failed' );
+		}
+
+		protected function tearDown(): void {
+			remove_all_actions( 'zw_ttvgpt_diff_sanitizer_failed' );
 		}
 
 		public function test_settings_module_is_not_enqueued_when_inline_config_encoding_fails(): void {
@@ -73,6 +78,23 @@ namespace ZW_TTVGPT_Core\Tests {
 
 			self::assertSame( 'zw-ttvgpt-settings', $GLOBALS['zw_test_script_modules'][0]['id'] );
 			self::assertSame( array(), $logger->errors );
+		}
+
+		public function test_diff_sanitizer_failure_hook_is_logged(): void {
+			$logger = new RecordingLogger();
+
+			new AdminMenu( $logger );
+			do_action( 'zw_ttvgpt_diff_sanitizer_failed', 'wp_kses_non_string', 'pre_kses returned array' );
+
+			self::assertCount( 1, $logger->errors );
+			self::assertSame( 'Diff sanitizer failed', $logger->errors[0]['message'] );
+			self::assertSame(
+				array(
+					'reason'        => 'wp_kses_non_string',
+					'error_message' => 'pre_kses returned array',
+				),
+				$logger->errors[0]['context']
+			);
 		}
 
 		private static function newAdminMenu( RecordingLogger $logger, SettingsPage $settings_page ): AdminMenu {

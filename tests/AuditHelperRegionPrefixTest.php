@@ -80,7 +80,12 @@ final class AuditHelperRegionPrefixTest extends TestCase {
 	}
 
 	public function test_generate_word_diff_falls_back_to_plain_text_when_diff_stripping_regex_fails(): void {
-		$previous_limit = ini_set( 'pcre.backtrack_limit', '1' );
+		$log_file           = tempnam( sys_get_temp_dir(), 'zw-ttvgpt-pcre-' );
+		$previous_error_log = false;
+		self::assertIsString( $log_file );
+
+		$previous_error_log = ini_set( 'error_log', $log_file );
+		$previous_limit     = ini_set( 'pcre.backtrack_limit', '1' );
 
 		try {
 			$diff = AuditHelper::generate_word_diff( 'oude zin', 'nieuwe zin' );
@@ -88,10 +93,22 @@ final class AuditHelperRegionPrefixTest extends TestCase {
 			if ( false !== $previous_limit ) {
 				ini_set( 'pcre.backtrack_limit', $previous_limit );
 			}
+			if ( false !== $previous_error_log ) {
+				ini_set( 'error_log', $previous_error_log );
+			}
 		}
 
 		self::assertSame( 'oude zin', $diff['before'] );
 		self::assertSame( 'nieuwe zin', $diff['after'] );
 		self::assertNotSame( $diff['before'], $diff['after'], 'PCRE failures must not show the combined diff in both panes.' );
+
+		$log_contents = file_get_contents( $log_file );
+		self::assertIsString( $log_contents );
+		self::assertStringContainsString( 'Audit diff PCRE failure during remove_diff_tag', $log_contents );
+		self::assertStringContainsString( 'Backtrack limit exhausted', $log_contents );
+
+		if ( is_file( $log_file ) ) {
+			unlink( $log_file );
+		}
 	}
 }

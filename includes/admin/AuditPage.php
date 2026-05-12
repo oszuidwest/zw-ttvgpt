@@ -64,12 +64,13 @@ class AuditPage {
 	private const int POSTS_PER_PAGE = 50;
 
 	/**
-	 * Keep in sync with generate_word_diff() and DIFF_ALLOWED_CLASSES.
+	 * Allowed tag/attribute map for diff panel wp_kses.
 	 *
 	 * @var array<string, array<string, bool>>
 	 */
 	private const array DIFF_ALLOWED_TAGS = array(
-		'span' => array( 'class' => true ),
+		'ins' => array(),
+		'del' => array(),
 	);
 
 	/**
@@ -99,16 +100,12 @@ class AuditPage {
 	}
 
 	/**
-	 * Diff class names emitted by AuditHelper::generate_word_diff().
-	 *
-	 * @var array<int, string>
-	 */
-	private const array DIFF_ALLOWED_CLASSES = array( 'zw-diff-added', 'zw-diff-removed' );
-
-	/**
 	 * Reports a sanitizer failure without leaking diff content.
 	 *
-	 * @param string $reason        Stable reason code.
+	 * The hook is retained for the current non-string guard and any future
+	 * sanitizer failure modes that need the same logging/subscriber path.
+	 *
+	 * @param string $reason        Stable reason code for this failure mode.
 	 * @param string $error_message Optional lower-level error message.
 	 */
 	private static function report_diff_sanitizer_failure( string $reason, string $error_message = '' ): void {
@@ -118,8 +115,8 @@ class AuditPage {
 	}
 
 	/**
-	 * Runs wp_kses across the pre_kses filter, which can return arbitrary
-	 * values; the caller must guard before handing the result to PCRE.
+	 * Runs wp_kses(), including pre_kses callbacks that can return arbitrary
+	 * values. Callers must verify is_string() before echoing the result.
 	 *
 	 * @param string $diff_html Raw diff HTML.
 	 */
@@ -130,10 +127,8 @@ class AuditPage {
 	/**
 	 * Sanitizes diff HTML for the audit modal.
 	 *
-	 * Because wp_kses() accepts any class value when class is in the allowlist,
-	 * this adds a pass that keeps only the plugin's diff classes and converts
-	 * other span markup to inert text. Fails closed by stripping remaining tags
-	 * on any sign of malformed or untrusted output.
+	 * The diff renderer emits unadorned <ins>/<del> tags. Letting wp_kses()
+	 * keep only those tags avoids a class allowlist and strips any attributes.
 	 *
 	 * @param string $diff_html Raw diff HTML emitted by AuditHelper::generate_word_diff.
 	 */
@@ -144,57 +139,7 @@ class AuditPage {
 			return wp_strip_all_tags( $diff_html );
 		}
 
-		// DIFF_ALLOWED_CLASSES is constant, so build the predicate once per process.
-		static $paired_pattern = null;
-		static $open_pattern   = null;
-		if ( null === $paired_pattern ) {
-			$class_pattern   = implode(
-				'|',
-				array_map(
-					static fn ( string $class_name ): string => preg_quote( $class_name, '#' ),
-					self::DIFF_ALLOWED_CLASSES
-				)
-			);
-			$disallowed_open = '<(?i:span)(?![^>]*\b(?i:class)=(["\'])\s*(?:' . $class_pattern . ')\s*\1)[^>]*>';
-			$paired_pattern  = '#' . $disallowed_open . '(.*?)</(?i:span)>#s';
-			$open_pattern    = '#' . $disallowed_open . '#';
-		}
-
-		// Bound iteration to the number of input spans, plus one stability check.
-		$span_count = preg_match_all( '/<span\b/i', $kses_out );
-		if ( false === $span_count ) {
-			self::report_diff_sanitizer_failure( 'span_count_regex_failed', preg_last_error_msg() );
-			return wp_strip_all_tags( $kses_out );
-		}
-		$max_iterations = $span_count + 1;
-
-		$current = $kses_out;
-		for ( $i = 0; $i < $max_iterations; $i++ ) {
-			$next = preg_replace( $paired_pattern, '$2', $current );
-			if ( null === $next ) {
-				self::report_diff_sanitizer_failure( 'paired_regex_failed', preg_last_error_msg() );
-				return wp_strip_all_tags( $current );
-			}
-			if ( $next === $current ) {
-				// Stable, but the paired regex can only strip balanced
-				// disallowed spans. If a disallowed open survived without a
-				// matching close, fail closed rather than echo live markup.
-				$open_match = preg_match( $open_pattern, $current );
-				if ( false === $open_match ) {
-					self::report_diff_sanitizer_failure( 'open_regex_failed', preg_last_error_msg() );
-					return wp_strip_all_tags( $current );
-				}
-				if ( 1 === $open_match ) {
-					self::report_diff_sanitizer_failure( 'orphan_disallowed_span' );
-					return wp_strip_all_tags( $current );
-				}
-				return $current;
-			}
-			$current = $next;
-		}
-
-		self::report_diff_sanitizer_failure( 'iteration_cap_exceeded' );
-		return wp_strip_all_tags( $current );
+		return $kses_out;
 	}
 
 	/**
@@ -701,7 +646,7 @@ class AuditPage {
 									<h3 class="hndle"><?php esc_html_e( 'AI-versie', 'zw-ttvgpt' ); ?></h3>
 								</div>
 								<div class="inside">
-									<div style="max-height: 400px; overflow-y: auto; padding: 10px; font-size: 13px; line-height: 1.6;">
+									<div class="zw-diff-panel" style="max-height: 400px; overflow-y: auto; padding: 10px; font-size: 13px; line-height: 1.6;">
 										<?php
 											// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is sanitized by sanitize_diff_panel().
 											echo self::sanitize_diff_panel( $diff['before'] );
@@ -715,7 +660,7 @@ class AuditPage {
 									<h3 class="hndle"><?php esc_html_e( 'Bewerkte versie', 'zw-ttvgpt' ); ?></h3>
 								</div>
 								<div class="inside">
-									<div style="max-height: 400px; overflow-y: auto; padding: 10px; font-size: 13px; line-height: 1.6;">
+									<div class="zw-diff-panel" style="max-height: 400px; overflow-y: auto; padding: 10px; font-size: 13px; line-height: 1.6;">
 										<?php
 											// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is sanitized by sanitize_diff_panel().
 											echo self::sanitize_diff_panel( $diff['after'] );

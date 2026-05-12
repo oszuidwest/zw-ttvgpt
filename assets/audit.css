@@ -60,15 +60,16 @@
     border-left: 4px solid #00a0d2;
 }
 
-.zw-diff-added {
+.zw-diff-panel ins {
     padding: 2px 4px;
     font-weight: 500;
     color: #155724;
+    text-decoration: none;
     background: #d4edda;
     border-radius: 3px;
 }
 
-.zw-diff-removed {
+.zw-diff-panel del {
     padding: 2px 4px;
     font-weight: 500;
     color: #721c24;

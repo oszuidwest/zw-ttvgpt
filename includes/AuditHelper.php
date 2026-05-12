@@ -21,8 +21,15 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @since   1.0.0
  */
 class AuditHelper {
-	private const string DIFF_CLASS_ADDED   = 'zw-diff-added';
-	private const string DIFF_CLASS_REMOVED = 'zw-diff-removed';
+	/**
+	 * Logs a PCRE failure without including article content.
+	 *
+	 * @param string $operation Operation that triggered the PCRE failure.
+	 */
+	private static function log_pcre_failure( string $operation ): void {
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Design choice for rare PCRE regression visibility.
+		error_log( sprintf( 'ZW_TTVGPT.ERROR: Audit diff PCRE failure during %s: %s', $operation, preg_last_error_msg() ) );
+	}
 
 	/**
 	 * Splits content for Text_Diff. Returns the unsplit text on PCRE failure so
@@ -34,6 +41,7 @@ class AuditHelper {
 	private static function split_for_word_diff( string $content ): array {
 		$parts = preg_split( '/([.!?]\s+)/', $content, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY );
 		if ( false === $parts ) {
+			self::log_pcre_failure( 'split_for_word_diff' );
 			return '' === $content ? array() : array( $content );
 		}
 
@@ -41,15 +49,20 @@ class AuditHelper {
 	}
 
 	/**
-	 * Strips spans of the given diff class. Returns null on PCRE failure so the
+	 * Strips the given inline diff tag. Returns null on PCRE failure so the
 	 * caller can fall back to a plain-text pane.
 	 *
-	 * @param string $diff_html  Combined diff HTML.
-	 * @param string $class_name Diff class to remove.
+	 * @param string $diff_html Combined diff HTML.
+	 * @param string $tag_name  Inline diff tag name to remove.
 	 */
-	private static function remove_diff_class( string $diff_html, string $class_name ): ?string {
-		$pattern = '/<span class="' . preg_quote( $class_name, '/' ) . '">.*?<\/span>/s';
+	private static function remove_diff_tag( string $diff_html, string $tag_name ): ?string {
+		$tag     = preg_quote( $tag_name, '/' );
+		$pattern = '/<' . $tag . '\b[^>]*>.*?<\/' . $tag . '>/is';
 		$result  = preg_replace( $pattern, '', $diff_html );
+
+		if ( null === $result ) {
+			self::log_pcre_failure( 'remove_diff_tag' );
+		}
 
 		return null === $result ? null : $result;
 	}
@@ -61,6 +74,10 @@ class AuditHelper {
 	 */
 	private static function normalize_diff_whitespace( string $diff_html ): string {
 		$normalized = preg_replace( '/\s+/', ' ', $diff_html );
+
+		if ( null === $normalized ) {
+			self::log_pcre_failure( 'normalize_diff_whitespace' );
+		}
 
 		return null === $normalized ? $diff_html : $normalized;
 	}
@@ -355,21 +372,9 @@ class AuditHelper {
 		$renderer  = new \WP_Text_Diff_Renderer_inline();
 		$diff_html = $renderer->render( $text_diff );
 
-		// WordPress uses <ins> and <del>, convert to our classes.
-		$diff_html = str_replace(
-			array( '<ins>', '</ins>', '<del>', '</del>' ),
-			array(
-				'<span class="' . self::DIFF_CLASS_ADDED . '">',
-				'</span>',
-				'<span class="' . self::DIFF_CLASS_REMOVED . '">',
-				'</span>',
-			),
-			$diff_html
-		);
-
 		// Split the diff into before/after by removing the opposite tags.
-		$before = self::remove_diff_class( $diff_html, self::DIFF_CLASS_ADDED );
-		$after  = self::remove_diff_class( $diff_html, self::DIFF_CLASS_REMOVED );
+		$before = self::remove_diff_tag( $diff_html, 'ins' );
+		$after  = self::remove_diff_tag( $diff_html, 'del' );
 
 		if ( null === $before || null === $after ) {
 			return self::plain_diff_result( $old_clean, $modified_clean );
