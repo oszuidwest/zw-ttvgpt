@@ -22,6 +22,16 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class AuditHelper {
 	/**
+	 * Logs a PCRE failure without including article content.
+	 *
+	 * @param string $operation Operation that triggered the PCRE failure.
+	 */
+	private static function log_pcre_failure( string $operation ): void {
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Design choice for rare PCRE regression visibility.
+		error_log( sprintf( 'ZW_TTVGPT.ERROR: Audit diff PCRE failure during %s: %s', $operation, preg_last_error_msg() ) );
+	}
+
+	/**
 	 * Splits content for Text_Diff. Returns the unsplit text on PCRE failure so
 	 * the caller still renders something instead of an empty diff.
 	 *
@@ -31,6 +41,7 @@ class AuditHelper {
 	private static function split_for_word_diff( string $content ): array {
 		$parts = preg_split( '/([.!?]\s+)/', $content, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY );
 		if ( false === $parts ) {
+			self::log_pcre_failure( 'split_for_word_diff' );
 			return '' === $content ? array() : array( $content );
 		}
 
@@ -49,6 +60,10 @@ class AuditHelper {
 		$pattern = '/<' . $tag . '\b[^>]*>.*?<\/' . $tag . '>/is';
 		$result  = preg_replace( $pattern, '', $diff_html );
 
+		if ( null === $result ) {
+			self::log_pcre_failure( 'remove_diff_tag' );
+		}
+
 		return null === $result ? null : $result;
 	}
 
@@ -59,6 +74,10 @@ class AuditHelper {
 	 */
 	private static function normalize_diff_whitespace( string $diff_html ): string {
 		$normalized = preg_replace( '/\s+/', ' ', $diff_html );
+
+		if ( null === $normalized ) {
+			self::log_pcre_failure( 'normalize_diff_whitespace' );
+		}
 
 		return null === $normalized ? $diff_html : $normalized;
 	}

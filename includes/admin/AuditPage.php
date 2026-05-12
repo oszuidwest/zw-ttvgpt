@@ -101,7 +101,10 @@ class AuditPage {
 	/**
 	 * Reports a sanitizer failure without leaking diff content.
 	 *
-	 * @param string $reason        Stable reason code.
+	 * The hook is retained for the current non-string guard and any future
+	 * sanitizer failure modes that need the same logging/subscriber path.
+	 *
+	 * @param string $reason        Stable reason code for this failure mode.
 	 * @param string $error_message Optional lower-level error message.
 	 */
 	private static function report_diff_sanitizer_failure( string $reason, string $error_message = '' ): void {
@@ -111,8 +114,8 @@ class AuditPage {
 	}
 
 	/**
-	 * Runs wp_kses across the pre_kses filter, which can return arbitrary
-	 * values; the caller must guard before echoing the result.
+	 * Runs wp_kses(), including pre_kses callbacks that can return arbitrary
+	 * values. Callers must verify is_string() before echoing the result.
 	 *
 	 * @param string $diff_html Raw diff HTML.
 	 */

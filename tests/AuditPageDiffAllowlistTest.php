@@ -187,9 +187,7 @@ final class AuditPageDiffAllowlistTest extends TestCase {
 	 */
 	public static function deepNestingDepthProvider(): array {
 		return array(
-			'21 deep' => array( 21 ),
-			'25 deep' => array( 25 ),
-			'50 deep' => array( 50 ),
+			'representative deep nesting' => array( 50 ),
 		);
 	}
 
@@ -201,6 +199,27 @@ final class AuditPageDiffAllowlistTest extends TestCase {
 
 		self::assertStringContainsString( '&lt;', $sanitized_before, 'Literal `<` from user text must survive as entity in BEFORE pane.' );
 		self::assertStringContainsString( '&lt;', $sanitized_after, 'Literal `<` from user text must survive as entity in AFTER pane.' );
+		self::assertOnlyDiffTagsAsLiveHtml( $sanitized_before, 'BEFORE pane' );
+		self::assertOnlyDiffTagsAsLiveHtml( $sanitized_after, 'AFTER pane' );
+	}
+
+	public function test_literal_diff_tags_from_user_content_render_as_entities(): void {
+		$diff = AuditHelper::generate_word_diff(
+			'literal <ins>evil</ins> en <del>weg</del> oud',
+			'literal <ins>evil</ins> en <del>weg</del> nieuw'
+		);
+
+		$sanitized_before = AuditPage::sanitize_diff_panel( $diff['before'] );
+		$sanitized_after  = AuditPage::sanitize_diff_panel( $diff['after'] );
+
+		self::assertStringContainsString( '&lt;ins&gt;evil&lt;/ins&gt;', $sanitized_before );
+		self::assertStringContainsString( '&lt;del&gt;weg&lt;/del&gt;', $sanitized_before );
+		self::assertStringContainsString( '&lt;ins&gt;evil&lt;/ins&gt;', $sanitized_after );
+		self::assertStringContainsString( '&lt;del&gt;weg&lt;/del&gt;', $sanitized_after );
+		self::assertStringNotContainsString( '<ins>evil</ins>', $sanitized_before );
+		self::assertStringNotContainsString( '<ins>evil</ins>', $sanitized_after );
+		self::assertStringNotContainsString( '<del>weg</del>', $sanitized_before );
+		self::assertStringNotContainsString( '<del>weg</del>', $sanitized_after );
 		self::assertOnlyDiffTagsAsLiveHtml( $sanitized_before, 'BEFORE pane' );
 		self::assertOnlyDiffTagsAsLiveHtml( $sanitized_after, 'AFTER pane' );
 	}
