@@ -108,7 +108,7 @@ npm install
 
 # Run linting
 vendor/bin/phpcs                    # PHP CodeSniffer
-vendor/bin/phpstan analyse          # PHPStan (level 6)
+vendor/bin/phpstan analyse --memory-limit=2G  # PHPStan (level 6)
 npm run lint                        # Biome (JS/CSS)
 
 # Auto-fix code style issues
