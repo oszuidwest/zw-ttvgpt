@@ -6,6 +6,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', dirname( __DIR__ ) . '/vendor/roots/wordpress-no-content/' );
 }
 
+if ( ! defined( 'MINUTE_IN_SECONDS' ) ) {
+	define( 'MINUTE_IN_SECONDS', 60 );
+}
+if ( ! defined( 'HOUR_IN_SECONDS' ) ) {
+	define( 'HOUR_IN_SECONDS', 60 * MINUTE_IN_SECONDS );
+}
+
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/RecordingLogger.php';
 
@@ -34,6 +41,13 @@ if ( ! function_exists( 'set_transient' ) ) {
 			return false;
 		}
 		$GLOBALS['zw_test_transients'][ $key ] = $value;
+		return true;
+	}
+}
+
+if ( ! function_exists( 'delete_transient' ) ) {
+	function delete_transient( string $key ): bool {
+		unset( $GLOBALS['zw_test_transients'][ $key ] );
 		return true;
 	}
 }

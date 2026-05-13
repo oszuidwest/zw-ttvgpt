@@ -35,6 +35,7 @@ use ZW_TTVGPT_Core\ApiHandler;
 use ZW_TTVGPT_Core\Constants;
 use ZW_TTVGPT_Core\Helper;
 use ZW_TTVGPT_Core\Logger;
+use ZW_TTVGPT_Core\RevisionManager;
 use ZW_TTVGPT_Core\SettingsManager;
 use ZW_TTVGPT_Core\SummaryGenerator;
 use ZW_TTVGPT_Core\Admin\AdminMenu;
@@ -46,17 +47,21 @@ use ZW_TTVGPT_Core\Admin\AdminMenu;
  */
 function zw_ttvgpt_init(): void {
 	$logger = new Logger( SettingsManager::is_debug_mode() );
+	$model  = SettingsManager::get_model();
+
+	$revision_manager = new RevisionManager( $logger );
 
 	$api_handler = new ApiHandler(
 		SettingsManager::get_api_key(),
-		SettingsManager::get_model(),
+		$model,
 		$logger
 	);
 
 	new SummaryGenerator(
 		$api_handler,
 		SettingsManager::get_word_limit(),
-		$logger
+		$logger,
+		$revision_manager
 	);
 
 	if ( is_admin() ) {

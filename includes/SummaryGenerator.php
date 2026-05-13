@@ -28,14 +28,16 @@ class SummaryGenerator {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param ApiHandler $api_handler API handler for OpenAI communication.
-	 * @param int        $word_limit  Maximum words allowed in summaries.
-	 * @param Logger     $logger      Logger instance for debugging.
+	 * @param ApiHandler      $api_handler      API handler for OpenAI communication.
+	 * @param int             $word_limit       Maximum words allowed in summaries.
+	 * @param Logger          $logger           Logger instance for debugging.
+	 * @param RevisionManager $revision_manager Native revision integration.
 	 */
 	public function __construct(
 		private readonly ApiHandler $api_handler,
 		private readonly int $word_limit,
-		private readonly Logger $logger
+		private readonly Logger $logger,
+		private readonly RevisionManager $revision_manager
 	) {
 		add_action( 'wp_ajax_zw_ttvgpt_generate', $this->handle_ajax_request( ... ) );
 	}
@@ -134,6 +136,8 @@ class SummaryGenerator {
 				500
 			);
 		}
+
+		$this->revision_manager->record_generation( $post_id, SettingsManager::get_model(), $regions );
 
 		$this->logger->debug( 'Summary generated for post ' . $post_id );
 

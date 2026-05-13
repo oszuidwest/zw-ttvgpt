@@ -15,6 +15,7 @@ WordPress-plugin die de GPT-modellen van OpenAI gebruikt om automatisch korte sa
 - Automatische detectie en ondersteuning voor de Chat Completions API en Responses API
 - Werkt met zowel de Block Editor (Gutenberg) als de Classic Editor
 - Auditfunctionaliteit met overzicht van alle samenvattingen en diff-weergave
+- Native WordPress-revisies voor AI-samenvattingen, inclusief model- en regio-metadata
 - Rate limiting (10 requests per minuut per gebruiker)
 - Uitgebreide foutafhandeling en validatie met consistente HTTP status codes
 - Integratie met WordPress-admin en ACF
@@ -77,6 +78,14 @@ OpenAI faseert self-serve fine-tuning uit. Nieuwe organisaties zonder eerder fin
 - Filter op wijzigingspercentage: Laag (≤20%), Gemiddeld (21-50%) of Hoog (>50%)
 - Bekijk de diff-weergave door op **Bekijk diff** te klikken
 
+### AI-versiehistorie
+- Elke succesvolle generatie wordt gemarkeerd voor de eerstvolgende normale WordPress-save. Die save wordt opgeslagen als native WordPress-revisie, zodat de revisie de actuele editorinhoud en de gegenereerde ACF-meta samen vastlegt.
+- Als het bericht na generatie niet wordt opgeslagen, vervalt deze tijdelijke markering automatisch na een uur.
+- De plugin gebruikt WordPress' postmeta-revisions framework voor de ACF-samenvatting, de opgeslagen AI-versie, het gebruikte model, de geselecteerde regio's en een AI-marker.
+- Open een bericht en gebruik de metabox **Tekst TV AI-versies** om eerdere AI-generaties in het WordPress Compare Revisions-scherm te bekijken of te herstellen.
+- Het Compare Revisions-scherm toont naast de normale revisievelden ook de Tekst TV-samenvatting, AI-versie, model, regio's en AI-marker.
+- De plugin wijzigt de sitebrede revisielimiet niet. WordPress blijft `WP_POST_REVISIONS` en eventuele bestaande revision-filters respecteren.
+
 ### Debuggen
 Schakel debugmodus in via **Instellingen** → **Tekst TV GPT** om gedetailleerde informatie te loggen:
 
@@ -120,6 +129,13 @@ npm run lint:fix                    # Biome auto-fix
 - **PHP:** WordPress Coding Standards (WPCS) + PHPStan level 6
 - **JavaScript/CSS:** Biome voor linting en formatting
 - **CI/CD:** GitHub Actions met automatische tests op PHP 8.3 en 8.4
+
+### Handmatige verificatie voor revisies
+Valideer na wijzigingen aan ACF of editor-integratie in beide editors:
+
+1. Genereer een samenvatting in de Block Editor, bewerk de samenvatting, herstel een eerdere AI-versie via **Tekst TV AI-versies** en controleer dat zowel het zichtbare samenvattingsveld als de opgeslagen AI-versie teruggezet zijn.
+2. Herhaal dezelfde flow in de Classic Editor.
+3. Controleer in het Compare Revisions-scherm dat model en regio's alleen zichtbaar zijn bij AI-generatie-revisies.
 
 ### Architectuur
 
