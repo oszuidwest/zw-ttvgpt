@@ -23,6 +23,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Helper {
 
 	/**
+	 * Regex fragment used to tokenize words consistently across PHP and JS.
+	 *
+	 * @since 1.0.0
+	 */
+	public const string WORD_TOKEN_PATTERN = '[\p{L}]+(?:[-\'][\p{L}]+)*';
+
+	/**
 	 * Removes plugin-owned transient rows from wp_options.
 	 *
 	 * Only called on deactivation and uninstall, so any persistent-object-cache
@@ -148,7 +155,7 @@ class Helper {
 	}
 
 	/**
-	 * Counts words in a text using a Unicode-aware tokenizer.
+	 * Tokenizes words in a text using a Unicode-aware pattern.
 	 *
 	 * A word is one or more Unicode letters, optionally followed by groups of a
 	 * hyphen or apostrophe and more letters (e.g. "zelf-rijdend", "auto's"). This
@@ -158,10 +165,29 @@ class Helper {
 	 *
 	 * @since 1.0.0
 	 *
+	 * @param string $text Text to tokenize.
+	 * @return array Word tokens.
+	 *
+	 * @phpstan-return list<string>
+	 */
+	public static function tokenize_words( string $text ): array {
+		$matched = preg_match_all( '/' . self::WORD_TOKEN_PATTERN . '/u', $text, $matches );
+		if ( false === $matched ) {
+			return array();
+		}
+
+		return $matches[0];
+	}
+
+	/**
+	 * Counts words in a text using a Unicode-aware tokenizer.
+	 *
+	 * @since 1.0.0
+	 *
 	 * @param string $text Text to count words in.
 	 * @return int Number of words.
 	 */
 	public static function count_words( string $text ): int {
-		return (int) preg_match_all( '/[\p{L}]+([-\'][\p{L}]+)*/u', $text );
+		return count( self::tokenize_words( $text ) );
 	}
 }

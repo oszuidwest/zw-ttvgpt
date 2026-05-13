@@ -23,6 +23,12 @@ const MESSAGE_TIMING = {
     typeStartDelay: 100,
 };
 
+const config = window.zwTTVGPT ?? {};
+const WORD_TOKEN_REGEX =
+    typeof config.wordTokenPattern === 'string'
+        ? new RegExp(config.wordTokenPattern, 'gu')
+        : null;
+
 let cachedAcfField = null;
 let cachedGptField = null;
 let cachedWordCounter = null;
@@ -69,7 +75,6 @@ function init() {
  * DOM ready handler - cache elements and inject button.
  */
 function onReady() {
-    const config = window.zwTTVGPT;
     if (!config?.acfFields) {
         return;
     }
@@ -87,12 +92,12 @@ function onReady() {
  * @return {number} Word count.
  */
 function countWords(text) {
-    if (!text || typeof text !== 'string') {
+    if (!text || typeof text !== 'string' || !WORD_TOKEN_REGEX) {
         return 0;
     }
     let count = 0;
-    const regex = /[\p{L}]+([-'][\p{L}]+)*/gu;
-    while (regex.exec(text)) {
+    WORD_TOKEN_REGEX.lastIndex = 0;
+    while (WORD_TOKEN_REGEX.exec(text)) {
         count++;
     }
     return count;

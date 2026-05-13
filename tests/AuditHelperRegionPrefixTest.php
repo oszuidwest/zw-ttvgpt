@@ -67,6 +67,10 @@ final class AuditHelperRegionPrefixTest extends TestCase {
 		self::assertSame( 100.0, AuditHelper::calculate_change_percentage( 'human content', '' ) );
 	}
 
+	public function test_calculate_change_percentage_no_word_tokens_returns_zero(): void {
+		self::assertSame( 0.0, AuditHelper::calculate_change_percentage( '3,5', '---' ) );
+	}
+
 	public function test_calculate_change_percentage_identical_returns_zero(): void {
 		self::assertSame( 0.0, AuditHelper::calculate_change_percentage( 'same words here', 'same words here' ) );
 	}
@@ -76,6 +80,16 @@ final class AuditHelperRegionPrefixTest extends TestCase {
 		self::assertSame(
 			50.0,
 			AuditHelper::calculate_change_percentage( 'the cat sat down', 'the cat ran away' )
+		);
+	}
+
+	public function test_calculate_change_percentage_uses_unicode_word_tokens(): void {
+		self::assertSame(
+			20.0,
+			AuditHelper::calculate_change_percentage(
+				'CURAÇAO - Het café opent vandaag',
+				'CURAÇAO - Het café opent morgen'
+			)
 		);
 	}
 

@@ -128,18 +128,19 @@ class AdminMenu {
 
 		// Inline script data before module loads (wp_enqueue_script_module doesn't support wp_localize_script).
 		$inline_data = array(
-			'ajaxUrl'        => admin_url( 'admin-ajax.php' ),
-			'nonce'          => wp_create_nonce( 'zw_ttvgpt_nonce' ),
-			'acfFields'      => Helper::get_acf_field_ids(),
-			'debugMode'      => SettingsManager::is_debug_mode(),
-			'wordLimit'      => SettingsManager::get_word_limit(),
-			'animationDelay' => array(
+			'ajaxUrl'          => admin_url( 'admin-ajax.php' ),
+			'nonce'            => wp_create_nonce( 'zw_ttvgpt_nonce' ),
+			'acfFields'        => Helper::get_acf_field_ids(),
+			'debugMode'        => SettingsManager::is_debug_mode(),
+			'wordLimit'        => SettingsManager::get_word_limit(),
+			'wordTokenPattern' => Helper::WORD_TOKEN_PATTERN,
+			'animationDelay'   => array(
 				'min'   => 20,
 				'max'   => 50,
 				'space' => 30,
 			),
-			'timeouts'       => array( 'successMessage' => 3000 ),
-			'strings'        => array(
+			'timeouts'         => array( 'successMessage' => 3000 ),
+			'strings'          => array(
 				'generating'      => __( 'Genereren...', 'zw-ttvgpt' ),
 				'error'           => __( 'Fout opgetreden', 'zw-ttvgpt' ),
 				'success'         => __( 'Klaar!', 'zw-ttvgpt' ),
