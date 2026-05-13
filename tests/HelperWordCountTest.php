@@ -24,6 +24,18 @@ final class HelperWordCountTest extends TestCase {
 		self::assertSame( $expected, Helper::tokenize_words( $input ) );
 	}
 
+	public function test_tokenize_words_returns_empty_array_when_pcre_fails(): void {
+		$previous_limit = ini_set( 'pcre.backtrack_limit', '1' );
+
+		try {
+			self::assertSame( array(), Helper::tokenize_words( 'zelf-rijdend cafe' ) );
+		} finally {
+			if ( false !== $previous_limit ) {
+				ini_set( 'pcre.backtrack_limit', $previous_limit );
+			}
+		}
+	}
+
 	/**
 	 * @return array<string, array{string, int}>
 	 */
@@ -57,6 +69,7 @@ final class HelperWordCountTest extends TestCase {
 	public static function wordTokenProvider(): array {
 		return array(
 			'empty string'                     => array( '', array() ),
+			'whitespace only'                  => array( "   \t\n", array() ),
 			'diacritics and compounds'        => array( "Curaçao café auto's zelf-rijdend", array( 'Curaçao', 'café', "auto's", 'zelf-rijdend' ) ),
 			'punctuation is not a token'      => array( 'CURAÇAO - Het café opent.', array( 'CURAÇAO', 'Het', 'café', 'opent' ) ),
 			'leading apostrophe starts token' => array( "'s avonds", array( 's', 'avonds' ) ),

@@ -67,6 +67,10 @@ final class AuditHelperRegionPrefixTest extends TestCase {
 		self::assertSame( 100.0, AuditHelper::calculate_change_percentage( 'human content', '' ) );
 	}
 
+	public function test_calculate_change_percentage_no_word_tokens_returns_zero(): void {
+		self::assertSame( 0.0, AuditHelper::calculate_change_percentage( '3,5', '---' ) );
+	}
+
 	public function test_calculate_change_percentage_identical_returns_zero(): void {
 		self::assertSame( 0.0, AuditHelper::calculate_change_percentage( 'same words here', 'same words here' ) );
 	}

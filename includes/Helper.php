@@ -27,7 +27,7 @@ class Helper {
 	 *
 	 * @since 1.0.0
 	 */
-	public const string WORD_TOKEN_PATTERN = '[\p{L}]+([-\'][\p{L}]+)*';
+	public const string WORD_TOKEN_PATTERN = '[\p{L}]+(?:[-\'][\p{L}]+)*';
 
 	/**
 	 * Removes plugin-owned transient rows from wp_options.
