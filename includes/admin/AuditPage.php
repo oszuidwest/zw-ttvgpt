@@ -53,8 +53,8 @@ class AuditPage {
 		return array(
 			'year'          => $year,
 			'month'         => $month,
-			'status_filter' => isset( $_GET['status'] ) ? sanitize_text_field( $_GET['status'] ) : '',
-			'change_filter' => isset( $_GET['change'] ) ? sanitize_text_field( $_GET['change'] ) : '',
+			'status_filter' => isset( $_GET['status'] ) ? sanitize_text_field( wp_unslash( $_GET['status'] ) ) : '',
+			'change_filter' => isset( $_GET['change'] ) ? sanitize_text_field( wp_unslash( $_GET['change'] ) ) : '',
 			'paged'         => isset( $_GET['paged'] ) ? max( 1, absint( $_GET['paged'] ) ) : 1,
 		);
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
@@ -184,13 +184,14 @@ class AuditPage {
 
 			$status_match = empty( $status_filter ) || $status->value === $status_filter;
 
+			$pct          = $analysis['change_percentage'];
 			$change_match = match ( true ) {
 				empty( $change_filter )                       => true,
 				AuditStatus::AiWrittenEdited !== $status      => false,
 				default                                       => match ( $change_filter ) {
-					'low'    => $analysis['change_percentage'] <= 20,
-					'medium' => $analysis['change_percentage'] > 20 && $analysis['change_percentage'] <= 50,
-					'high'   => $analysis['change_percentage'] > 50,
+					'low'    => $pct <= Constants::CHANGE_BAND_LOW_MAX,
+					'medium' => $pct > Constants::CHANGE_BAND_LOW_MAX && $pct <= Constants::CHANGE_BAND_MEDIUM_MAX,
+					'high'   => $pct > Constants::CHANGE_BAND_MEDIUM_MAX,
 					default  => true,
 				},
 			};
@@ -352,28 +353,43 @@ class AuditPage {
 					<label for="filter-by-status" class="screen-reader-text"><?php esc_html_e( 'Op type filteren', 'zw-ttvgpt' ); ?></label>
 					<select name="status" id="filter-by-status">
 						<option value=""><?php esc_html_e( 'Alle types', 'zw-ttvgpt' ); ?></option>
-						<option value="fully_human_written" <?php selected( $status_filter, 'fully_human_written' ); ?>>
-							<?php esc_html_e( 'Handgeschreven', 'zw-ttvgpt' ); ?>
-						</option>
-						<option value="ai_written_not_edited" <?php selected( $status_filter, 'ai_written_not_edited' ); ?>>
-							<?php esc_html_e( 'AI-gegenereerd', 'zw-ttvgpt' ); ?>
-						</option>
-						<option value="ai_written_edited" <?php selected( $status_filter, 'ai_written_edited' ); ?>>
-							<?php esc_html_e( 'AI-bewerkt', 'zw-ttvgpt' ); ?>
-						</option>
+						<?php foreach ( AuditStatus::cases() as $status_case ) : ?>
+							<option value="<?php echo esc_attr( $status_case->value ); ?>" <?php selected( $status_filter, $status_case->value ); ?>>
+								<?php echo esc_html( $status_case->get_label() ); ?>
+							</option>
+						<?php endforeach; ?>
 					</select>
 
 					<label for="filter-by-change" class="screen-reader-text"><?php esc_html_e( 'Op wijzigingspercentage filteren', 'zw-ttvgpt' ); ?></label>
 					<select name="change" id="filter-by-change">
 						<option value=""><?php esc_html_e( 'Alle wijzigingen', 'zw-ttvgpt' ); ?></option>
 						<option value="low" <?php selected( $change_filter, 'low' ); ?>>
-							<?php esc_html_e( 'Laag (≤20%)', 'zw-ttvgpt' ); ?>
+							<?php
+							printf(
+								/* translators: %d: upper-bound percentage for the low change band */
+								esc_html__( 'Laag (≤%d%%)', 'zw-ttvgpt' ),
+								(int) Constants::CHANGE_BAND_LOW_MAX
+							);
+							?>
 						</option>
 						<option value="medium" <?php selected( $change_filter, 'medium' ); ?>>
-							<?php esc_html_e( 'Gemiddeld (21-50%)', 'zw-ttvgpt' ); ?>
+							<?php
+							printf(
+								/* translators: 1: low-band upper bound + 1, 2: medium-band upper bound */
+								esc_html__( 'Gemiddeld (%1$d-%2$d%%)', 'zw-ttvgpt' ),
+								(int) Constants::CHANGE_BAND_LOW_MAX + 1,
+								(int) Constants::CHANGE_BAND_MEDIUM_MAX
+							);
+							?>
 						</option>
 						<option value="high" <?php selected( $change_filter, 'high' ); ?>>
-							<?php esc_html_e( 'Hoog (>50%)', 'zw-ttvgpt' ); ?>
+							<?php
+							printf(
+								/* translators: %d: upper-bound percentage above which change is "high" */
+								esc_html__( 'Hoog (>%d%%)', 'zw-ttvgpt' ),
+								(int) Constants::CHANGE_BAND_MEDIUM_MAX
+							);
+							?>
 						</option>
 					</select>
 
@@ -464,6 +480,20 @@ class AuditPage {
 	 * @phpstan-param array<int, array<string, mixed>> $categorized_posts
 	 */
 	private function render_audit_table( array $categorized_posts ): void {
+		// Prime the user cache so per-row get_userdata() calls don't each hit the DB.
+		$user_ids = array();
+		foreach ( $categorized_posts as $item ) {
+			$post       = $item['post'];
+			$user_ids[] = (int) $post->post_author;
+			$edit_last  = get_post_meta( $post->ID, '_edit_last', true );
+			if ( is_numeric( $edit_last ) ) {
+				$user_ids[] = (int) $edit_last;
+			}
+		}
+		$user_ids = array_values( array_unique( array_filter( $user_ids ) ) );
+		if ( ! empty( $user_ids ) ) {
+			cache_users( $user_ids );
+		}
 		?>
 		<h2 class="screen-reader-text"><?php esc_html_e( 'Auditlog', 'zw-ttvgpt' ); ?></h2>
 		<table class="wp-list-table widefat fixed striped table-view-list posts zw-audit-table">
@@ -584,7 +614,9 @@ class AuditPage {
 								<?php if ( AuditStatus::AiWrittenEdited === $status && isset( $item['change_percentage'] ) ) : ?>
 									<?php
 									$pct       = $item['change_percentage'];
-									$pct_class = $pct > 50 ? 'high-change' : ( $pct > 20 ? 'medium-change' : 'low-change' );
+									$pct_class = $pct > Constants::CHANGE_BAND_MEDIUM_MAX
+										? 'high-change'
+										: ( $pct > Constants::CHANGE_BAND_LOW_MAX ? 'medium-change' : 'low-change' );
 									?>
 									<span class="change-percentage <?php echo esc_attr( $pct_class ); ?>">
 										<?php echo esc_html( $pct . '%' ); ?>
@@ -624,21 +656,21 @@ class AuditPage {
 				$post = $item['post'];
 				$diff = AuditHelper::generate_word_diff( $item['ai_content'], $item['human_content'] );
 				?>
-				<div id="zw-diff-modal-<?php echo esc_attr( $post->ID ); ?>" style="display: none;">
+				<div id="zw-diff-modal-<?php echo esc_attr( (string) $post->ID ); ?>" class="zw-diff-modal">
 					<div class="wrap">
 						<?php
 						/* translators: %s is the post title. */
 						$modal_title = sprintf( __( 'Verschillen voor: %s', 'zw-ttvgpt' ), get_the_title( $post->ID ) );
 						?>
 						<h2><?php echo esc_html( $modal_title ); ?></h2>
-						
-						<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+
+						<div class="zw-diff-modal-grid">
 							<div class="postbox">
 								<div class="postbox-header">
 									<h3 class="hndle"><?php esc_html_e( 'AI-versie', 'zw-ttvgpt' ); ?></h3>
 								</div>
 								<div class="inside">
-									<div class="zw-diff-panel" style="max-height: 400px; overflow-y: auto; padding: 10px; font-size: 13px; line-height: 1.6;">
+									<div class="zw-diff-panel">
 										<?php
 											// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is sanitized by sanitize_diff_panel().
 											echo self::sanitize_diff_panel( $diff['before'] );
@@ -646,13 +678,13 @@ class AuditPage {
 									</div>
 								</div>
 							</div>
-							
+
 							<div class="postbox">
 								<div class="postbox-header">
 									<h3 class="hndle"><?php esc_html_e( 'Bewerkte versie', 'zw-ttvgpt' ); ?></h3>
 								</div>
 								<div class="inside">
-									<div class="zw-diff-panel" style="max-height: 400px; overflow-y: auto; padding: 10px; font-size: 13px; line-height: 1.6;">
+									<div class="zw-diff-panel">
 										<?php
 											// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is sanitized by sanitize_diff_panel().
 											echo self::sanitize_diff_panel( $diff['after'] );

@@ -174,3 +174,22 @@
 .change-percentage.high-change {
     background: #dc3232;
 }
+
+.zw-diff-modal {
+    display: none;
+}
+
+.zw-diff-modal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.zw-diff-panel {
+    max-height: 400px;
+    padding: 10px;
+    overflow-y: auto;
+    font-size: 13px;
+    line-height: 1.6;
+}
