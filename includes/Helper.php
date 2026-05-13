@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Helper class.
  *
- * Provides utility functions for transients, ACF fields, and validation.
+ * Provides utility functions for transients, ACF fields, validation, and text handling.
  *
  * @package ZW_TTVGPT
  * @since   1.0.0
@@ -152,6 +152,35 @@ class Helper {
 
 		// Accept any gpt-5* model for Responses API (forward compatibility).
 		return str_starts_with( $model_lower, 'gpt-5' );
+	}
+
+	/**
+	 * Converts editor HTML content to plain text.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $content Raw HTML content to clean.
+	 * @return string Plain text content.
+	 */
+	public static function html_to_text( string $content ): string {
+		// Remove script-like elements including their content; wp_strip_all_tags() only removes tags.
+		$content = preg_replace( '/<script\b[^>]*>.*?<\/script>/is', '', $content ) ?? $content;
+		$content = preg_replace( '/<style\b[^>]*>.*?<\/style>/is', '', $content ) ?? $content;
+		$content = preg_replace( '/<noscript\b[^>]*>.*?<\/noscript>/is', '', $content ) ?? $content;
+
+		// Convert block elements to newlines for proper paragraph spacing.
+		$content = preg_replace( '/<\/(p|div|h[1-6]|li|tr|blockquote)>/i', "\n", $content ) ?? $content;
+		$content = preg_replace( '/<br\s*\/?>/i', "\n", $content ) ?? $content;
+
+		$text = wp_strip_all_tags( $content );
+
+		$text = html_entity_decode( $text, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+
+		// Normalize whitespace.
+		$text = preg_replace( '/[ \t]+/', ' ', $text ) ?? $text;
+		$text = preg_replace( '/\n{3,}/', "\n\n", $text ) ?? $text;
+
+		return trim( $text );
 	}
 
 	/**
