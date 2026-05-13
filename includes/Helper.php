@@ -135,6 +135,7 @@ class Helper {
 			}
 		}
 
+		// time() fallback is intentionally unlogged: debug-only path, cosmetic cache-busting impact only.
 		$debug_version = ZW_TTVGPT_VERSION . '.' . ( $latest > 0 ? $latest : time() );
 		return $debug_version;
 	}

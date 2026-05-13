@@ -46,6 +46,17 @@ class SettingsManager {
 	private const string MODEL_MIGRATION_NOTICE_TRANSIENT = 'zw_ttvgpt_model_migration_notice';
 
 	/**
+	 * Transient key that throttles corrupted-settings logging.
+	 *
+	 * Without this, a non-array stored option would be re-detected and re-logged
+	 * on every request that misses the per-request object cache.
+	 *
+	 * @since 1.0.0
+	 * @var string
+	 */
+	private const string CORRUPT_SETTINGS_LOG_THROTTLE_TRANSIENT = 'zw_ttvgpt_corrupt_settings_logged';
+
+	/**
 	 * Clears the cached settings.
 	 *
 	 * @since 1.0.0
@@ -75,11 +86,42 @@ class SettingsManager {
 			Constants::get_default_settings()
 		);
 		if ( ! is_array( $settings ) ) {
+			self::log_corrupt_settings( $settings );
 			$settings = Constants::get_default_settings();
 		}
 
 		wp_cache_set( self::CACHE_KEY, $settings, self::CACHE_GROUP );
 		return $settings;
+	}
+
+	/**
+	 * Logs a corrupted (non-array) stored settings option, throttled to one entry per hour.
+	 *
+	 * Only safe metadata is recorded: option name, detected type, and string length for
+	 * string values. The raw value is never logged because a corrupted option may still
+	 * contain fragments of sensitive settings such as the API key.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param mixed $settings The non-array value returned from get_option().
+	 */
+	private static function log_corrupt_settings( mixed $settings ): void {
+		if ( false !== get_transient( self::CORRUPT_SETTINGS_LOG_THROTTLE_TRANSIENT ) ) {
+			return;
+		}
+
+		$context = array(
+			'option_name'   => Constants::SETTINGS_OPTION_NAME,
+			'detected_type' => gettype( $settings ),
+		);
+		if ( is_string( $settings ) ) {
+			$context['string_length'] = strlen( $settings );
+		}
+
+		// Logger::error() writes unconditionally, so the debug-mode flag is irrelevant here.
+		( new Logger() )->error( 'Stored settings option is not an array; falling back to defaults', $context );
+
+		set_transient( self::CORRUPT_SETTINGS_LOG_THROTTLE_TRANSIENT, true, HOUR_IN_SECONDS );
 	}
 
 	/**
