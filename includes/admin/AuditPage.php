@@ -12,6 +12,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+use ZW_TTVGPT_Core\AjaxResponse;
+use ZW_TTVGPT_Core\AjaxSecurity;
 use ZW_TTVGPT_Core\AuditHelper;
 use ZW_TTVGPT_Core\AuditStatus;
 use ZW_TTVGPT_Core\Constants;
@@ -23,6 +25,11 @@ use ZW_TTVGPT_Core\Constants;
  * @since   1.0.0
  */
 class AuditPage {
+	use AjaxSecurity;
+
+	public const string DIFF_AJAX_ACTION       = 'zw_ttvgpt_audit_diff';
+	public const string DIFF_AJAX_NONCE_ACTION = 'zw_ttvgpt_audit_diff';
+
 	/**
 	 * Retrieves validated filter parameters for audit page display.
 	 *
@@ -60,7 +67,7 @@ class AuditPage {
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 	}
 
-	/** The page emits a hidden modal per row, so large pages are expensive. */
+	/** Keep page slices bounded so audit metadata stays reasonably cheap. */
 	private const int POSTS_PER_PAGE = 50;
 
 	/**
@@ -132,6 +139,60 @@ class AuditPage {
 		}
 
 		return $kses_out;
+	}
+
+	/**
+	 * Handles lazy loading for an audit diff modal.
+	 *
+	 * @return void
+	 */
+	public function handle_diff_ajax(): void {
+		$this->validate_ajax_request( self::DIFF_AJAX_NONCE_ACTION, Constants::REQUIRED_CAPABILITY );
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified in validate_ajax_request().
+		$post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
+		$post    = $post_id ? get_post( $post_id ) : null;
+
+		if ( ! $post instanceof \WP_Post || Constants::SUPPORTED_POST_TYPE !== $post->post_type || 'publish' !== $post->post_status ) {
+			AjaxResponse::error(
+				'invalid_post',
+				__( 'Artikel niet gevonden voor auditanalyse.', 'zw-ttvgpt' ),
+				404
+			);
+		}
+
+		AuditHelper::prime_meta_cache( array( $post_id ) );
+
+		if ( '1' !== (string) get_post_meta( $post_id, Constants::ACF_FIELD_IN_KABELKRANT, true ) ) {
+			AjaxResponse::error(
+				'invalid_post',
+				__( 'Artikel is niet beschikbaar in het auditlog.', 'zw-ttvgpt' ),
+				404
+			);
+		}
+
+		$analysis = AuditHelper::categorize_post( $post );
+		if ( AuditStatus::AiWrittenEdited !== $analysis['status'] ) {
+			AjaxResponse::error(
+				'no_diff',
+				__( 'Geen verschillen beschikbaar voor dit artikel.', 'zw-ttvgpt' ),
+				404
+			);
+		}
+
+		$diff = AuditHelper::generate_word_diff( $analysis['ai_content'], $analysis['human_content'] );
+
+		AjaxResponse::success(
+			array(
+				'title'  => sprintf(
+					/* translators: %s is the post title. */
+					__( 'Verschillen voor: %s', 'zw-ttvgpt' ),
+					get_the_title( $post_id )
+				),
+				'before' => self::sanitize_diff_panel( $diff['before'] ),
+				'after'  => self::sanitize_diff_panel( $diff['after'] ),
+			)
+		);
 	}
 
 	/**
@@ -245,9 +306,10 @@ class AuditPage {
 					'bottom'
 				);
 				?>
-			</form>
-		</div>
-		<?php
+				</form>
+				<?php $this->render_diff_modal_container(); ?>
+			</div>
+			<?php
 	}
 
 
@@ -584,11 +646,12 @@ class AuditPage {
 									</span>
 									<?php if ( AuditStatus::AiWrittenEdited === $status ) : ?>
 										<?php
-										$diff_url = '#TB_inline?width=800&height=600&inlineId=zw-diff-modal-' . $post->ID;
+										$diff_url = '#TB_inline?width=800&height=600&inlineId=zw-diff-modal';
 										?>
 										| <span class="view-diff">
 											<a href="<?php echo esc_attr( $diff_url ); ?>"
-												class="thickbox"
+												class="zw-audit-diff-link"
+												data-post-id="<?php echo esc_attr( (string) $post->ID ); ?>"
 												aria-label="<?php esc_attr_e( 'Toon verschillen tussen AI en bewerkte versie', 'zw-ttvgpt' ); ?>">
 												<?php esc_html_e( 'Verschillen', 'zw-ttvgpt' ); ?>
 											</a>
@@ -652,54 +715,47 @@ class AuditPage {
 				</tr>
 			</tfoot>
 		</table>
-		
-		<?php foreach ( $categorized_posts as $item ) : ?>
-			<?php if ( AuditStatus::AiWrittenEdited === $item['status'] ) : ?>
-				<?php
-				$post = $item['post'];
-				$diff = AuditHelper::generate_word_diff( $item['ai_content'], $item['human_content'] );
-				?>
-				<div id="zw-diff-modal-<?php echo esc_attr( (string) $post->ID ); ?>" class="zw-diff-modal">
-					<div class="wrap">
-						<?php
-						/* translators: %s is the post title. */
-						$modal_title = sprintf( __( 'Verschillen voor: %s', 'zw-ttvgpt' ), get_the_title( $post->ID ) );
-						?>
-						<h2><?php echo esc_html( $modal_title ); ?></h2>
+		<?php
+	}
 
-						<div class="zw-diff-modal-grid">
-							<div class="postbox">
-								<div class="postbox-header">
-									<h3 class="hndle"><?php esc_html_e( 'AI-versie', 'zw-ttvgpt' ); ?></h3>
-								</div>
-								<div class="inside">
-									<div class="zw-diff-panel">
-										<?php
-											// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is sanitized by sanitize_diff_panel().
-											echo self::sanitize_diff_panel( $diff['before'] );
-										?>
-									</div>
-								</div>
-							</div>
+	/**
+	 * Renders the shared Thickbox container populated by audit.js.
+	 */
+	private function render_diff_modal_container(): void {
+		?>
+		<div id="zw-diff-modal" class="zw-diff-modal">
+			<div class="wrap">
+				<h2 id="zw-diff-modal-title"><?php esc_html_e( 'Verschillen laden', 'zw-ttvgpt' ); ?></h2>
 
-							<div class="postbox">
-								<div class="postbox-header">
-									<h3 class="hndle"><?php esc_html_e( 'Bewerkte versie', 'zw-ttvgpt' ); ?></h3>
-								</div>
-								<div class="inside">
-									<div class="zw-diff-panel">
-										<?php
-											// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is sanitized by sanitize_diff_panel().
-											echo self::sanitize_diff_panel( $diff['after'] );
-										?>
-									</div>
-								</div>
-							</div>
+				<div id="zw-diff-modal-loading" class="zw-diff-modal-status" role="status" hidden>
+					<?php esc_html_e( 'Verschillen laden...', 'zw-ttvgpt' ); ?>
+				</div>
+
+				<div id="zw-diff-modal-error" class="notice notice-error inline" role="alert" hidden>
+					<p></p>
+				</div>
+
+				<div id="zw-diff-modal-grid" class="zw-diff-modal-grid" hidden>
+					<div class="postbox">
+						<div class="postbox-header">
+							<h3 class="hndle"><?php esc_html_e( 'AI-versie', 'zw-ttvgpt' ); ?></h3>
+						</div>
+						<div class="inside">
+							<div id="zw-diff-before" class="zw-diff-panel"></div>
+						</div>
+					</div>
+
+					<div class="postbox">
+						<div class="postbox-header">
+							<h3 class="hndle"><?php esc_html_e( 'Bewerkte versie', 'zw-ttvgpt' ); ?></h3>
+						</div>
+						<div class="inside">
+							<div id="zw-diff-after" class="zw-diff-panel"></div>
 						</div>
 					</div>
 				</div>
-			<?php endif; ?>
-		<?php endforeach; ?>
+			</div>
+		</div>
 		<?php
 	}
 }
