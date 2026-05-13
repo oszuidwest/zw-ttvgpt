@@ -71,6 +71,7 @@ function attachDiffHandlers() {
     }
 
     let activeRequest = 0;
+    let activeController = null;
 
     for (const link of links) {
         link.addEventListener('click', async (event) => {
@@ -83,7 +84,15 @@ function attachDiffHandlers() {
 
             const requestId = activeRequest + 1;
             activeRequest = requestId;
+            activeController?.abort();
+            activeController =
+                typeof window.AbortController === 'function'
+                    ? new window.AbortController()
+                    : null;
 
+            for (const busyLink of links) {
+                busyLink.removeAttribute('aria-busy');
+            }
             link.setAttribute('aria-busy', 'true');
             modalTitle.textContent =
                 config.strings?.loading ?? 'Verschillen laden...';
@@ -93,7 +102,7 @@ function attachDiffHandlers() {
             openDiffModal(link.href);
 
             try {
-                const diff = await fetchDiff(postId);
+                const diff = await fetchDiff(postId, activeController?.signal);
                 if (requestId !== activeRequest) {
                     return;
                 }
@@ -102,6 +111,7 @@ function attachDiffHandlers() {
                     typeof diff.title === 'string'
                         ? diff.title
                         : (config.strings?.diffTitle ?? 'Verschillen');
+                // Server response is sanitized by AuditPage::sanitize_diff_panel().
                 before.innerHTML =
                     typeof diff.before === 'string' ? diff.before : '';
                 after.innerHTML =
@@ -121,7 +131,10 @@ function attachDiffHandlers() {
                           'Verschillen konden niet worden geladen.');
                 setDiffModalState('error');
             } finally {
-                link.removeAttribute('aria-busy');
+                if (requestId === activeRequest) {
+                    activeController = null;
+                    link.removeAttribute('aria-busy');
+                }
             }
         });
     }
@@ -144,7 +157,7 @@ function openDiffModal(href) {
     );
 }
 
-async function fetchDiff(postId) {
+async function fetchDiff(postId, signal) {
     const body = new URLSearchParams();
     body.set('action', config.ajaxAction);
     body.set('nonce', config.nonce);
@@ -157,6 +170,7 @@ async function fetchDiff(postId) {
             'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
         },
         body,
+        signal,
     });
     const payload = await response.json().catch(() => null);
 

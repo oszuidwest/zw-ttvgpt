@@ -111,7 +111,7 @@ class AdminMenu {
 				'ajaxAction' => AuditPage::DIFF_AJAX_ACTION,
 				'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
 				'baseUrl'    => admin_url( 'tools.php' ),
-				'nonce'      => wp_create_nonce( AuditPage::DIFF_AJAX_NONCE_ACTION ),
+				'nonce'      => wp_create_nonce( AuditPage::DIFF_AJAX_ACTION ),
 				'pageSlug'   => Constants::AUDIT_PAGE_SLUG,
 				'strings'    => array(
 					'diffTitle'     => __( 'Verschillen', 'zw-ttvgpt' ),

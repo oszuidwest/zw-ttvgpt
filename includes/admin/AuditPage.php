@@ -27,8 +27,7 @@ use ZW_TTVGPT_Core\Constants;
 class AuditPage {
 	use AjaxSecurity;
 
-	public const string DIFF_AJAX_ACTION       = 'zw_ttvgpt_audit_diff';
-	public const string DIFF_AJAX_NONCE_ACTION = 'zw_ttvgpt_audit_diff';
+	public const string DIFF_AJAX_ACTION = 'zw_ttvgpt_audit_diff';
 
 	/**
 	 * Retrieves validated filter parameters for audit page display.
@@ -67,7 +66,7 @@ class AuditPage {
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 	}
 
-	/** Keep page slices bounded so audit metadata stays reasonably cheap. */
+	/** Maximum audit rows rendered after month-wide categorization. */
 	private const int POSTS_PER_PAGE = 50;
 
 	/**
@@ -147,7 +146,7 @@ class AuditPage {
 	 * @return void
 	 */
 	public function handle_diff_ajax(): void {
-		$this->validate_ajax_request( self::DIFF_AJAX_NONCE_ACTION, Constants::REQUIRED_CAPABILITY );
+		$this->validate_ajax_request( self::DIFF_AJAX_ACTION, Constants::REQUIRED_CAPABILITY );
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified in validate_ajax_request().
 		$post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
@@ -306,10 +305,10 @@ class AuditPage {
 					'bottom'
 				);
 				?>
-				</form>
-				<?php $this->render_diff_modal_container(); ?>
-			</div>
-			<?php
+			</form>
+			<?php $this->render_diff_modal_container(); ?>
+		</div>
+		<?php
 	}
 
 
