@@ -79,6 +79,16 @@ final class AuditHelperRegionPrefixTest extends TestCase {
 		);
 	}
 
+	public function test_calculate_change_percentage_uses_unicode_word_tokens(): void {
+		self::assertSame(
+			20.0,
+			AuditHelper::calculate_change_percentage(
+				'CURAÇAO - Het café opent vandaag',
+				'CURAÇAO - Het café opent morgen'
+			)
+		);
+	}
+
 	public function test_generate_word_diff_falls_back_to_plain_text_when_diff_stripping_regex_fails(): void {
 		$log_file           = tempnam( sys_get_temp_dir(), 'zw-ttvgpt-pcre-' );
 		$previous_error_log = false;

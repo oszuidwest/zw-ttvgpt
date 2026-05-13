@@ -401,14 +401,15 @@ class AuditHelper {
 			return 100.0;
 		}
 
-		$ai_words_result    = preg_split( '/\s+/', trim( $ai_content ) );
-		$human_words_result = preg_split( '/\s+/', trim( $human_content ) );
-
-		$ai_words    = false !== $ai_words_result ? $ai_words_result : array();
-		$human_words = false !== $human_words_result ? $human_words_result : array();
+		$ai_words    = Helper::tokenize_words( $ai_content );
+		$human_words = Helper::tokenize_words( $human_content );
 
 		$ai_word_count    = count( $ai_words );
 		$human_word_count = count( $human_words );
+
+		if ( 0 === $ai_word_count && 0 === $human_word_count ) {
+			return 0.0;
+		}
 
 		if ( 0 === $ai_word_count ) {
 			return 100.0;
