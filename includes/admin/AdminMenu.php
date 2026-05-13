@@ -32,6 +32,13 @@ class AdminMenu {
 	private readonly SettingsPage $settings_page;
 
 	/**
+	 * Cached so page rendering and AJAX handlers share one audit page instance.
+	 *
+	 * @var AuditPage
+	 */
+	private readonly AuditPage $audit_page;
+
+	/**
 	 * Initializes the admin menu and registers WordPress hooks.
 	 *
 	 * @since 1.0.0
@@ -40,9 +47,11 @@ class AdminMenu {
 	 */
 	public function __construct( private readonly Logger $logger ) {
 		$this->settings_page = new SettingsPage( $this->logger );
+		$this->audit_page    = new AuditPage();
 
 		add_action( 'admin_menu', $this->add_admin_menu( ... ) );
 		add_action( 'admin_enqueue_scripts', $this->enqueue_admin_assets( ... ) );
+		add_action( 'wp_ajax_' . AuditPage::DIFF_AJAX_ACTION, array( $this->audit_page, 'handle_diff_ajax' ) );
 		add_action( 'zw_ttvgpt_diff_sanitizer_failed', $this->log_diff_sanitizer_failure( ... ), 10, 2 );
 	}
 
@@ -80,7 +89,7 @@ class AdminMenu {
 			__( 'Tekst TV Audit', 'zw-ttvgpt' ),
 			Constants::REQUIRED_CAPABILITY,
 			Constants::AUDIT_PAGE_SLUG,
-			array( new AuditPage(), 'render' )
+			array( $this->audit_page, 'render' )
 		);
 	}
 
@@ -99,8 +108,17 @@ class AdminMenu {
 			wp_enqueue_style( 'zw-ttvgpt-audit', ZW_TTVGPT_URL . 'assets/audit.css', array(), $version );
 
 			$audit_config = array(
-				'baseUrl'  => admin_url( 'tools.php' ),
-				'pageSlug' => Constants::AUDIT_PAGE_SLUG,
+				'ajaxAction' => AuditPage::DIFF_AJAX_ACTION,
+				'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
+				'baseUrl'    => admin_url( 'tools.php' ),
+				'nonce'      => wp_create_nonce( AuditPage::DIFF_AJAX_ACTION ),
+				'pageSlug'   => Constants::AUDIT_PAGE_SLUG,
+				'strings'    => array(
+					'diffTitle'     => __( 'Verschillen', 'zw-ttvgpt' ),
+					'loadError'     => __( 'Verschillen konden niet worden geladen.', 'zw-ttvgpt' ),
+					'loading'       => __( 'Verschillen laden...', 'zw-ttvgpt' ),
+					'requestFailed' => __( 'De aanvraag is mislukt.', 'zw-ttvgpt' ),
+				),
 			);
 			if ( $this->print_inline_config( 'zwTTVGPTAudit', $audit_config ) ) {
 				wp_enqueue_script_module( 'zw-ttvgpt-audit', ZW_TTVGPT_URL . 'assets/audit.js', array(), $version );

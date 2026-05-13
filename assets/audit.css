@@ -186,6 +186,19 @@
     margin-top: 20px;
 }
 
+.zw-diff-modal-status {
+    padding: 12px;
+    margin-top: 20px;
+    background: #f6f7f7;
+    border-left: 4px solid #72aee6;
+}
+
+.zw-diff-modal-grid[hidden],
+.zw-diff-modal-status[hidden],
+.zw-diff-modal-error[hidden] {
+    display: none;
+}
+
 .zw-diff-panel {
     max-height: 400px;
     padding: 10px;
