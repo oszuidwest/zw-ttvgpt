@@ -375,7 +375,7 @@ class AuditPage {
 						<option value="medium" <?php selected( $change_filter, 'medium' ); ?>>
 							<?php
 							printf(
-								/* translators: 1: low-band upper bound + 1, 2: medium-band upper bound */
+								/* translators: 1: lower bound, 2: upper bound for the medium change band */
 								esc_html__( 'Gemiddeld (%1$d-%2$d%%)', 'zw-ttvgpt' ),
 								(int) Constants::CHANGE_BAND_LOW_MAX + 1,
 								(int) Constants::CHANGE_BAND_MEDIUM_MAX
@@ -472,6 +472,9 @@ class AuditPage {
 
 	/**
 	 * Renders WordPress-style table with audit data.
+	 *
+	 * Primes author/editor user caches before rendering rows to avoid N+1
+	 * get_userdata() lookups.
 	 *
 	 * @since 1.0.0
 	 *

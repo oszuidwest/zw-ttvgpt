@@ -252,6 +252,8 @@ class Constants {
 	/**
 	 * Upper bound (inclusive) for the "low" change-percentage band in the audit UI.
 	 *
+	 * Also acts as the exclusive lower threshold for the "medium" band.
+	 *
 	 * @since 1.0.0
 	 * @var int
 	 */
@@ -259,6 +261,8 @@ class Constants {
 
 	/**
 	 * Upper bound (inclusive) for the "medium" change-percentage band in the audit UI.
+	 *
+	 * Also acts as the exclusive lower threshold for the "high" band.
 	 *
 	 * @since 1.0.0
 	 * @var int

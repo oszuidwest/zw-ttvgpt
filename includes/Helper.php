@@ -97,9 +97,11 @@ class Helper {
 	/**
 	 * Retrieves the version string for asset cache management.
 	 *
-	 * In debug mode the busting suffix is the latest filemtime across assets so
-	 * the browser revalidates when files actually change rather than on every
-	 * page load. Memoized per-request to avoid repeated file stats.
+	 * In debug mode the busting suffix is the latest filemtime across the
+	 * top-level assets directory, so the browser revalidates when files
+	 * actually change rather than on every page load. Falls back to a
+	 * per-request time() if no asset mtimes are readable. Memoized per-request
+	 * to avoid repeated file stats.
 	 *
 	 * @since 1.0.0
 	 *
