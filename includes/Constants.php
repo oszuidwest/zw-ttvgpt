@@ -250,6 +250,26 @@ class Constants {
 	public const float MIN_RESPONSE_RATIO = 0.2;
 
 	/**
+	 * Upper bound (inclusive) for the "low" change-percentage band in the audit UI.
+	 *
+	 * Also acts as the exclusive lower threshold for the "medium" band.
+	 *
+	 * @since 1.0.0
+	 * @var int
+	 */
+	public const int CHANGE_BAND_LOW_MAX = 20;
+
+	/**
+	 * Upper bound (inclusive) for the "medium" change-percentage band in the audit UI.
+	 *
+	 * Also acts as the exclusive lower threshold for the "high" band.
+	 *
+	 * @since 1.0.0
+	 * @var int
+	 */
+	public const int CHANGE_BAND_MEDIUM_MAX = 50;
+
+	/**
 	 * Default system prompt for AI summary generation.
 	 *
 	 * Use %d as placeholder for word limit.

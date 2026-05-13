@@ -260,7 +260,7 @@ class AuditHelper {
 			return;
 		}
 
-		update_meta_cache( 'post', array_map( 'intval', $post_ids ) );
+		update_meta_cache( 'post', $post_ids );
 	}
 
 	/**
@@ -414,11 +414,18 @@ class AuditHelper {
 			return 100.0;
 		}
 
-		// Calculate similarity using simple word matching.
-		$max_words = max( $ai_word_count, $human_word_count );
+		// Multiset overlap: count each word only as many times as it appears in both sides,
+		// so repeated common words like "de" cannot inflate similarity past their human-side count.
+		$max_words    = max( $ai_word_count, $human_word_count );
+		$ai_counts    = array_count_values( $ai_words );
+		$human_counts = array_count_values( $human_words );
 
-		$common_words   = array_intersect( $ai_words, $human_words );
-		$matching_words = count( $common_words );
+		$matching_words = 0;
+		foreach ( $ai_counts as $word => $count ) {
+			if ( isset( $human_counts[ $word ] ) ) {
+				$matching_words += min( $count, $human_counts[ $word ] );
+			}
+		}
 
 		$similarity_ratio  = $matching_words / $max_words;
 		$change_percentage = ( 1 - $similarity_ratio ) * 100;

@@ -59,7 +59,7 @@ class SummaryGenerator {
 		}
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified in validate_ajax_request()
-		$content = isset( $_POST['content'] ) ? wp_unslash( $_POST['content'] ) : '';
+		$content = isset( $_POST['content'] ) ? (string) wp_unslash( $_POST['content'] ) : '';
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified in validate_ajax_request()
 		$post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
 

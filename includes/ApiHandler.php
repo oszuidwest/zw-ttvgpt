@@ -121,7 +121,7 @@ class ApiHandler {
 	 *
 	 * @phpstan-return array<int, ChatMessage>
 	 */
-	public function build_messages( string $content, int $word_limit ): array {
+	private function build_messages( string $content, int $word_limit ): array {
 		return array(
 			array(
 				'role'    => 'system',

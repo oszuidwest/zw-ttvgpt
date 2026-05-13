@@ -97,12 +97,39 @@ class Helper {
 	/**
 	 * Retrieves the version string for asset cache management.
 	 *
+	 * In debug mode the busting suffix is the latest filemtime across the
+	 * top-level assets directory, so the browser revalidates when files
+	 * actually change rather than on every page load. Falls back to a
+	 * per-request time() if no asset mtimes are readable. Memoized per-request
+	 * to avoid repeated file stats.
+	 *
 	 * @since 1.0.0
 	 *
 	 * @return string Version string for asset enqueuing.
 	 */
 	public static function get_asset_version(): string {
-		return ZW_TTVGPT_VERSION . ( SettingsManager::is_debug_mode() ? '.' . time() : '' );
+		if ( ! SettingsManager::is_debug_mode() ) {
+			return ZW_TTVGPT_VERSION;
+		}
+
+		static $debug_version = null;
+		if ( null !== $debug_version ) {
+			return $debug_version;
+		}
+
+		$assets = glob( ZW_TTVGPT_DIR . 'assets/*' );
+		$latest = 0;
+		if ( is_array( $assets ) ) {
+			foreach ( $assets as $asset ) {
+				$mtime = filemtime( $asset );
+				if ( false !== $mtime && $mtime > $latest ) {
+					$latest = $mtime;
+				}
+			}
+		}
+
+		$debug_version = ZW_TTVGPT_VERSION . '.' . ( $latest > 0 ? $latest : time() );
+		return $debug_version;
 	}
 
 	/**

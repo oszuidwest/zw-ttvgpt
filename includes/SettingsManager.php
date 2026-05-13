@@ -66,16 +66,20 @@ class SettingsManager {
 	public static function get_settings(): array {
 		$settings = wp_cache_get( self::CACHE_KEY, self::CACHE_GROUP );
 
-		if ( false === $settings ) {
-			$settings = get_option(
-				Constants::SETTINGS_OPTION_NAME,
-				Constants::get_default_settings()
-			);
-			$settings = is_array( $settings ) ? $settings : Constants::get_default_settings();
-			wp_cache_set( self::CACHE_KEY, $settings, self::CACHE_GROUP );
+		if ( is_array( $settings ) ) {
+			return $settings;
 		}
 
-		return is_array( $settings ) ? $settings : Constants::get_default_settings();
+		$settings = get_option(
+			Constants::SETTINGS_OPTION_NAME,
+			Constants::get_default_settings()
+		);
+		if ( ! is_array( $settings ) ) {
+			$settings = Constants::get_default_settings();
+		}
+
+		wp_cache_set( self::CACHE_KEY, $settings, self::CACHE_GROUP );
+		return $settings;
 	}
 
 	/**
