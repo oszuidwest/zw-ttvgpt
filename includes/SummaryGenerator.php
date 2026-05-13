@@ -71,7 +71,7 @@ class SummaryGenerator {
 			);
 		}
 
-		$clean_content = $this->api_handler->prepare_content( $content );
+		$clean_content = Helper::html_to_text( $content );
 		$word_count    = Helper::count_words( $clean_content );
 
 		if ( $word_count < Constants::MIN_WORD_COUNT ) {

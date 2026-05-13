@@ -82,35 +82,6 @@ class ApiHandler {
 	}
 
 	/**
-	 * Extracts clean text from HTML content.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param string $content Raw content to clean.
-	 * @return string Cleaned content ready for API.
-	 */
-	public function prepare_content( string $content ): string {
-		// Remove script-like elements including their content; wp_strip_all_tags() only removes tags.
-		$content = preg_replace( '/<script\b[^>]*>.*?<\/script>/is', '', $content ) ?? $content;
-		$content = preg_replace( '/<style\b[^>]*>.*?<\/style>/is', '', $content ) ?? $content;
-		$content = preg_replace( '/<noscript\b[^>]*>.*?<\/noscript>/is', '', $content ) ?? $content;
-
-		// Convert block elements to newlines for proper paragraph spacing.
-		$content = preg_replace( '/<\/(p|div|h[1-6]|li|tr|blockquote)>/i', "\n", $content ) ?? $content;
-		$content = preg_replace( '/<br\s*\/?>/i', "\n", $content ) ?? $content;
-
-		$text = wp_strip_all_tags( $content );
-
-		$text = html_entity_decode( $text, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
-
-		// Normalize whitespace.
-		$text = preg_replace( '/[ \t]+/', ' ', $text ) ?? $text;
-		$text = preg_replace( '/\n{3,}/', "\n\n", $text ) ?? $text;
-
-		return trim( $text );
-	}
-
-	/**
 	 * Creates the messages structure for the Chat Completions API.
 	 *
 	 * @since 1.0.0
