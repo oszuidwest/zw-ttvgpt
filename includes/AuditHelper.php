@@ -94,14 +94,12 @@ class AuditHelper {
 	public static function get_most_recent_month(): ?array {
 		global $wpdb;
 
-		// Limit the scan to recent posts for audit performance.
 		$result = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT p.post_date
 				FROM {$wpdb->posts} p
 				WHERE p.post_status = %s
 				  AND p.post_type = %s
-				  AND p.post_date >= DATE_SUB(NOW(), INTERVAL 2 YEAR)
 				  AND EXISTS (
 					  SELECT 1 FROM {$wpdb->postmeta} pm1
 					  WHERE pm1.post_id = p.ID
