@@ -8,6 +8,10 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ZW_TTVGPT_Core\Helper;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 require_once __DIR__ . '/wp-load-helper.php';
 
 #[CoversClass(Helper::class)]
