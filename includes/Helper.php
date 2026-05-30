@@ -185,6 +185,32 @@ class Helper {
 	}
 
 	/**
+	 * Ensures generated summary text ends with sentence-ending punctuation.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $text Summary text to normalize.
+	 * @return string Summary text with terminal punctuation.
+	 */
+	public static function ensure_terminal_period( string $text ): string {
+		$text = trim( $text );
+		if ( '' === $text ) {
+			return $text;
+		}
+
+		if ( 1 === preg_match( '/[.!?…][\'"”’»)\]\}]*$/u', $text ) ) {
+			return $text;
+		}
+
+		$normalized = preg_replace( '/[,;:]+([\'"”’»)\]\}]*)$/u', '.$1', $text );
+		if ( null !== $normalized && $normalized !== $text ) {
+			return $normalized;
+		}
+
+		return $text . '.';
+	}
+
+	/**
 	 * Tokenizes words in a text using a Unicode-aware pattern.
 	 *
 	 * A word is one or more Unicode letters, optionally followed by groups of a

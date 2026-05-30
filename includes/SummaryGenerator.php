@@ -171,6 +171,7 @@ class SummaryGenerator {
 				return $result;
 			}
 
+			$result      = Helper::ensure_terminal_period( $result );
 			$last_result = $result;
 			$word_count  = Helper::count_words( $result );
 
