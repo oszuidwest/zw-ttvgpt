@@ -31,6 +31,11 @@ final class HelperTerminalPeriodTest extends TestCase {
 			'closing quote after punctuation is kept' => array( '"Het besluit is genomen."', '"Het besluit is genomen."' ),
 			'period is added after closing bracket'   => array( 'De weg gaat dicht (A58)', 'De weg gaat dicht (A58).' ),
 			'trailing comma becomes period'           => array( 'De vergadering start morgen,', 'De vergadering start morgen.' ),
+			'comma before quote becomes period'       => array( 'Hij zei "ja,"', 'Hij zei "ja."' ),
+			'comma after quote becomes period'        => array( 'Hij zei "ja",', 'Hij zei "ja."' ),
+			'colon before quote becomes period'       => array( 'Hij zei "ja:"', 'Hij zei "ja."' ),
+			'comma before bracket becomes period'     => array( 'De weg gaat dicht (A58,)', 'De weg gaat dicht (A58).' ),
+			'comma after bracket becomes period'      => array( 'De weg gaat dicht (A58),', 'De weg gaat dicht (A58).' ),
 		);
 	}
 }

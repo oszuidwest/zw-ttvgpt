@@ -202,9 +202,19 @@ class Helper {
 			return $text;
 		}
 
-		$normalized = preg_replace( '/[,;:]+([\'"”’»)\]\}]*)$/u', '.$1', $text );
-		if ( null !== $normalized && $normalized !== $text ) {
-			return $normalized;
+		foreach (
+			array(
+				'/[,;:]+([\'"”’»]+)$/u' => '.$1',
+				'/([\'"”’»]+)[,;:]+$/u' => '.$1',
+				'/[,;:]+([)\]\}]+)$/u'  => '$1.',
+				'/([)\]\}]+)[,;:]+$/u'  => '$1.',
+				'/[,;:]+$/u'            => '.',
+			) as $pattern => $replacement
+		) {
+			$normalized = preg_replace( $pattern, $replacement, $text );
+			if ( null !== $normalized && $normalized !== $text ) {
+				return $normalized;
+			}
 		}
 
 		return $text . '.';
