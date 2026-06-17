@@ -16,6 +16,9 @@ final class ApiHandlerExtractTest extends TestCase {
 	private ApiHandler $handler;
 
 	protected function setUp(): void {
+		$GLOBALS['zw_test_http_requests']  = array();
+		$GLOBALS['zw_test_http_responses'] = array();
+
 		$this->logger  = new RecordingLogger();
 		$this->handler = new ApiHandler( 'sk-test', 'gpt-5.5', $this->logger );
 	}
@@ -181,5 +184,31 @@ final class ApiHandlerExtractTest extends TestCase {
 
 		self::assertInstanceOf( WP_Error::class, $result );
 		self::assertSame( 'invalid_response', $result->get_error_code() );
+	}
+
+	public function test_generate_summary_retries_transport_failure_once(): void {
+		$this->handler = new ApiHandler( 'sk-test', 'gpt-4.1-mini', $this->logger );
+
+		$GLOBALS['zw_test_http_responses'] = array(
+			new WP_Error( 'http_request_failed', 'cURL error 28: Operation timed out after 30001 milliseconds with 0 bytes received' ),
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => wp_json_encode(
+					array(
+						'choices' => array(
+							array(
+								'message'       => array( 'content' => '  Retry gelukt.  ' ),
+								'finish_reason' => 'stop',
+							),
+						),
+					)
+				),
+			),
+		);
+
+		$result = $this->handler->generate_summary( 'Artikeltekst met voldoende inhoud.', 100 );
+
+		self::assertSame( 'Retry gelukt.', $result );
+		self::assertCount( 2, $GLOBALS['zw_test_http_requests'] );
 	}
 }

@@ -50,6 +50,55 @@ if ( ! function_exists( 'wp_json_encode' ) ) {
 	}
 }
 
+$GLOBALS['zw_test_http_requests']  = array();
+$GLOBALS['zw_test_http_responses'] = array();
+
+if ( ! function_exists( 'wp_remote_post' ) ) {
+	/**
+	 * @param array<string, mixed> $args
+	 * @return array<string, mixed>|WP_Error
+	 */
+	function wp_remote_post( string $url, array $args = array() ): array|WP_Error {
+		$GLOBALS['zw_test_http_requests'][] = array(
+			'url'  => $url,
+			'args' => $args,
+		);
+
+		$response = array_shift( $GLOBALS['zw_test_http_responses'] );
+		return $response ?? array(
+			'response' => array( 'code' => 200 ),
+			'body'     => wp_json_encode(
+				array(
+					'choices' => array(
+						array(
+							'message'       => array( 'content' => 'summary' ),
+							'finish_reason' => 'stop',
+						),
+					),
+				)
+			),
+		);
+	}
+}
+
+if ( ! function_exists( 'wp_remote_retrieve_response_code' ) ) {
+	/**
+	 * @param array<string, mixed> $response
+	 */
+	function wp_remote_retrieve_response_code( array $response ): int {
+		return isset( $response['response']['code'] ) ? (int) $response['response']['code'] : 0;
+	}
+}
+
+if ( ! function_exists( 'wp_remote_retrieve_body' ) ) {
+	/**
+	 * @param array<string, mixed> $response
+	 */
+	function wp_remote_retrieve_body( array $response ): string {
+		return isset( $response['body'] ) && is_string( $response['body'] ) ? $response['body'] : '';
+	}
+}
+
 if ( ! function_exists( 'admin_url' ) ) {
 	function admin_url( string $path = '', string $scheme = 'admin' ): string {
 		return 'https://example.test/wp-admin/' . $path;
@@ -135,5 +184,11 @@ if ( ! class_exists( 'WP_Error' ) ) {
 		public function get_error_data(): mixed {
 			return $this->data;
 		}
+	}
+}
+
+if ( ! function_exists( 'is_wp_error' ) ) {
+	function is_wp_error( mixed $thing ): bool {
+		return $thing instanceof WP_Error;
 	}
 }
