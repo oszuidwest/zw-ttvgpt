@@ -350,17 +350,29 @@ class ApiHandler {
 			);
 		}
 
-		$response = wp_remote_post(
-			$endpoint,
-			array(
-				'timeout' => $timeout,
-				'headers' => array(
-					'Authorization' => 'Bearer ' . $this->api_key,
-					'Content-Type'  => 'application/json',
-				),
-				'body'    => $request_body,
-			)
+		$request_args = array(
+			'timeout' => $timeout,
+			'headers' => array(
+				'Authorization' => 'Bearer ' . $this->api_key,
+				'Content-Type'  => 'application/json',
+			),
+			'body'    => $request_body,
 		);
+		$response     = wp_remote_post( $endpoint, $request_args );
+
+		if ( is_wp_error( $response ) ) {
+			$this->logger->debug(
+				'API request failed, retrying',
+				array(
+					'model'         => $this->model,
+					'error_code'    => $response->get_error_code(),
+					'error_message' => $response->get_error_message(),
+				)
+			);
+			usleep( 500000 );
+
+			$response = wp_remote_post( $endpoint, $request_args );
+		}
 
 		if ( is_wp_error( $response ) ) {
 			$this->logger->error( 'API request failed: ' . $response->get_error_message() );
